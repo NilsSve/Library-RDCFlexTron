@@ -1,0 +1,384 @@
+﻿/* palette.css - the ONE definition of DFRefactor's colours.
+
+   Split out of application.css 2026-08-12 so the FT dialogs can have the tokens WITHOUT the rest
+   of the sheet. The surfaces do not share a document: application.css reaches the boards, but each
+   cWebHtmlBoxFT dialog is its own page carrying its own <style>, and linking the whole sheet into
+   one would import its html/body rules on top of the dialog's own layout. This file is only the
+   :root block, so a dialog can link it and get the palette and nothing else.
+
+   Loaded two ways, both pointing here so the values can never drift apart:
+     - application.css @imports it (the boards);
+     - each fragment links it directly, CssStyle/palette.css relative to AppHtml, which resolves
+       because the fragment's base IS AppHtml - the same reason <img src="Svg/Compare.svg"> works.
+
+   Read the header of application.css for why these are tokens at all, and why the flow colours
+   (amber = guided/modernization, mint = manual) are DFRefactor's own whatever theme is loaded. */
+:root {
+    /* ---- SURFACES  - the warm dark ramp, darkest first ---- */
+    --dfr-bg-sunken:  #211f1e;   /* sidebar + masthead ground (sc-side, sc-mast) */
+    --dfr-bg-well:    #242322;   /* recessed wells inside a card */
+    --dfr-bg-page:    #262624;   /* the page backdrop itself (html, body, #viewport) */
+    --dfr-bg-inset:   #2a2926;   /* inset strips + focused button ground */
+    --dfr-bg-card:    #2c2b29;   /* the standard card / tile ground */
+    --dfr-bg-card-hi: #31302e;   /* a card lifted above its neighbours */
+    --dfr-bg-track:   #3a3936;   /* slider + progress tracks, button ground */
+    --dfr-bg-pill:    #38373a;   /* selection pills */
+
+    /* ---- LINES     - borders, in the order they read from quiet to loud ---- */
+    --dfr-line-soft:   #2e2d2a;   /* a border that should barely register */
+    --dfr-line:        #35342f;   /* the default divider */
+    --dfr-line-card:   #403f3a;   /* a card's own edge */
+    --dfr-line-mid:    #42413d;   /* pill + action edges */
+    --dfr-line-focus:  #46443f;   /* focus ring ground */
+    --dfr-line-strong: #4a4945;   /* the loudest ordinary border */
+    --dfr-line-input:  #5a5853;   /* form-control edges */
+
+    /* ---- INK       - text, brightest first ---- */
+    --dfr-ink:       #eceae1;   /* primary text */
+    --dfr-ink-2:     #cbc9c0;   /* secondary text */
+    --dfr-ink-3:     #c9c7bd;   /* secondary text on a lit ground */
+    --dfr-ink-4:     #a8a69b;   /* tertiary text */
+    --dfr-ink-muted: #84827a;   /* captions + help text */
+    --dfr-ink-dim:   #6f6d64;   /* disabled / shut states */
+    --dfr-ink-faint: #5e5d57;   /* the quietest legible ink */
+
+    /* ---- FLOW      - product meaning, NOT decoration. Amber is guided/modernization, mint is manual/clean.
+   These carry the UI's language and must survive any theme - see the note above. ---- */
+    --dfr-amber:         #e6a571;   /* guided flow, modernization, the crumb + Run Plan chip */
+    --dfr-amber-deep:    #d4a657;   /* amber on a lit ground */
+    --dfr-amber-line:    #7a6a3a;   /* amber card edge */
+    --dfr-amber-bg:      #4a4126;   /* amber card ground */
+    --dfr-amber-bg-deep: #322d22;   /* amber card ground, sunken */
+    --dfr-mint:          #5fd3a6;   /* manual flow, clean states, ok */
+    --dfr-mint-bright:   #7ee0bb;   /* mint on hover */
+    --dfr-mint-line:     #357e60;   /* mint card edge */
+    --dfr-mint-bg:       #1c382e;   /* mint card ground */
+    --dfr-coral:         #f0a481;   /* attention: no workspace, needs action */
+    --dfr-coral-deep:    #c98b6e;   /* coral, quieter */
+    --dfr-blue:          #85b7eb;   /* informational accent */
+    --dfr-yellow:        #e8c44d;   /* warning accent */
+    --dfr-violet:        #b48fe4;   /* the Unicode function group */
+
+    /* ======== bucket D: colours that recur but sit >8/255 from every token above, so they
+       are their OWN colours rather than drift. Named by the role their classes give them
+       (Nils 2026-08-12). One-offs are deliberately NOT here - a token used once is a literal
+       with extra steps. ======== */
+    /* ---- EXTRA INK - the dialog bars use a COOLER grey than the boards' warm ink ---- */
+    --dfr-btn-ink:  #d8d8d8;   /* dialog-bar button text (.rpbtn/.sfbtn) - 31 uses in 16 files */
+    --dfr-ink-cool: #8f8d84;   /* cool muted text */
+
+    /* ---- AMBER RAMP, extended - the cycle strip carries its own shades ---- */
+    --dfr-amber-bright: #f4c194;   /* amber, lifted */
+    --dfr-amber-mid:    #b98a54;   /* the cycle strip's step text */
+    --dfr-amber-line-2: #7a5a34;   /* the cycle strip's edge */
+    --dfr-amber-bg-2:   #43331f;   /* the cycle strip's ground */
+    --dfr-gold:         #e0b34d;   /* the band/browse accents */
+    --dfr-coral-2:      #e0876a;   /* counts + version chips */
+
+    /* ---- MINT RAMP, extended - the tour scenes and the done/ok states ---- */
+    --dfr-mint-glow:    #6fddae;   /* ok, lit */
+    --dfr-mint-2:       #57c79a;   /* the tour's own mint */
+    --dfr-mint-line-2:  #2b7d5f;   /* tour + done edges */
+    --dfr-mint-bg-deep: #0f2019;   /* the deepest mint ground */
+
+    /* ---- VIOLET - the Unicode / source-scan function group ---- */
+    --dfr-violet-2:    #8a6fc4;   /* the scan chip */
+    --dfr-violet-soft: #d0bcf0;   /* violet text on a violet ground */
+    --dfr-violet-line: #5c4a86;   /* violet edge */
+    --dfr-violet-bg:   #2e2740;   /* violet ground */
+
+    /* ---- ERROR - distinct from coral, which means 'needs attention', not 'wrong' ---- */
+    --dfr-error:     #f2777a;   /* an error, stated */
+    --dfr-error-ink: #f0b0b0;   /* error text on an error ground */
+    --dfr-error-bg:  #5a3030;   /* error ground */
+
+    /* ======== bucket C: 5-8/255 from a token - close enough to look like drift, far enough
+       that a large area can show it. Split by the same rule bucket D used: what RECURS is a
+       colour, what appears once is drift. The exception is meaning - a one-off that carries
+       flow identity keeps its own token, because the nearest neighbour would say something
+       else (Nils 2026-08-12). ======== */
+    /* ---- BUCKET C - recurring at 5-8/255, so their own colours rather than drift ---- */
+    --dfr-flow-line:   #56544e;   /* the guided/manual flow rules on the boards */
+    --dfr-ink-dim-2:   #6a6864;   /* checkbox rows */
+    --dfr-ink-cool-2:  #8b897f;   /* sub-text in the dialogs */
+    --dfr-ink-muted-2: #8a8177;   /* the cycle tail + flow sub-text */
+    --dfr-ink-bright:  #e6e6e6;   /* dialog body text, brighter than the boards' ink */
+    --dfr-guided-div:  #453a28;   /* the guided band's dividers */
+    --dfr-warn-bg:     #3a2a1a;   /* the target-warning ground */
+    --dfr-btn-off-ink: #67655f;   /* a shut button's text */
+
+    /* ---- ...and three used ONCE that still earn a token, because the nearest one would change
+       what they MEAN: the two lane grounds carry the flow identity (amber = guided, mint =
+       manual), and the soft warning is blue-tinted, not violet ---- */
+    --dfr-lane-guided-bg: #2e2820;   /* the Start Center's guided lane card */
+    --dfr-lane-manual-bg: #1f2e29;   /* the Start Center's manual lane card */
+    --dfr-warn-soft-bg:   #262d38;   /* the quiet workspace warning */
+    /* ---- DIALOG BUTTONS - completes the family that --dfr-btn-ink / --dfr-btn-off-ink started.
+       Kept SEPARATE from --dfr-bg-track (which is 1/255 away and whose comment also says "button
+       ground") because in light a button must read as RAISED and a progress track as RECESSED;
+       binding them would foreclose that. 86 uses across 14 dialogs. ---- */
+    --dfr-btn-bg:         #3a3937;
+    --dfr-btn-line:       #4a4948;
+    --dfr-btn-bg-hover:   #454341;
+    --dfr-btn-line-hover: #5d5b58;
+    /* ---- INK ON A COLOURED FILL - these MUST invert, because the fill itself inverts. Every
+       one was a hardcoded literal paired with a tokenised background, which read fine in dark
+       and collapsed to 1.1-3.2 contrast in light (Nils 2026-08-13: the Tidy Up / Ignore all
+       buttons). Dark values are the ORIGINAL literals, so dark is unchanged. ---- */
+    --dfr-ink-on-fill:     #1d1c1a;   /* .fact - ink ON a solid bright accent fill; the fill goes DARK in light, so this inverts */
+    --dfr-ink-on-amber:    #ffe3c4;   /* the active cycle step, on the amber edge */
+    --dfr-ink-on-violet:   #b49ae0;   /* the scan chips, on the violet ground */
+    --dfr-ink-on-mint-bg:  #86ecc0;   /* the manual-run readout, on the mint ground */
+    --dfr-ink-on-mint:     #f2fff9;   /* the continue buttons, on the mint edge */
+    --dfr-ink-bar:         #e8e7e2;   /* the compiler/analyzer status bar text */
+    --dfr-mint-hover:      #7ce0ba;   /* .fact:hover fill - brighter mint in dark, DARKER in light */
+    /* ---- LIBRARY LIST - the Libraries dialog kept its child rows on a hardcoded dark ground,
+       so they stayed dark on a light page (Nils 2026-08-13). Dark values are the originals. ---- */
+    --dfr-row-sel-bg:    #3b4a5c;   /* the selected library row */
+    --dfr-pkg-ink:       #9d8fd0;   /* a DF26 package (vs a plain library) - name + version */
+    --dfr-kid-ink:       #9a988f;   /* a sub-library/sub-package row */
+    --dfr-kid-nm-ink:    #bdbbb2;   /* that row's own name, lifted above its siblings */
+    /* ---- BREADCRUMB - the go-back links. Their own token, not --dfr-amber, because the crumb is
+       11.5px: WCAG small text, where 4.5 is the FLOOR and not a comfortable target. Plain amber
+       measured 4.66 on a light page against 7.21 in dark, and Nils called it (2026-08-13: "a bit
+       difficult to read"). The DARK value is exactly --dfr-amber, so dark is unchanged; only the
+       light value is solved, for >=7.0 on page/card/card-hi - dark-mode comfort. Still amber, so
+       the guided-flow language holds. ---- */
+    --dfr-crumb:       #e6a571;
+    --dfr-crumb-hover: #f0bd93;
+    /* ---- DISABLED BUTTONS - the *-off chips (Analyze source / Run Plan / Clear Ignored when they
+       are inert). Hardcoded, so they stayed dark on a light page (Nils 2026-08-13). Dark values
+       are the originals; --dfr-btn-off-line also carries the TestCompile meter track's edge. ---- */
+    --dfr-btn-off-bg:   #2e2d2b;
+    --dfr-btn-off-line: #393836;
+    /* ---- FILLED GROUNDS - a LITERAL background paired with a tokenised (or inherited) ink.
+       The mirror image of the ink-on-fill class above, and missed by that sweep because it only
+       looked for literal INK on a tokenised background. Dark-on-dark in light; the <pre> code
+       block was the one Nils saw (2026-08-13). Dark values are the originals. ---- */
+    --dfr-ok-bg:               #3d6a3d;   /* a ticked checkbox / primary confirm fill */
+    --dfr-ok-bg-hover:         #477a47;   /* ...its hover */
+    --dfr-amber-fill-hover:    #855f34;   /* the filled amber board button, hovered */
+    --dfr-violet-fill:         #6b57a0;   /* the filled violet scan button */
+    --dfr-violet-fill-hover:   #7a66b0;   /* ...its hover */
+    --dfr-violet-bg-hover:     #372f4d;   /* the scan chip ground, hovered */
+    --dfr-logo-bg:             #40545d;   /* the Start Center masthead logo plate */
+    /* ---- CODE - the <pre> sample in ConfirmDialog. Its own ink: --dfr-gold is solved for the
+       PAGE, and a code block sits on the sunken ground, where gold fell to 4.08 at 12px mono. ---- */
+    --dfr-code-ink:  #e0b34d;
+    /* ---- OK / PRIMARY CHIP INK - ink on the green confirm fill. The fill was tokenised but the
+       ink was not, so in light it became near-white on pale green (Nils 2026-08-13: the OK button
+       has "white text that is hard to read"). Dark values are the originals. ---- */
+    --dfr-ok-ink:       #eaf5ea;
+    --dfr-ok-ink-hover: #ffffff;
+    --dfr-ok-line:      #4f8a4f;
+    /* ---- STATUS PILLS - the counts in the analyzer and compiler-output strips.
+       Six inline colour pairs across two files before this, including two greys one shade apart for
+       the same "set aside" meaning. Named by what they MEAN, not by hue: a pill is err/warn/review/
+       ok/mute, and the colour follows from that. ---- */
+    --dfr-pill-err-bg:    #791f1f;   /* compiler errors - the count that blocks a build */
+    --dfr-pill-err-ink:   #fcebeb;
+    --dfr-pill-warn-bg:   #633806;   /* compiler warnings */
+    --dfr-pill-warn-ink:  #faeeda;
+    --dfr-pill-review-bg: #854f0b;   /* analyzer Review - a fix applies but wants checking */
+    --dfr-pill-review-ink:#faeeda;
+    --dfr-pill-ok-bg:     #0f6e56;   /* analyzer Auto-fix - a function applies the fix cleanly */
+    --dfr-pill-ok-ink:    #e1f5ee;
+    --dfr-pill-mute-bg:   #3a3a37;   /* set aside: Explain/Unknown, ignored rows, dead-dep skips */
+    --dfr-pill-mute-ink:  #d0cfca;
+    /* The dim "|" between groups in a summary bar. One value, three bars - and a fourth that was
+       getting none of it; see .sep in bars.css. */
+    --dfr-sep-ink: #5f5e5a;
+}
+/* ============================== THE LIGHT THEME ==============================
+   Every token above again, on a WARM off-white ground - the same warmth the dark ramp has, so the
+   product keeps its own identity in both themes and the flow colours (amber = guided, mint =
+   manual) carry over with the least adjustment.
+
+   WHY :root STAYS DARK AND THIS OVERRIDES IT
+   The framework puts df-Light / df-Dark on document.body of each FlexTron host (peThemePreference,
+   cWebHostAPI_mixin - see FTThemeHost.inc). Proven 2026-08-13 with a probe: redefining a token here
+   does reach our markup, because custom properties inherit. Keeping :root on the dark values means
+   any document that somehow does NOT get the class falls back to the look the app has always had,
+   rather than to a half-finished light one. It also keeps the markup's own
+   var(--dfr-x, #<dark literal>) fallbacks honest.
+
+   WHY NOT DF26's OWN LIGHT THEME
+   Df_Material's :root IS a light theme, and the DataFlex CONTROLS already use it. But it themes
+   controls, not surfaces - there is no --df-* for a page, a card, a tile, or a flow colour. Its
+   Main* ramp is also an accent (blue) in light and a surface grey in dark, so it cannot serve as a
+   surface scale, and its greys are cool where ours are warm. Binding to it would pull the dark
+   theme cool. The traffic goes the other way instead: a few --df-* vars get remapped to these.
+
+   THE ONE KNOWN GAP: a token defined here lands on <body>, so it does NOT reach <html>. 24 rules
+   paint via "html,body{...}". Body fills the viewport in those fragments (margin:0;height:100%), so
+   body's background covers html's - if a dark edge ever shows around a light page, that rule needs
+   splitting so only body carries the background.
+   ============================================================================ */
+body.df-Light {
+    /* ---- SURFACES - the ramp INVERTS: sunken is now darker than the page, cards lift to white ---- */
+    --dfr-bg-sunken:  #ebe7de;
+    --dfr-bg-well:    #efece4;
+    --dfr-bg-page:    #f7f5f0;
+    --dfr-bg-inset:   #f2efe8;
+    --dfr-bg-card:    #fdfcfa;
+    --dfr-bg-card-hi: #ffffff;
+    --dfr-bg-track:   #e4e0d6;   /* a track/button ground must read DARKER than its card here */
+    --dfr-bg-pill:    #e8e4dc;
+
+    /* ---- LINES - same quiet-to-loud order, walking down from the page instead of up ---- */
+    --dfr-line-soft:   #eae6dd;
+    --dfr-line:        #e2ded4;
+    --dfr-line-card:   #d9d4c9;
+    --dfr-line-mid:    #d2ccc0;
+    --dfr-line-focus:  #c9c3b6;
+    --dfr-line-strong: #bdb6a8;
+    --dfr-line-input:  #a9a294;
+
+    /* ---- INK - inverted: the primary ink is now the DARKEST, not the brightest ---- */
+    --dfr-ink:       #2a2825;
+    --dfr-ink-2:     #45423c;
+    --dfr-ink-3:     #4a473f;
+    --dfr-ink-4:     #5f5b52;
+    --dfr-ink-muted: #7b766b;
+    --dfr-ink-dim:   #948f83;
+    --dfr-ink-faint: #a8a294;
+
+    /* ---- FLOW - hue held, luminance flipped. These MEAN something, so amber stays amber and mint
+       stays mint; only their weight changes so they read against a light ground. ---- */
+    --dfr-amber:         #98631a;
+    --dfr-amber-deep:    #96601a;
+    --dfr-amber-line:    #e0c9a0;
+    --dfr-amber-bg:      #fdf3e4;
+    --dfr-amber-bg-deep: #f7e9d5;
+    --dfr-mint:          #1f7a55;
+    --dfr-mint-bright:   #17694a;   /* hover goes DARKER on light, not brighter */
+    --dfr-mint-line:     #a8d9c4;
+    --dfr-mint-bg:       #e8f7f0;
+    --dfr-coral:         #b25329;
+    --dfr-coral-deep:    #9c4a25;
+    --dfr-blue:          #1a6bb5;
+    --dfr-yellow:        #876c0b;
+    --dfr-violet:        #6a45a8;
+
+    /* ---- EXTRA INK ---- */
+    --dfr-btn-ink:  #3c3c3c;
+    --dfr-ink-cool: #6e6b63;
+
+    /* ---- AMBER RAMP, extended ---- */
+    --dfr-amber-bright: #98641f;
+    --dfr-amber-mid:    #8a6220;
+    --dfr-amber-line-2: #dcc49a;
+    --dfr-amber-bg-2:   #f9efdd;
+    --dfr-gold:         #896b0e;
+    --dfr-coral-2:      #a94e28;
+
+    /* ---- MINT RAMP, extended ---- */
+    --dfr-mint-glow:    #189060;
+    --dfr-mint-2:       #1d7d59;
+    --dfr-mint-line-2:  #9ed2bd;
+    --dfr-mint-bg-deep: #dff2e9;
+
+    /* ---- VIOLET ---- */
+    --dfr-violet-2:    #6247a0;
+    --dfr-violet-soft: #5b3f96;   /* violet text ON a violet ground - dark-on-light here */
+    --dfr-violet-line: #cbbce6;
+    --dfr-violet-bg:   #f0eafa;
+
+    /* ---- ERROR ---- */
+    --dfr-error:     #c0272b;
+    --dfr-error-ink: #8f1f22;
+    --dfr-error-bg:  #fbe6e6;
+
+    /* ---- BUCKET C ---- */
+    --dfr-flow-line:   #c4bfb2;
+    --dfr-ink-dim-2:   #8a857b;
+    --dfr-ink-cool-2:  #6c6961;
+    --dfr-ink-muted-2: #736e64;
+    --dfr-ink-bright:  #1f1f1f;   /* "brighter than the boards' ink" becomes DARKER than it */
+    --dfr-guided-div:  #e6d9bf;
+    --dfr-warn-bg:     #fbeedc;
+    --dfr-btn-off-ink: #9a958b;
+
+    /* ---- the three that carry flow identity ---- */
+    --dfr-lane-guided-bg: #fbf2e3;
+    --dfr-lane-manual-bg: #e9f6f0;
+    --dfr-warn-soft-bg:   #e8eef7;
+    /* ---- DIALOG BUTTONS ---- */
+    --dfr-btn-bg:         #e9e5db;
+    --dfr-btn-line:       #c9c3b6;
+    --dfr-btn-bg-hover:   #ded9cc;
+    --dfr-btn-line-hover: #b0a99a;
+    /* ---- INK ON A COLOURED FILL ---- */
+    --dfr-ink-on-fill:     #ffffff;
+    --dfr-ink-on-amber:    #4a3208;
+    --dfr-ink-on-violet:   #4a3282;
+    --dfr-ink-on-mint-bg:  #145c3e;
+    --dfr-ink-on-mint:     #123527;
+    --dfr-ink-bar:         #2a2825;
+    --dfr-mint-hover:      #17694a;
+    /* ---- LIBRARY LIST ---- */
+    --dfr-row-sel-bg:    #d6e4f2;
+    --dfr-pkg-ink:       #533d8c;
+    --dfr-kid-ink:       #5f5b52;
+    --dfr-kid-nm-ink:    #3f3c36;
+    /* ---- BREADCRUMB ---- */
+    --dfr-crumb:       #734b14;
+    --dfr-crumb-hover: #804412;
+    /* ---- DISABLED BUTTONS ---- */
+    --dfr-btn-off-bg:   #eeeae1;
+    --dfr-btn-off-line: #d8d3c6;
+    /* ---- FILLED GROUNDS ---- */
+    --dfr-ok-bg:               #cfe6cf;
+    --dfr-ok-bg-hover:         #bcdcbc;
+    --dfr-amber-fill-hover:    #a06416;
+    --dfr-violet-fill:         #6a45a8;
+    --dfr-violet-fill-hover:   #5b3a94;
+    --dfr-violet-bg-hover:     #e5dcf5;
+    --dfr-logo-bg:             #cfdde3;
+    /* ---- CODE ---- */
+    --dfr-code-ink:  #5d490a;
+    /* ---- OK / PRIMARY CHIP INK ---- */
+    --dfr-ok-ink:       #14401f;
+    --dfr-ok-ink-hover: #0d2e15;
+    --dfr-ok-line:      #9dc79d;
+    /* ---- STATUS PILLS - ground and ink swap, hue held, exactly as the flow colours above do.
+       Every value here is one this palette ALREADY uses in light mode - error, amber, mint and the
+       shut-button neutral - so a pill cannot drift away from the rest of the light theme:
+         err    = --dfr-error-bg / --dfr-error-ink      warn   = --dfr-amber-bg  / --dfr-amber-deep
+         review = --dfr-amber-bg-deep / --dfr-amber-mid ok     = --dfr-mint-bg   / --dfr-mint-bright
+         mute   = --dfr-btn-off-bg / --dfr-ink-muted
+       Before this the pills were baked dark in BOTH themes - dark red and deep green blocks on the
+       off-white ground. That was true of the inline styles they replaced too; it is fixed here
+       rather than carried over. ---- */
+    --dfr-pill-err-bg:    #fbe6e6;
+    --dfr-pill-err-ink:   #8f1f22;
+    --dfr-pill-warn-bg:   #fdf3e4;
+    --dfr-pill-warn-ink:  #96601a;
+    --dfr-pill-review-bg: #f7e9d5;
+    --dfr-pill-review-ink:#8a6220;
+    --dfr-pill-ok-bg:     #e8f7f0;
+    --dfr-pill-ok-ink:    #17694a;
+    --dfr-pill-mute-bg:   #eeeae1;
+    --dfr-pill-mute-ink:  #7b766b;
+    /* Separator: the light theme's shut-button ink, which is this palette's existing "present but
+       not content" neutral. #5f5e5a would be near-black text weight on the off-white ground. */
+    --dfr-sep-ink: #9a958b;
+}
+
+/* ---------------------------- GLYPHS IN LIGHT MODE ----------------------------
+   The button glyphs are separate .svg FILES loaded through <img>, so page CSS and currentColor
+   never reach inside them - 26 of the 27 in AppHtml/Svg are baked monochrome light
+   (stroke="#d8d8d8", which is --dfr-btn-ink's DARK value). They were colour-matched to the button
+   text, but the text flips with the theme and a baked asset cannot (Nils 2026-08-13: "the glyphs
+   seem missing from all the buttons on the Libraries dialog" - light grey on a light button).
+
+   brightness(0.28) maps #d8d8d8 to #3c3c3c, which IS --dfr-btn-ink's light value, so a glyph lands
+   on exactly the colour of the text beside it. A filter beats shipping 26 light variants: no new
+   assets, no runtime src switching, and it cannot drift from the token.
+
+   Compile.svg is the one multi-colour glyph - an amber disc with a white triangle INSIDE it. The
+   white never touches the page, so it reads correctly in both themes and must NOT be filtered;
+   darkening it would mangle the amber for no gain.
+   ------------------------------------------------------------------------------ */
+body.df-Light img[src^="Svg/"] { filter: brightness(0.28); }
+body.df-Light img[src$="Compile.svg"] { filter: none; }

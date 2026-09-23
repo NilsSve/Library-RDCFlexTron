@@ -1,0 +1,39 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebForm
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-06-17
+//
+// Description : FlexTron (FT) subclass of cWebForm: theme-aware behaviour for the FT build.
+//               FT twin files are the privacy boundary - never merge them.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebForm.pkg
+
+// Inherited from cWebForm; stated so the Designer models this class without the pooled package.
+{ DesignerJSClass=df.WebForm }
+Class cFTWebForm is a cWebForm
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set peLabelAlign to alignRight
+        Set pbServerOnChange to True
+        // The app's text size, not the framework's larger default - see FtCompact in application.css.
+        Set psCSSClass to "FtCompact"
+        // 11 of the 12 forms sat in column 0; the one that does not sets 4 and still does.
+        Set piColumnIndex to 0
+    End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+    Procedure Request_Clear
+    End_Procedure
+    
+End_Class

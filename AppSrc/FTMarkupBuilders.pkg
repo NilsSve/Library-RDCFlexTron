@@ -1,0 +1,590 @@
+//****************************************************************************
+// $Module type: Package
+// $Module name: FTMarkupBuilders
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-22
+//
+// Description : Global HTML markup helpers for the FlexTron surface: escaping, chips and the
+//               shared fragments the FT views compose their pages from.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+
+/*
+    Package:    FTMarkupBuilders.pkg
+    Purpose:    The shared builders for FlexTron markup - one place that decides what a clickable
+                element looks like, instead of every dialog writing the span or div out by hand.
+
+    WHY GLOBAL FUNCTIONS.
+    They were object functions on cFTTileMarkup first, reached as ChipHtml(ghoTileMarkup, ..). That
+    works from the two boards, which load after that package, and fails at COMPILE in the ten dialogs
+    that load before it - 74 errors, "Function Not Found in Expression BARBUTTONHTML". Chasing the
+    include order would have fixed the symptom; the cause is that these are pure string builders with
+    no state to belong to. As globals they need no handle, they are available from the first Use in
+    the program, and - the point that matters here - a wrong name is a BUILD error rather than the
+    runtime "Invalid message" that an object function gives (see the error-98 crash of 2026-08-21).
+
+    THE GATE MODEL, which is the same everywhere:
+    enabled emits data-ServerOnClick; disabled emits NONE, so a dead control resolves to nothing
+    rather than reaching a handler that has to ask whether it should have run.
+
+    Only the TAG and the disabled-class convention ever differed between the callers - the boards and
+    the findings list use <span> with an "off" modifier, the dialog bars use <div> with "dis" - so
+    each wrapper passes its own and neither convention had to move.
+*/
+
+/* Global Function: FTHtmlEscape
+
+ & < and " as entities - the escape every builder below applies to text it puts into markup. The
+ same three replacements as rfHtmlEscape in cEncodingHelpers.pkg, kept here since 2026-09-23 so the
+ builders need no DFRefactor package; a second Global function of the same NAME would be error 4390.
+ > and ' are left as they are, exactly as before, so the markup is byte-identical.
+*/
+Function FTHtmlEscape Global String sText Returns String
+    String s
+    Move (Replaces("&", sText, "&amp;")) to s
+    Move (Replaces("<", s, "&lt;")) to s
+    Move (Replaces('"', s, "&quot;")) to s
+    Function_Return s
+End_Function
+
+/* Global Function: CssLink
+
+ The <link> for one stylesheet in AppHtml/CssStyle. A function rather than a Define per sheet: there
+ are a dozen page-specific sheets now, and a dozen more CS_*CssLink constants would say nothing that
+ the file name does not.
+
+ ORDER IS THE CONTRACT. Emit it AFTER CS_PaletteCssLink so a page rule still wins a tie against
+ palette/buttons/bars, exactly as the inline <style> block it replaced did, and anything the caller
+ adds in its own <style> is later still and beats both.
+
+     Move (CS_PaletteCssLink + CssLink("testcompile") + '<div ..>') to sHtml
+*/
+Function CssLink Global String sName Returns String
+    Function_Return ('<link rel="stylesheet" href="CssStyle/' + sName + '.css">')
+End_Function
+
+/* Global Function: ElemHtml
+
+ The primitive. Attribute order is fixed here: class, data-ServerOnClick, data-OnClickParam, title -
+ which is the order every hand-written site already used, so converting them was provably a no-op.
+ A blank sParam or sTip omits the attribute entirely rather than emitting an empty one.
+*/
+Function ElemHtml Global String sTag String sCls String sClsOff String sId String sParam ;
+                  String sLabel String sTip Boolean bEnabled Returns String
+    String sOut
+
+    If (bEnabled = False) Begin
+        Move ('<' + sTag + ' class="' + sClsOff + '"') to sOut
+        If (Trim(sTip) <> "") ;
+            Move (sOut + ' title="' + sTip + '"') to sOut
+        Function_Return (sOut + '>' + sLabel + '</' + sTag + '>')
+    End
+
+    Move ('<' + sTag + ' class="' + sCls + '" data-ServerOnClick="' + sId + '"') to sOut
+    If (Trim(sParam) <> "") ;
+        Move (sOut + ' data-OnClickParam="' + sParam + '"') to sOut
+    If (Trim(sTip) <> "") ;
+        Move (sOut + ' title="' + sTip + '"') to sOut
+    Function_Return (sOut + '>' + sLabel + '</' + sTag + '>')
+End_Function
+
+/* Global Function: ClickableHtml
+
+ An element that is ALWAYS clickable - a card action, a crumb step, a pill, a row that opens
+ something. No gate: these carry data-ServerOnClick unconditionally, so there is no disabled class to
+ name and passing one would invent a state the caller does not have.
+
+ The class may be an expression rather than a literal - several sites build it from a row's kind -
+ which is why it is a plain String here and not a fixed set.
+*/
+Function ClickableHtml Global String sTag String sCls String sId String sParam String sLabel ;
+                       String sTip Returns String
+    Function_Return (ElemHtml(sTag, sCls, sCls, sId, sParam, sLabel, sTip, True))
+End_Function
+
+/* Global Function: OffElemHtml
+
+ The THIRD disabled convention, and the one the wrappers above did not cover. ChipHtml adds " off"
+ to the class and ButtonHtml adds " dis"; this one SWAPS the class for a differently named twin -
+ .mtbtn becomes .mtbtn-off, .tcbtn becomes .tcbtn-off - so the pairing lives in the class name
+ rather than in a modifier.
+
+ Pass the ENABLED name. The "-off" is appended here, which is the whole point: eleven sites used to
+ write the shut name out by hand, and a shut twin whose name nobody could grep for is how the five
+ of them drifted out of shape in the first place (see buttons.css).
+
+ No sId and no sParam - a shut element carries neither, and offering them would invent a state the
+ caller does not have.
+*/
+Function OffElemHtml Global String sTag String sCls String sLabel String sTip Returns String
+    Function_Return (ElemHtml(sTag, sCls, (sCls + "-off"), "", "", sLabel, sTip, False))
+End_Function
+
+/* Global Function: ChipHtml
+
+ A <span> chip - the boards, the findings list, the package cards. Disabled class is "<cls> off".
+*/
+Function ChipHtml Global String sCls String sClsOff String sId String sParam String sLabel ;
+                  String sTip Boolean bEnabled Returns String
+    Function_Return (ElemHtml("span", sCls, sClsOff, sId, sParam, sLabel, sTip, bEnabled))
+End_Function
+
+/* Global Function: BarButtonHtml
+
+ A <div> button in a dialog bar - .rpbtn in the report bars, .sfbtn in the select bars, and the
+ per-dialog classes (.tcbtn, .csbtn, .ml-btn ..) that buttons.css already styles as one family.
+ Disabled class is "<cls> dis", which is the convention those bars use.
+
+ The CSS for all of it has lived in buttons.css since the button sweep, so this is the markup half of
+ a consolidation that was already half done.
+*/
+/* ============================================================================================
+   THE ELEMENT BUILDERS
+
+   670 source lines in this app build HTML by hand, and div + span are 80% of what they build.
+   These four cover that surface. The clickable family below (ElemHtml / ChipHtml / ButtonHtml)
+   still owns anything carrying a data-ServerOnClick; these are for the markup around it.
+
+   TWO FLAVOURS, AND THE DIFFERENCE MATTERS. TagHtml takes inner MARKUP and passes it through;
+   TagText takes plain TEXT and escapes it. Choosing the wrong one either double-escapes a
+   nested element or lets a path with an & break the page - which is exactly the decision every
+   call site was making by hand, sometimes by forgetting. Escaping is FTHtmlEscape
+   (top of this package), the same three replacements as cEncodingHelpers' rfHtmlEscape.
+
+   NO CLOSING-TAG BUILDER, on purpose. A literal '</div>' is shorter and clearer than any
+   function that could return it, and it cannot drift. 100 of the 457 div/span lines are bare
+   closes; they stay as they are.
+
+   A BLANK sCls emits no class attribute, so these serve unclassed elements too.
+   ============================================================================================ */
+Function OpenHtml Global String sTag String sCls Returns String
+    If (sCls = "") ;
+        Function_Return ('<' + sTag + '>')
+    Function_Return ('<' + sTag + ' class="' + sCls + '">')
+End_Function
+
+/* THE TWO THAT CALL SITES ACTUALLY USE, and they exist to READ as a pair with the closing
+   constants (Nils 2026-08-25):
+
+       Move (sHtml + (OpenHtml("div", "st")) + ... + CS_DivEnd) to sHtml     <- what it was
+       Move (sHtml + (DivOpen("st"))         + ... + CS_DivEnd) to sHtml     <- what it is
+
+   The old form put the tag in a STRING PARAMETER at one end of the pair and baked it into the
+   NAME at the other, so the two halves did not look like halves - you had to notice that "div"
+   and CS_DivEnd referred to the same thing. Now the word Div appears in both, the verbs pair,
+   and the tag name is never typed at a call site at all.
+
+   Every OpenHtml call in the app was one of these two. OpenHtml stays as the plumbing they are
+   built from, and for any tag that ever needs it. */
+/* THE SAME, CARRYING A TOOLTIP. Without these a call site builds the attribute itself:
+
+       Move (' title="' + CS_DashTidyDoneTip + '"') to sReadyTip
+       Move (sHtml + '<div class="st done rdy"' + sReadyTip + '>' + ...) to sHtml
+
+   - which is HTML in two places at once, and leaves the opening tag SPLIT across an expression
+   so no converter can see it whole. With these the variable holds the TEXT and the tag stays in
+   one piece (Nils 2026-08-25: "why the '<div class...'?").
+
+   The tip is escaped. A title attribute is the likeliest place for a stray quote to close the
+   attribute early and swallow the rest of the tag, and the value is often composed at runtime. */
+/* A CLICKABLE OPENING, for a container whose content is built up afterwards. ClickableHtml builds
+   a WHOLE element - open, label, close - which suits a button; these suit a card or a row that is
+   opened here and closed many lines later.
+
+   The attribute order and the omit-when-blank rules are ElemHtml's exactly, so a hand-written tag
+   converts to one of these without the bytes moving. Like ElemHtml, they do NOT escape the tip:
+   several callers pass a value they have already escaped themselves. */
+Function DivOpenClick Global String sCls String sId String sParam String sTip Returns String
+    String sOut
+    Move ('<div class="' + sCls + '" data-ServerOnClick="' + sId + '"') to sOut
+    If (Trim(sParam) <> "") ;
+        Move (sOut + ' data-OnClickParam="' + sParam + '"') to sOut
+    If (Trim(sTip) <> "") ;
+        Move (sOut + ' title="' + sTip + '"') to sOut
+    Function_Return (sOut + '>')
+End_Function
+
+Function SpanOpenClick Global String sCls String sId String sParam String sTip Returns String
+    String sOut
+    Move ('<span class="' + sCls + '" data-ServerOnClick="' + sId + '"') to sOut
+    If (Trim(sParam) <> "") ;
+        Move (sOut + ' data-OnClickParam="' + sParam + '"') to sOut
+    If (Trim(sTip) <> "") ;
+        Move (sOut + ' title="' + sTip + '"') to sOut
+    Function_Return (sOut + '>')
+End_Function
+
+/* A blank class DROPS the attribute, exactly as OpenHtml does - a tag carrying nothing but a
+   tooltip is a real shape (nine of them in the Libraries dialog), and emitting class="" for it
+   would change the bytes. */
+Function DivOpenTip Global String sCls String sTip Returns String
+    If (sCls = "") ;
+        Function_Return ('<div title="' + (FTHtmlEscape(sTip)) + '">')
+    Function_Return ('<div class="' + sCls + '" title="' + (FTHtmlEscape(sTip)) + '">')
+End_Function
+
+Function SpanOpenTip Global String sCls String sTip Returns String
+    If (sCls = "") ;
+        Function_Return ('<span title="' + (FTHtmlEscape(sTip)) + '">')
+    Function_Return ('<span class="' + sCls + '" title="' + (FTHtmlEscape(sTip)) + '">')
+End_Function
+
+/* THE SAME PAIR, TAKING THE TIP AS MARKUP. Named -Html for the reason TagHtml is: in this file,
+   Html means "already the thing" and Text means "will be escaped for you". Choosing between them
+   is choosing who owns the escaping.
+
+   USE THE ESCAPING ONES. DivOpenTip / SpanOpenTip are the default and always will be: a tooltip is
+   the likeliest place for a stray quote to close the attribute early and swallow the rest of the
+   tag, and most tips are composed at runtime from names, paths and counts.
+
+   These two exist for the tips that are ALREADY correct HTML and would be spoilt by escaping:
+
+     * a tip carrying a CHARACTER ENTITY. "&#10;" is how a title attribute gets a line break and
+       "&rsquo;" is how it gets an apostrophe that will not close anything. Escape either and the
+       & becomes &amp; and the reader sees the entity spelled out instead of the character.
+     * a tip the caller has ALREADY escaped - HtmlEscaped / ScEscaped / Esc at the call site.
+       Escaping twice turns & into &amp;amp;.
+
+   If you are reaching for these for any other reason, you want the escaping pair. */
+Function DivOpenTipHtml Global String sCls String sTipHtml Returns String
+    If (sCls = "") ;
+        Function_Return ('<div title="' + sTipHtml + '">')
+    Function_Return ('<div class="' + sCls + '" title="' + sTipHtml + '">')
+End_Function
+
+Function SpanOpenTipHtml Global String sCls String sTipHtml Returns String
+    If (sCls = "") ;
+        Function_Return ('<span title="' + sTipHtml + '">')
+    Function_Return ('<span class="' + sCls + '" title="' + sTipHtml + '">')
+End_Function
+
+/* AN OPENING TAG THAT KEEPS AN INLINE STYLE, and an <img> the same way.
+
+   Nearly every style belongs in a .css file - that is what the CssStyle folder is for, and a class
+   follows the theme where a hardcoded colour cannot. These two exist for the handful of places
+   where the style has to apply at FIRST PAINT, before any stylesheet has been fetched:
+
+     * a box whose child sizes itself against it. The Libraries badge is 32x32 from libraries.css,
+       and for the frame before that sheet applies it is an auto-height div - so an <img> asking
+       for height:100% has nothing to resolve against and paints at its INTRINSIC size, which for
+       a multi-resolution .ico is up to 256px (Nils 2026-08-24, the flashing "VDF").
+     * a value computed per element - a bar's height, a column's width. No class can carry it.
+
+   If neither applies, use DivOpen and put the rule in the sheet. Passing a style here is a claim
+   that a stylesheet arriving one frame late would be visibly wrong. */
+Function DivOpenStyle Global String sCls String sStyle Returns String
+    If (sCls = "") ;
+        Function_Return ('<div style="' + sStyle + '">')
+    Function_Return ('<div class="' + sCls + '" style="' + sStyle + '">')
+End_Function
+
+Function SpanOpenStyle Global String sCls String sStyle Returns String
+    If (sCls = "") ;
+        Function_Return ('<span style="' + sStyle + '">')
+    Function_Return ('<span class="' + sCls + '" style="' + sStyle + '">')
+End_Function
+
+/* An image. sCls, sStyle and sOnError are all optional and all dropped when blank, so the plain
+   form is ImgHtml(sSrc, "", "", ""). alt="" is always emitted: these are decorative, and an <img>
+   with no alt at all is read aloud by a screen reader as its file name.
+
+   sOnError takes the handler BODY, not the attribute - the quoting is done here, which is the
+   whole point: a handler is JavaScript inside an HTML attribute inside a DataFlex literal, and
+   that is three levels of quoting for a call site to get right on its own. */
+Function ImgHtml Global String sSrc String sCls String sStyle String sOnError Returns String
+    String sOut
+
+    Move '<img' to sOut
+    If (sCls <> "") ;
+        Move (sOut + ' class="' + sCls + '"') to sOut
+    Move (sOut + ' src="' + sSrc + '" alt=""') to sOut
+    If (sStyle <> "") ;
+        Move (sOut + ' style="' + sStyle + '"') to sOut
+    If (sOnError <> "") ;
+        Move (sOut + ' onerror="' + sOnError + '"') to sOut
+    Function_Return (sOut + '>')
+End_Function
+
+Function DivOpen Global String sCls Returns String
+    Function_Return (OpenHtml("div", sCls))
+End_Function
+
+Function SpanOpen Global String sCls Returns String
+    Function_Return (OpenHtml("span", sCls))
+End_Function
+
+Function TagHtml Global String sTag String sCls String sInner Returns String
+    Function_Return ((OpenHtml(sTag, sCls)) + sInner + '</' + sTag + '>')
+End_Function
+
+Function TagText Global String sTag String sCls String sText Returns String
+    Function_Return (TagHtml(sTag, sCls, (FTHtmlEscape(sText))))
+End_Function
+
+/* The same, carrying a tooltip. Both the tip and the text are escaped - a title attribute is
+   the likeliest place for a quote to close the attribute early and swallow the rest of the tag. */
+Function TagTipText Global String sTag String sCls String sTip String sText Returns String
+    Function_Return ('<' + sTag + ' class="' + sCls + '" title="' + (FTHtmlEscape(sTip)) ;
+        + '">' + (FTHtmlEscape(sText)) + '</' + sTag + '>')
+End_Function
+
+/* ============================================================================================
+   PROSE - the vocabulary a help panel is written in.
+
+   These exist so a dialog can be written in DataFlex rather than in HTML. A developer who has
+   never written a tag can read HelpHeading / HelpParagraph / CodeText and know exactly what the
+   panel will look like; the tag names and class names stay in here, which is where someone who
+   does know HTML would go looking anyway.
+
+   CodeText EARNS ITS PLACE ON ESCAPING ALONE. The Add Package panel used to carry
+   '&lt;publisher&gt;/&lt;package&gt;#&lt;version&gt;' in the source - correct, and unreadable unless you
+   know HTML entities. It is now CodeText("<publisher>/<package>#<version>"), which produces the
+   same bytes. Note it escapes > as well as < and &, which FTHtmlEscape does not: a bare > is legal
+   in text, but code samples are exactly where a reader expects to see the angle brackets they
+   typed come back unchanged.
+   ============================================================================================ */
+Function HelpHeading Global String sText Returns String
+    Function_Return (TagText("h4", "", sText))
+End_Function
+
+// Takes MARKUP, because a paragraph is where BoldText and CodeText get composed into a sentence.
+// A paragraph carrying a class; HelpParagraph is this with none. Both take MARKUP.
+// Defined FIRST because HelpParagraph calls it - a global must exist before its caller compiles.
+Function ParaHtml Global String sCls String sInner Returns String
+    Function_Return (TagHtml("p", sCls, sInner))
+End_Function
+
+Function HelpParagraph Global String sInner Returns String
+    Function_Return (ParaHtml("", sInner))
+End_Function
+
+Function BoldText Global String sText Returns String
+    Function_Return (TagText("b", "", sText))
+End_Function
+
+/* Bold around MARKUP, the pair to BoldText exactly as HelpParagraph is the pair to it: Text is
+   escaped for you, Html is already the thing.
+
+   Most bold in this app wraps a count and a few words, and BoldText is right for those. This one
+   is for a <b> whose content is BUILT - a literal, an interpolated value, another element - where
+   escaping would either change bytes that are already correct or reach a runtime value whose
+   escaping is the caller's business, not the builder's. */
+/* AN EMPTY <i>. In this app the <i> tag is never italic text - it is a decorative SHAPE: a dot in
+   a strip, a bar, the coloured part of a progress track. Every one of them is styled by a
+   descendant rule (.sc-vid-dots i, .sc-vid-track i) and carries no content, so the whole element
+   is its class or nothing at all.
+
+   NOT called BarHtml: four dialogs already have their own Function BarHtml for their button bar,
+   and a global of that name collides with every one of them - error 4390, the duplicate-global
+   this very program refactors. */
+Function ShapeHtml Global String sCls Returns String
+    Function_Return (TagHtml("i", sCls, ""))
+End_Function
+Function BoldHtml Global String sInner Returns String
+    Function_Return (TagHtml("b", "", sInner))
+End_Function
+
+/* ============================================================================================
+   TABLES. Six names for the five tags a table is made of, so a row of data reads as a row of
+   data instead of as punctuation. All of them take MARKUP - a cell holds whatever the caller
+   built, commonly another builder - and none escapes; a cell whose text needs escaping should
+   arrive escaped, the same rule the rest of the -Html family follows.
+
+   The two Tip forms exist because a header cell explaining itself is the ordinary case, not a
+   special one: five of the nine columns in the progress history carry a title.
+   ============================================================================================ */
+Function TableHtml Global String sCls String sInner Returns String
+    Function_Return (TagHtml("table", sCls, sInner))
+End_Function
+
+Function TheadHtml Global String sInner Returns String
+    Function_Return (TagHtml("thead", "", sInner))
+End_Function
+
+Function TbodyHtml Global String sInner Returns String
+    Function_Return (TagHtml("tbody", "", sInner))
+End_Function
+
+Function RowHtml Global String sCls String sInner Returns String
+    Function_Return (TagHtml("tr", sCls, sInner))
+End_Function
+
+Function CellHtml Global String sCls String sInner Returns String
+    Function_Return (TagHtml("td", sCls, sInner))
+End_Function
+
+Function HeadCellHtml Global String sCls String sInner Returns String
+    Function_Return (TagHtml("th", sCls, sInner))
+End_Function
+
+/* An element with a class, a tooltip and content, none of it escaped - TagTipText's -Html twin.
+   A blank class drops the attribute, as everywhere else here. */
+Function TagTipHtml Global String sTag String sCls String sTip String sInner Returns String
+    String sOut
+
+    Move ('<' + sTag) to sOut
+    If (sCls <> "") ;
+        Move (sOut + ' class="' + sCls + '"') to sOut
+    If (sTip <> "") ;
+        Move (sOut + ' title="' + sTip + '"') to sOut
+    Function_Return (sOut + '>' + sInner + '</' + sTag + '>')
+End_Function
+
+// The two cell forms carrying a tooltip. A header cell explaining itself is the ordinary case:
+// five of the nine columns in the progress history carry one.
+Function CellTipHtml Global String sCls String sTip String sInner Returns String
+    Function_Return (TagTipHtml("td", sCls, sTip, sInner))
+End_Function
+
+Function HeadCellTipHtml Global String sCls String sTip String sInner Returns String
+    Function_Return (TagTipHtml("th", sCls, sTip, sInner))
+End_Function
+
+Function CodeText Global String sText Returns String
+    String s
+    Move (Replaces("&", sText, "&amp;")) to s
+    Move (Replaces("<", s, "&lt;")) to s
+    Move (Replaces(">", s, "&gt;")) to s
+    Function_Return (TagHtml("code", "", s))
+End_Function
+
+// A plain bulleted list. Items are markup, so an item may itself carry CodeText or a link.
+Function BulletList Global String sItems Returns String
+    Function_Return (TagHtml("ul", "", sItems))
+End_Function
+
+Function BulletItem Global String sInner Returns String
+    Function_Return (TagHtml("li", "", sInner))
+End_Function
+
+/* Global Function: SepHtml
+
+ The upright bar between two readings in a status strip. Four sites in three files spelled the
+ span out; the glyph and its class live here now.
+*/
+Function SepHtml Global Returns String
+    Function_Return ('<span class="sep">|</span>')
+End_Function
+
+
+/* ============================================================================================
+   THE TILE vocabulary. A dashboard tile is a glyph, a heading and a line of explanation; the
+   step strip above it is a numbered or ticked marker per stage. Both boards draw these from
+   cFTTileMarkup, so the names are worth more here than in most places - the same call renders
+   on two different pages.
+
+   Content passes through unescaped, as with the findings vocabulary: TileIcon is handed the
+   markup DashIcon returns, and the headings are literal English written right at the call.
+   ============================================================================================ */
+Function TileIcon Global String sGlyph Returns String
+    Function_Return (TagHtml("div", "dash-ico", sGlyph))
+End_Function
+
+Function TileHeading Global String sInner Returns String
+    Function_Return (TagHtml("div", "dash-h", sInner))
+End_Function
+
+Function TileParagraph Global String sInner Returns String
+    Function_Return (TagHtml("div", "dash-p", sInner))
+End_Function
+
+// The step strip's marker: a number while the stage is ahead of you, a tick once it is done.
+Function StepMarker Global String sInner Returns String
+    Function_Return (TagHtml("span", "d", sInner))
+End_Function
+
+/* ============================================================================================
+   THE FINDINGS ROW vocabulary. A row on the dashboard findings list is a dot, a badge, a file
+   or name, a message and a hint; these name those parts so the board can be read without
+   knowing which span carries which class.
+
+   They take their content AS GIVEN and do not escape it. Every caller composes the inner value
+   itself - a function name, a count, a path that one site already puts through HtmlEscaped -
+   and escaping here would double-escape that site while silently changing the others. The
+   escaping decision stays where the value comes from, which is the only place that knows.
+   ============================================================================================ */
+Function FindingBadge Global String sInner Returns String
+    Function_Return (TagHtml("span", "bdg bdg-c", sInner))
+End_Function
+
+Function FindingFile Global String sInner Returns String
+    Function_Return (TagHtml("span", "ffile", sInner))
+End_Function
+
+Function FindingMsg Global String sInner Returns String
+    Function_Return (TagHtml("span", "fmsg", sInner))
+End_Function
+
+Function FindingHint Global String sInner Returns String
+    Function_Return (TagHtml("span", "fhint", sInner))
+End_Function
+
+/* Global Function: FindingRepOpen
+
+ Opens a REPORT row on the findings list: the row div, its severity dot, and the opening tag of
+ the badge beside it. Nine sites built this by hand, differing only in the dot class and in what
+ went inside the badge.
+
+ IT RETURNS AN OPEN TAG, deliberately. These call sites build their row by appending - the badge
+ text is a count, a message number or a word, and some rows carry an <span class="fmsg"> after it
+ and some do not. Folding the whole row would need a parameter per variant; folding the part that
+ never varies is what puts the row SHAPE in one place, which is the thing that was duplicated.
+ Close the badge span at the call site, as before.
+
+ sDot is the severity class: "e" error, "w" warning, "s" scan.
+*/
+Function FindingRepOpen Global String sDot Returns String
+    Function_Return ('<div class="fnd rep"><span class="fdot ' + sDot + '"></span><span class="bdg bdg-c">')
+End_Function
+
+/* Global Function: IconLabel
+
+ The FACE of a button - its 15px glyph and the words beside it. The builders below own the
+ ELEMENT (classes, id, click wiring, the disabled twin); this owns what goes inside it, which
+ every call site used to write out by hand.
+
+ It was spelled out at 72 sites across 16 files. That is 72 places to get the path convention
+ wrong, and 72 edits the day a standard button changes its glyph - "Close" alone appeared nine
+ times in eight files, "Select All" and "Invert" five times each in five.
+
+ sIcon is the file STEM, not a path: IconLabel("Close", "Close") gives
+ <img src="Svg/Close.svg">Close. buttons.css sizes any <img> inside a button of the family, so
+ nothing here states a size.
+
+ Faces built INTO a larger markup string are left alone - splitting a hand-built element to
+ reach its icon buys nothing.
+*/
+Function IconLabel Global String sIcon String sLabel Returns String
+    Function_Return ('<img src="Svg/' + sIcon + '.svg">' + sLabel)
+End_Function
+
+/* Global Function: ButtonHtml
+
+ A button of the family buttons.css styles as one - .dfrbtn .rpbtn .sfbtn .csbtn .ml-btn .mph-btn
+ .psbtn .tcbtn .mtbtn .sabtn .cw-btn .apb .act .cfb .tcbtnc. The disabled class is "<cls> dis"
+ for every one of them; buttons.css lists exactly that set, which is what makes them a family
+ rather than fifteen lookalikes.
+
+ It also builds the ONE thing here that is not a button: the Add Package dialog's .excp "Copy
+ link", a text link styled in addpackage.css (2026-08-24). What this function actually provides
+ is the data-ServerOnClick wiring, and a link needs that as much as a button does.
+
+ sCls may carry modifiers - "tcbtn tc-scan", "mph-btn mph-reset" - and "dis" is appended after them,
+ which is the order the hand-written sites already used.
+
+ The TAG is a parameter because the family is split between <div> and <span> for no reason anyone
+ chose; passing it keeps every site rendering exactly what it rendered before.
+*/
+Function ButtonHtml Global String sTag String sCls String sId String sParam String sLabel ;
+                    String sTip Boolean bEnabled Returns String
+    Function_Return (ElemHtml(sTag, sCls, (sCls + " dis"), sId, sParam, sLabel, sTip, bEnabled))
+End_Function
+
+// The <div> half of the family - the dialog bars. Its 45 callers pre-date ButtonHtml.
+Function BarButtonHtml Global String sCls String sId String sParam String sLabel ;
+                       String sTip Boolean bEnabled Returns String
+    Function_Return (ButtonHtml("div", sCls, sId, sParam, sLabel, sTip, bEnabled))
+End_Function

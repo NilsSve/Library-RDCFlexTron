@@ -1,0 +1,44 @@
+//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebLabel
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-22
+//
+// Description : FlexTron (FT) subclass of cWebLabel: theme-aware behaviour for the FT build.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebLabel.pkg
+
+/*
+    Class:      cFTWebLabel
+    Purpose:    A cWebLabel wearing this app's palette and text size, so a dialog does not have to
+                dress one every time it places a caption.
+
+                Created 2026-08-22. There was exactly ONE raw cWebLabel in the program - the note at
+                the top of Target DataFlex Version - which is why this class did not exist while the
+                other four FT control classes did. Nils asked for it once the FtCompact class landed:
+                a per-control psCSSClass line is the kind of thing that gets copied to four dialogs
+                and forgotten in the fifth.
+
+                Carries no colours of its own. FtCompact styles the label, the field box and the
+                value together in application.css, so a label and the field under it read as one
+                control rather than two shades of near-white. The framework's psTextColor and
+                friends are INLINE styles that no stylesheet can override - see the FtCompact note
+                in application.css for why nothing here sets them.
+*/
+
+// Inherited from cWebLabel; stated so the Designer models this class without the pooled package.
+{ DesignerJSClass=df.WebLabel }
+Class cFTWebLabel is a cWebLabel
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        // The app's text size, not the framework's larger default - see FtCompact in application.css.
+        Set psCSSClass to "FtCompact"
+    End_Procedure
+
+End_Class

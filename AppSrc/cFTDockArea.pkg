@@ -1,0 +1,46 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTDockArea
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-21
+//
+// Description : The root class of a bottom-dock AREA file - CompilerOutputFT.dg, ModAnalyzerFT.dg,
+//               ManualChangesFT.dg - each a Container3d that OutputDockFT.dg #Include's INSIDE
+//               oOutputDock_dg, so the area object is constructed as a child of the dock.
+//
+//               At runtime this class adds nothing to Container3d. It exists for the Studio's
+//               Windows Designer, which needs two things the fragment shape denies it:
+//
+//               1. The Designer models a file only when one of its ROOT-level objects carries a
+//                  top-level designer class (Studio help, "How the Studio visually models
+//                  objects"). Container3d's own tag is cDTContainer3d, a child container, so an
+//                  area file opened on its own answered "No Objects to Model".
+//               2. The Designer does not expand #Include, so the areas are not seen through the
+//                  dock either: OutputDockFT.dg models as the tab strip alone (Nils 2026-09-21).
+//
+//               The DesignerClass meta-tag below is the whole fix: a comment to the compiler, an
+//               instruction to the Designer. cDTPanel is the plain top-level window - no MDI
+//               client (cDTView) and no modal semantics (cDTModalPanel) - so an area models as a
+//               window holding its grid and buttons, which is what it is inside the dock. If the
+//               Designer ever objects to a Container3d wearing a panel's tag, cDTView is the
+//               alternative; the tag is the only line to change.
+//
+//               Each area file Use's this package for itself (a once-only no-op when the dock has
+//               Used it first), and OutputDockFT.dg Use's it BEFORE the #Include lines - the one
+//               that matters: a Use inside the dock's object body would paste this class
+//               definition into the object.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+
+{ DesignerClass=cDTPanel }
+Class cFTDockArea is a Container3d
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+    End_Procedure
+
+End_Class

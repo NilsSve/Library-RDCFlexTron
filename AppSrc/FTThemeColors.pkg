@@ -1,0 +1,125 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTThemeColors
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-13
+//
+// Description : Runtime colours for the NATIVE side of the FlexTron surface.
+//
+//               The web surface follows the theme through palette.css (--dfr-* under body.df-Light), but the
+//               panels, hosts and margins around it are painted by DataFlex with clDarkWebBg / clDarkViewBg /
+//               clDarkThemeText - compile-time Defines, which cannot vary at runtime. So in light mode the web
+//               content went light and the native chrome stayed dark, which shows wherever a host does not fully
+//               cover its panel: the gaps around a control, and any strip below the last web control (Nils
+//               2026-08-13, the Add-a-package dialog: "the part with the Search for control and buttons, and
+//               under them - the background is dark").
+//
+//               These read ghiFTThemeMode ONLY - deliberately no ghoApplication. A Global function must be
+//               DEFINED above every caller, and ghoApplication is not declared until cRefactorApplication.pkg is
+//               Used, far below the point where this has to be available. ghiFTThemeMode and the cl* constants
+//               both come from FTConstants.h.pkg, which this package Uses itself (until 2026-09-23 they were in
+//               RefactorConstants.h.pkg), so it can sit near the top of a program and be visible to everything.
+//
+//               Unseeded (CI_FTThemeUnset, the value before any FlexTron host has constructed) falls back to the
+//               dark constants - the look the app has always had. The panels that call these do so in
+//               End_Construct_Object, which runs after their hosts, so by then the global is seeded.
+//
+//               CI_FTThemeSystem returns the DARK values: "follow Windows" is resolved client-side by the
+//               framework from prefers-color-scheme, and nothing native has read the OS preference. A user on
+//               Follow-Windows-with-a-light-desktop therefore gets light web content in dark native chrome; if
+//               that matters, the fix is to read AppsUseLightTheme from the registry here, not to guess.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use FTConstants.h.pkg           // ghiFTThemeMode, CI_FTTheme* and the clDark* colours
+Use cCJCommandBarSystem.pkg     // xtpThemeVisualStudio2022Light / 2017Dark - FTCJTheme
+Use cCJGridControl.pkg          // xtpGridThemeVisualStudio2012Light / Dark - FTCJGridTheme
+
+/* THE WEBVIEW2 COMPOSITOR BACKGROUND - the layer the colour probe could not reach
+   (2026-08-15). Three painters stack under every FT page: the wrapper CONTROL's background
+   (piBackColor -> ComBackColor - turned red under the probe, so that knob works), the
+   framework page's body (dark via application.css), and the WebView2 compositor's own
+   DefaultBackgroundColor - which the DataFlex wrapper does not expose, defaults to WHITE,
+   and is what paints the freshly exposed area during a live resize before the page
+   relayouts. That is the stripe that survived every dialog-side fix.
+
+   Microsoft's documented escape hatch is the process-wide environment variable
+   WEBVIEW2_DEFAULT_BACKGROUND_COLOR, read when a WebView2 ENVIRONMENT is created - so it
+   must be set before the first browser control binds. ApplyFTTheme calls this from every
+   host's construction, and construction precedes binding; the flag makes it once-only.
+   Values are 8-digit AARRGGBB hex, the twins of FTWebBg's two returns below.
+
+   PROBE 2 VERDICT (2026-08-15): setting this env var to RED changed nothing on Nils's machine
+   - the white was the framework PAGE BODY, fixed by the VirtualHtml override in cFTThemeHost_mixin.pkg.
+   Kept anyway: it is correct, free, and covers the compositor on machines where it does land. */
+Global_Variable Integer ghbWV2DefaultBgSet
+Move 0 to ghbWV2DefaultBgSet
+
+External_Function WV2_SetEnvironmentVariable "SetEnvironmentVariableW" Kernel32.dll ;
+    WString sName WString sValue Returns Integer
+
+Procedure ApplyWebView2DefaultBackground Global
+    Integer iVoid
+    If (ghbWV2DefaultBgSet <> 0) ;
+        Procedure_Return
+    Move 1 to ghbWV2DefaultBgSet
+    If (ghiFTThemeMode = CI_FTThemeLight) ;
+        Move (WV2_SetEnvironmentVariable("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "FFF7F5F0")) to iVoid
+    Else ;
+        Move (WV2_SetEnvironmentVariable("WEBVIEW2_DEFAULT_BACKGROUND_COLOR", "FF262624")) to iVoid
+End_Procedure
+
+// The web host backdrop - the twin of --dfr-bg-page.
+Function FTWebBg Global Returns Integer
+    If (ghiFTThemeMode = CI_FTThemeLight) ;
+        Function_Return (RGB(247, 245, 240))    // #F7F5F0
+    Function_Return clDarkWebBg
+End_Function
+
+// The ordinary native-view grey - the twin of --dfr-bg-card-hi.
+Function FTViewBg Global Returns Integer
+    If (ghiFTThemeMode = CI_FTThemeLight) ;
+        Function_Return (RGB(255, 255, 255))    // #FFFFFF
+    Function_Return clDarkViewBg
+End_Function
+
+// The flat theme ground - the twin of clDarkTheme.
+Function FTThemeBg Global Returns Integer
+    If (ghiFTThemeMode = CI_FTThemeLight) ;
+        Function_Return (RGB(247, 245, 240))    // #F7F5F0
+    Function_Return clDarkTheme
+End_Function
+
+// Text on any of the above - the twin of --dfr-ink.
+Function FTThemeInk Global Returns Integer
+    If (ghiFTThemeMode = CI_FTThemeLight) ;
+        Function_Return (RGB(42, 40, 37))       // #2A2825
+    Function_Return clDarkThemeText
+End_Function
+
+// The CodeJock chrome - command bars, dialog status bars, context menus. CodeJock themes itself
+// natively rather than through CSS, so it needs its own switch: hardcoding
+// xtpThemeVisualStudio2017Dark left every native panel and every themed group dark on a light page
+// (Nils 2026-08-13: "the program settings dialog is still dark" - that dialog is all native
+// CodeJock controls, so the palette never reached it).
+//
+// The xtp* constants come from cCJCommandBarSystem.pkg and cCJGridControl.pkg, Used at the top of
+// this package. Until 2026-09-23 it relied on every program having Used cRDCCJCommandBarSystem.pkg
+// above it, which another workspace would not know to do.
+//
+// CodeJock reads peVisualTheme when the control REALIZES, so a change needs a program restart -
+// the same restart the rest of the theme already asks for.
+Function FTCJTheme Global Returns Integer
+    If (ghiFTThemeMode = CI_FTThemeLight) ;
+        Function_Return xtpThemeVisualStudio2022Light
+    Function_Return xtpThemeVisualStudio2017Dark
+End_Function
+
+// The grid chrome, a separate CodeJock enumeration from the command-bar one above.
+Function FTCJGridTheme Global Returns Integer
+    If (ghiFTThemeMode = CI_FTThemeLight) ;
+        Function_Return xtpGridThemeVisualStudio2012Light
+    Function_Return xtpGridThemeVisualStudio2012Dark
+End_Function

@@ -1,0 +1,190 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTThemeHost_mixin
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-13 (as the include file FTThemeHost.inc; a Mixin package since 2026-09-21)
+//
+// Description : Theme members shared by cFTLocalWebControlHost and cFTDbLocalWebControlHost.
+//
+//               The two FT host classes need identical behaviour but sit on different framework bases
+//               (cLocalWebControlHost and cDbLocalWebControlHost, the latter reaching the same mixin via
+//               cBaseDbLocalWebControlHost), so neither can inherit from the other. This is the framework's
+//               own answer to that shape - a Mixin, imported with Import_Class_Protocol - and replaces an
+//               #Include inside the class bodies: the Studio's parser has to resolve a class before the
+//               Windows Designer will model an object of it, and a mixin is a construct it knows.
+//
+//               Not for Use on its own: each host Uses its framework base FIRST, and that is what declares
+//               the host members set here (peThemePreference, psTheme, pbInitWebApp) and the tp* values.
+//
+//               Each host's own End_Construct_Object forwards first (the base sends
+//               End_Construct_cWebHostAPI_mixin, which is what brings peThemePreference into existence)
+//               and then sends ApplyFTTheme.
+//
+// WHAT THIS IS FOR
+//               The FlexTron host carries the framework's theme switch: peThemePreference, from
+//               cWebHostAPI_mixin.pkg. Setting it makes the framework put df-Dark or df-Light on the host
+//               document's body, which is the document our cFTWebHtmlBox markup is mounted in - so one
+//               property re-themes both the DataFlex web controls and, through palette.css, our own tokens.
+//               peThemePreference is DF26-only; the build has been DF26-only since 2026-09-16, so the
+//               former #IF (!@ > 250) gate around it is gone.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use FTConstants.h.pkg           // CI_FTTheme*, ghiFTThemeMode, where the theme is saved
+Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
+
+Class cFTThemeHost_mixin is a Mixin
+
+    // Seed ghiFTThemeMode from the saved setting, once per run. Deliberately lazy rather than done at
+    // startup: OnStartup runs AFTER every object exists (see ApplyDarkStatusPanel at the foot of
+    // DFRefactorFT.src), so the view hosts would already have been constructed and themed by then.
+    // Whoever constructs first pays for one registry read; the other 32 hosts find the global set.
+    Procedure SeedFTThemeMode
+        Integer iMode
+        If (ghiFTThemeMode = CI_FTThemeUnset) Begin
+            Get ReadInteger of ghoApplication CS_FTThemeSection CS_FTTheme CI_FTThemeDark to iMode
+            // A value written by a future version - or a hand-edited registry - must not leave the
+            // global on a meaningless number, so anything unrecognised falls back to dark.
+            If (iMode < CI_FTThemeDark or iMode > CI_FTThemeSystem) Begin
+                Move CI_FTThemeDark to iMode
+            End
+            Move iMode to ghiFTThemeMode
+        End
+    End_Procedure
+
+    // Push ghiFTThemeMode onto this host. Called as the host is constructed, and again by a runtime
+    // theme switch - broadcast it to re-read the global rather than setting peThemePreference directly,
+    // so the mapping lives in exactly one place.
+    Procedure ApplyFTTheme
+        Integer eWanted
+        Send SeedFTThemeMode
+        Move tpDarkMode to eWanted
+        If (ghiFTThemeMode = CI_FTThemeLight) Begin
+            Move tpLightMode to eWanted
+        End
+        If (ghiFTThemeMode = CI_FTThemeSystem) Begin
+            Move tpSystemPreference to eWanted
+        End
+        Set peThemePreference to eWanted
+        /* THE WHITE FLASH AT RESIZE (Nils 2026-08-15: "an annoying section ... only visible as a
+           white horizontal line when resizing", seen on the Browse packages AND Libraries dialogs).
+
+           Not a section - the WebView2 CONTROL's own background, which defaults to white and shows
+           at the freshly exposed edge for the moment before the page repaints. cWebView2Browser
+           (the framework base under every local host) exposes it as piBackColor -> ComBackColor;
+           nothing ever set it, so every resize of every FT dialog flashed white on a dark theme.
+
+           Set here, in the one place every FT host passes through, with the same colour the native
+           side already uses - so a theme re-apply updates it too. Version-free: piBackColor exists
+           on DF25's cWebView2Browser as well (read there, 2026-08-15). */
+        Set piBackColor to (FTWebBg())
+        /* AND THE NATIVE SURROUND. Color is piBackColor's twin on the DataFlex side - the panel
+           margin around the browser control. 33 of the 42 FT hosts set it to exactly this and not
+           one set anything else, so it was never a per-object decision; the nine that said nothing
+           were simply left on the framework's pale default behind a dark page.
+
+           HERE rather than in either class's Construct_Object, for two reasons: this include is what
+           the two host classes SHARE (cFTDbLocalWebControlHost cannot extend cFTLocalWebControlHost -
+           see its header), and this procedure is what a runtime theme switch re-broadcasts, so the
+           surround follows a switch instead of being frozen at construction.
+
+           The cost, stated plainly: End_Construct_Object runs after the object body, so this now WINS
+           over a per-instance Color. Nothing in the app sets a different one - if something ever needs
+           to, it belongs after this, not before. */
+        Set Color to (FTWebBg())
+        // And the COMPOSITOR's background - the third painter, process-wide, once. See
+        // ApplyWebView2DefaultBackground in FTThemeColors.pkg for the whole story.
+        Send ApplyWebView2DefaultBackground
+    End_Procedure
+
+    /* THE PAGE BODY IS THE WHITE (2026-08-15, probe 2). With the wrapper control dark (probe 1
+       turned it red - piBackColor works) and the compositor painted RED by the env var, the resize
+       stripes and the first-activation flash stayed WHITE - so the white sits IN FRONT of the
+       compositor, and the only layer there is the framework page itself. Its VirtualHtml template
+       ships html,body{height:100%} with NO background: a UA-default white body that stays white
+       until the theme CSS arrives, with our dark boxes painted on top - white shows at first paint
+       and wherever the boxes have not re-covered during a live resize.
+
+       The override injects an INLINE background into the template, so it applies at the very first
+       paint, before any external CSS - and permanently, so a resize-exposed body region is dark
+       too. ghiFTThemeMode is seeded by ApplyFTTheme at construction; VirtualHtml runs at OnCreate,
+       which is later. The Replaces target is the template's own spelling, "html, body{" - if a
+       DataFlex update rewords the template the inject silently misses, so a future white flash
+       means: read the base VirtualHtml again. */
+    Function VirtualHtml Returns String
+        String sHtml sBg sTheme sLinks
+
+        Forward Get VirtualHtml to sHtml
+        /* THE STYLESHEETS GO IN THE HEAD (Nils 2026-09-19: on the first open of the Guided board for
+           a 2005-era workspace "the whole view area is shown with a black background and a lot of
+           white text", gone before it can be read). The framework's template links NO stylesheet;
+           its engine script inserts DfEngine/system.css, the theme's theme.css and
+           CssStyle/application.css at init - AFTER the mounting page, which already carries the first
+           tile's markup, has painted. With a findings list of thousands of rows that unstyled paint
+           (theme ink on the inline dark body, every band and row as bare text) lasts long enough to
+           see. Importing tiles.css from application.css did not touch it, because application.css is
+           itself one of the late three.
+
+           So the same three sheets, in the engine's own order, are linked here in the head: a head
+           <link> is render-blocking, so the first paint is styled. The engine looks for existing
+           links by href substring ("DfEngine/system.css", "CssThemes/" + "theme.css",
+           "CssStyle/application.css") and ADOPTS them instead of adding its own, so nothing loads
+           twice and its later theme switch still rewrites the theme link it found. */
+        Get psTheme to sTheme
+        If (Trim(sTheme) = "") ;
+            Move "Df_Material" to sTheme
+        Move ('<link rel="stylesheet" href="DfEngine/system.css">' ;
+            + '<link rel="stylesheet" href="CssThemes/' + sTheme + '/theme.css">' ;
+            + '<link rel="stylesheet" href="CssStyle/application.css">' ;
+            + C_NewLine + '<!-- DataFlex Engine -->') to sLinks
+        Move (Replaces("<!-- DataFlex Engine -->", sHtml, sLinks)) to sHtml
+        If (ghiFTThemeMode = CI_FTThemeLight) ;
+            Move "#F7F5F0" to sBg
+        Else ;
+            Move "#262624" to sBg
+        /* Probe 3 (green body, white band ABOVE it) placed the residual white exactly where
+           application.css already documents it: the theme paints two opaque #EFEFEF layers ON TOP
+           of #viewport - .WebApp.WebContainer and .WebCon_ContentWrp. application.css wins the
+           steady state because it loads AFTER the theme, but that is precisely too late for the
+           first-activation flash and the resize lag. So the same surfaces are painted here, inline
+           in the head with !important - dark from the first style computation, before any sheet
+           has loaded, and immune to the theme arriving later. */
+        Move (Replaces("html, body{", sHtml, "html, body{ background: " + sBg + " !important;")) to sHtml
+        Move (Replaces("</style>", sHtml, "#viewport, .WebApp.WebContainer, .WebCon_ContentWrp { background: " + sBg + " !important; } </style>")) to sHtml
+        Function_Return sHtml
+    End_Function
+
+    /*  A NAVIGATION MAKES THE PAGE UNREADY AGAIN, and the framework's own flag does not say so.
+
+        pbInitWebApp is the readiness truth every live push is gated on (cFTWebHtmlBox.UpdateHtml folds
+        the push into Set psHtml while it is True). But the framework starts it True, sets it False ONCE
+        in FinishWebObjectInitialize, and NEVER restores it. So it really means "has this host ever
+        initialised", not "is the page ready now".
+
+        That is the whole bug behind the message box's "Unhandled Program Error on the Client - Could
+        not find object 'oMbBody_hb'" (Nils, seen repeatedly 2026-08-21, on the SECOND and later boxes
+        of a session and reproducible through Uninstall, which is not our code). The framework's own
+        OnNavigationStarting CLEARS the page-scoped data - the client's object registry - on every
+        navigation, yet leaves pbInitWebApp False. The gate therefore lets a live ClientAction through to
+        a page whose objects no longer exist, and the framework paints its error banner where the body
+        should be. Intermittent, because it is a race with the navigation completing.
+
+        Setting it back to True here restores the flag's intended meaning: from the moment a navigation
+        starts until the page calls home again, pushes fold into Set psHtml - which is exactly the
+        carrier a mounting page is served, and exactly why the FIRST box of a session never fails.
+
+        SAFE WHEN NOTHING RENAVIGATES: this only fires when a navigation actually starts. A host whose
+        page stays alive never reaches here, keeps pbInitWebApp False, and keeps taking the live path -
+        so a box that is merely re-shown is not quietly served stale HTML.
+
+        Forwarded, not replaced: the base clears the client and server handler data here, and losing that
+        would leave stale web-property state behind. */
+    Procedure OnNavigationStarting UBigInt iNavigationId String sUrl Boolean bIsRedirected ;
+                                   Boolean bIsUserInitiated Boolean ByRef bCancelnavigation
+        Set pbInitWebApp to True
+        Forward Send OnNavigationStarting iNavigationId sUrl bIsRedirected bIsUserInitiated (&bCancelnavigation)
+    End_Procedure
+
+End_Class

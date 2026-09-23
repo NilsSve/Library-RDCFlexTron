@@ -1,0 +1,54 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTLocalWebControlHost
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-13
+//
+// Description : FT variant of the FlexTron web host: identical to cLocalWebControlHost except that it renders in
+//               the theme ghiFTThemeMode names. See cFTThemeHost_mixin.pkg for the whole story - this package is only the
+//               class wrapper around it.
+//
+//               The theme properties live on the HOST, not on the controls. None of the FT control subclasses we
+//               already own (cFTWebButton, cFTWebCheckbox, cFTWebCombo, cFTWebForm, cFTWebHtmlBox) can reach
+//               peThemePreference, because cWebHostAPI_mixin is mixed into cBaseLocalControlHost - which is why
+//               this class had to exist before the theme switch could have a home.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cLocalWebControlHost.pkg
+Use FTConstants.h.pkg           // CI_FTTheme* + ghiFTThemeMode
+Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
+Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc)
+
+/* Both tags are inherited from cLocalWebControlHost (Studio help: "the DesignerClass meta-tag is
+   inherited"), and are stated here so the Windows Designer's view of this class does not depend on
+   the pooled package having been parsed first. */
+{ DesignerClass=cDTWebControlHost }
+{ DesignerJSClass=df.WebApp }
+Class cFTLocalWebControlHost is a cLocalWebControlHost
+
+    /* ONE COLUMN unless the host says otherwise. 25 of the 33 hosts set piColumnCount to 1;
+       the other eight set 12, 14 or 20 and still do. Every instance stated it explicitly,
+       so moving the common value here changes nothing and removes 25 restatements.
+       
+       The same argument the white-flash fix makes below for piBackColor: set it in the one
+       place every FT host passes through.
+    */
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set piColumnCount to 1
+    End_Procedure
+
+    Import_Class_Protocol cFTThemeHost_mixin
+
+    Procedure End_Construct_Object
+        // Forward first: the base sends End_Construct_cWebHostAPI_mixin, which is what brings
+        // peThemePreference into existence on this object.
+        Forward Send End_Construct_Object
+        Send ApplyFTTheme
+    End_Procedure
+
+End_Class

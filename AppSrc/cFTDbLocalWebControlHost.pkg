@@ -1,0 +1,39 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTDbLocalWebControlHost
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-13
+//
+// Description : FT variant of the data-aware FlexTron web host - the cDbLocalWebControlHost counterpart of
+//               cFTLocalWebControlHost. Same theme behaviour, same mixin; see cFTThemeHost_mixin.pkg.
+//
+//               It cannot simply extend cFTLocalWebControlHost: the framework's own chain is
+//               cDbLocalWebControlHost -> cBaseDbLocalWebControlHost -> cLocalWebControlHost, so deriving from our
+//               FT class would drop everything the Db layer adds. Hence two classes sharing one include.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cDbLocalWebControlHost.pkg
+Use FTConstants.h.pkg           // CI_FTTheme* + ghiFTThemeMode
+Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
+Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc)
+
+/* Both tags are inherited from cLocalWebControlHost (Studio help: "the DesignerClass meta-tag is
+   inherited"), and are stated here so the Windows Designer's view of this class does not depend on
+   the pooled package having been parsed first. */
+{ DesignerClass=cDTWebControlHost }
+{ DesignerJSClass=df.WebApp }
+Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
+
+    Import_Class_Protocol cFTThemeHost_mixin
+
+    Procedure End_Construct_Object
+        // Forward first: the base sends End_Construct_cWebHostAPI_mixin, which is what brings
+        // peThemePreference into existence on this object.
+        Forward Send End_Construct_Object
+        Send ApplyFTTheme
+    End_Procedure
+
+End_Class

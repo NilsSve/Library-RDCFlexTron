@@ -1,0 +1,36 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebCombo
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-06-17
+//
+// Description : FlexTron (FT) subclass of cWebCombo: theme-aware behaviour for the FT build.
+//               FT twin files are the privacy boundary - never merge them.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebCombo.pkg
+
+// Inherited from cWebCombo; stated so the Designer models this class without the pooled package.
+{ DesignerJSClass=df.WebCombo }
+Class cFTWebCombo is a cWebCombo
+    
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set pbServerOnChange to True
+        Set peLabelAlign to alignRight
+            // The app's text size, not the framework's larger default - see FtCompact in application.css.
+        Set psCSSClass to "FtCompact"
+End_Procedure
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+
+    End_Procedure
+
+    Procedure Request_Clear
+    End_Procedure
+End_Class

@@ -1,0 +1,42 @@
+# Files to be ignored by git in a DataFlex 26 workspace
+
+# Compiler output and IDE state
+**/appsrc/**/*.prn
+**/appsrc/**/*.dep
+**/appsrc/**/*.dbg
+**/appsrc/**/*.err
+**/appsrc/**/*.exe
+**/appsrc/**/*.exe.manifest
+**/appsrc/**/*.fld
+**/appsrc/**/*.pbg
+**/appsrc/**/*.pdp
+**/appsrc/**/*.pkd
+**/appsrc/**/*.prp
+**/appsrc/config/classlist.xml
+**/programs/*.dbg
+**/programs/*.exe
+**/programs/*.exe.manifest
+**/programs/*.log
+**/idesrc/*.dsk
+**/idesrc/*.loc
+**/idesrc/*.mtd
+**/ddsrc/**/*.def
+LoginEncryptionKey.inc
+
+# Data: tables are never shared; the filelist is
+**/data/**/*.dat
+**/data/**/*.k*
+**/data/**/*.hdr
+**/data/**/*.vld
+**/data/**/*.tag
+**/data/**/*.log
+!Data/Filelist.cfg
+
+# DataFlex 26 package handler: installed checkouts, the resolved lock, and the files packages
+# install into AppHtml
+DfPkg/
+*.sws.lock
+AppHtml/WebUI/
+AppHtml/WebUI_Designer/
+AppHtml/CssThemes/
+AppHtml/RDCFlexTron/

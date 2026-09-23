@@ -1,0 +1,25 @@
+/* pagefit.css - the page box for a fragment that must fill its host exactly and never scroll.
+
+   html,body{margin:0;padding:0;height:100%;overflow:hidden;background:<page>}
+
+   That single rule was written out BYTE-IDENTICALLY 25 times, in 14 files. It is the most-copied
+   thing in the whole AppHtml layer.
+
+   OPT-IN, and deliberately not folded into CS_PaletteCssLink. Sixteen other fragments declare a
+   DIFFERENT html,body - some want the page to scroll, some set their own font size, the message box
+   sets line-height and no height at all. Putting this in the link every fragment already carries
+   would silently impose height:100% and overflow:hidden on all of them, which is how a shared
+   stylesheet turns into a layout bug you cannot find. A fragment asks for it by name:
+
+       Move (CS_PaletteCssLink + CS_PageFitCssLink + '<style>...') to sHtml
+
+   Anything a dialog puts in its own <style> still wins - the inline block is parsed after these
+   links, so a fragment that needs to override one declaration can, without editing this file. */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--dfr-bg-page, #262624);
+}

@@ -1,0 +1,110 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebHtmlBox
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-07-02
+//
+// Description : FlexTron (FT) subclass of cWebHtmlBox: theme-aware behaviour for the FT
+//               build. The HtmlBox renders in the FRAMEWORK DOM - style accordingly.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebHtmlBox.pkg
+Use seq_chnl.pkg               // Seq_New_Channel - the design-time dump below
+
+// Drop-in for cWebHtmlBox that is marked NOT data-aware. The "Clear" toolbar button does
+// `Broadcast Recursive Send Request_Clear of (Client_Id(ghoCommandBars))` (DFRefactorFT.src), which reaches
+// EVERY web control in the client area. A bare cWebHtmlBox answers Request_Clear by delegating the DEO request
+// to a server DEO it does not have -> GET_SERVERDEO -> Error 98 "Invalid message" (a whole series of them, on
+// oWebShowAll_htm et al., when the Test Compile / output docks are open - Nils, LegacyApp 2026-07-02). DEO_Object
+// False marks it non-data-aware so DEO-request broadcasts skip it (also covers Request_Save / Clear_All); the
+// empty Request_Clear mirrors the sibling FT web controls (cFTWebButton et al.) as a guaranteed guard for the
+// exact broadcast (a read-only HTML box has nothing to clear anyway). Otherwise identical to cWebHtmlBox.
+// Inherited from cWebHtmlBox; stated so the Designer models this class without the pooled package.
+{ DesignerJSClass=df.WebHtmlBox }
+/* THE DESIGN-TIME DUMP - a regeneration aid for the Designer placeholders, off by default.
+   Every FlexTron dialog seeds its HTML boxes with an EXPRESSION at construct, which the Studio's
+   Windows Designer cannot evaluate, so each box also carries a LITERAL copy of that markup for
+   the Designer (2026-09-21). Those literals must be regenerated when a builder changes. A
+   throwaway copy of the program sets ghbFTDesignDump before any object constructs, and every
+   box then appends '<full object name>|<psHtml>' to ghsFTDesignDumpFile as it finishes
+   constructing - the exact string the runtime seeds, in the no-workspace state. The real
+   program never sets the flag, so this costs one integer compare per box. */
+Global_Variable Integer ghbFTDesignDump
+Global_Variable String  ghsFTDesignDumpFile
+Move 0  to ghbFTDesignDump
+Move "" to ghsFTDesignDumpFile
+
+Class cFTWebHtmlBox is a cWebHtmlBox
+
+    /* THE COLUMN DEFAULT, not a per-object decision. 47 of the 52 boxes in this app set
+       piColumnIndex to 0 and the other five set 4, 8, 10 or 12 - so the value that was
+       repeated 47 times is the default, and the five that differ override it exactly as
+       they did when every site spelled it out. Behaviour-neutral: nothing loses a setting,
+       47 lines stop restating one.
+    */
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set piColumnIndex to 0
+    End_Procedure
+
+    Procedure End_Construct_Object
+        String  sHtml sLine
+        Integer iCh
+        Forward Send End_Construct_Object
+        If (ghbFTDesignDump <> 0 and ghsFTDesignDumpFile <> "") Begin
+            Get psHtml to sHtml
+            If (sHtml <> "") Begin
+                Move (Replaces(Character(13), sHtml, "")) to sHtml
+                Move (Replaces(Character(10), sHtml, "")) to sHtml
+                Move (Name(Self) + "|" + sHtml) to sLine
+                Move (Seq_New_Channel()) to iCh
+                If (iCh >= 0) Begin
+                    Append_Output channel iCh ghsFTDesignDumpFile
+                    Writeln channel iCh sLine
+                    Close_Output channel iCh
+                    Send Seq_Release_Channel iCh
+                End
+            End
+        End
+    End_Procedure
+
+    Function DEO_Object Returns Boolean
+        Function_Return False
+    End_Function
+
+    Procedure Request_Clear
+    End_Procedure
+
+    // The live push, gated on the host page actually being ALIVE. UpdateHtml is a ClientAction
+    // ("updateHtml") - delivered before the page's df.LocalApp has built its controls it breaks
+    // the page, and the whole host renders the framework's "Unhandled Program Error on the
+    // Client" banner (SelectFunctionsFT's Run-button bar, root-caused 2026-07-19: that view
+    // mounts BEHIND the Folders view and WebView2 THROTTLES hidden windows, so the page can
+    // still be initializing long after IsComObjectCreated turns True; a flaky cold-start
+    // sighting on 2026-07-16 was the same race). pbInitWebApp of the owning
+    // cLocalWebControlHost is the readiness truth - the framework flips it False on the page's
+    // FIRST server call (FinishWebObjectInitialize). Until then, fold the push into Set psHtml:
+    // the stored property is exactly what the page's init sync serves at mount, so nothing is
+    // lost. ONE canonical home for the gate - the ~20 push sites need no per-site guards (the
+    // gate at SelectFunctionsFT's oRunBtnDeferTimer stays: it also skips its CheckUpdateWebUI).
+    // AppendHtml/UpdateHtmlArray share the ClientAction risk but have no callers - gate them
+    // here too if they ever gain one.
+    Procedure UpdateHtml String sHtml
+        Handle  hoHost
+        Boolean bInitializing
+        Get Owner to hoHost
+        Move False to bInitializing
+        If (hoHost <> 0) ;
+            Get pbInitWebApp of hoHost to bInitializing
+        If (bInitializing = True) Begin
+            Set psHtml to sHtml
+            Procedure_Return
+        End
+        Forward Send UpdateHtml sHtml
+    End_Procedure
+
+End_Class

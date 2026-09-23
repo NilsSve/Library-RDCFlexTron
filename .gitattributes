@@ -1,0 +1,57 @@
+# Define the workspace as a DataFlex language project:
+*.src linguist-language=DataFlex
+*.pkg linguist-language=DataFlex
+*.vw linguist-language=DataFlex
+*.dg linguist-language=DataFlex
+*.sl linguist-language=DataFlex
+*.bp linguist-language=DataFlex
+*.wo linguist-language=DataFlex
+*.inc linguist-language=DataFlex
+*.rv linguist-language=DataFlex
+*.dd linguist-language=DataFlex
+
+# DataFlex source is authored and saved by DataFlex Studio with CRLF line
+# endings; pin it so editors/tools can't silently introduce LF (which causes
+# spurious whole-file diffs). Submodules under Libraries/ are separate repos
+# and are unaffected by this. BOM bytes are content and are left intact.
+*.src text eol=crlf
+*.pkg text eol=crlf
+*.vw  text eol=crlf
+*.dg  text eol=crlf
+*.sl  text eol=crlf
+*.bp  text eol=crlf
+*.wo  text eol=crlf
+*.inc text eol=crlf
+*.rv  text eol=crlf
+*.dd  text eol=crlf
+
+# Windows helper scripts must stay CRLF so cmd.exe runs them correctly
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Exclude compiled or generated files
+*.prn linguist-generated=true
+*.dbg linguist-generated=true
+*.dsk linguist-generated=true
+*.mtd linguist-generated=true
+*.dep linguist-generated=true
+*.fld linguist-generated=true
+*.pdp linguist-generated=true
+*.pkd linguist-generated=true
+
+# Language-stats fixes: GitHub misdetects several DataFlex workspace files
+# as other languages. Once DataFlex lands in github-linguist (PR #7479) the
+# DataFlex mappings above switch from "suppress" to "count as DataFlex"
+# automatically; the lines below stay correct either way.
+
+# Workspace config is INI-format data — without this, *.ws is detected as
+# "Witcher Script" (a game-modding language) and can become the repo's
+# headline language.
+*.ws linguist-language=INI
+
+# DataFlex compile/API headers are DataFlex source, not C/C++.
+*.h linguist-language=DataFlex
+
+# gitattributes globs are case-sensitive on GitHub's servers; catch
+# capitalized variants (e.g. DRLanguage.Inc) that slip past *.inc above.
+*.Inc linguist-language=DataFlex

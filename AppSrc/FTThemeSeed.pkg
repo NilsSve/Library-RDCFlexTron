@@ -1,0 +1,47 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTThemeSeed
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-13
+//
+// Description : Seeds ghiFTThemeMode from the saved setting, ONCE, early.
+//
+//               WHY THIS EXISTS SEPARATELY FROM FTThemeColors.pkg
+//               FTThemeColors has to be compiled near the top of the program - the shared files that call its
+//               colour accessors are pulled in early - and at that point ghoApplication is not declared yet, so
+//               nothing there can read the registry. This package can, because it is Used AFTER
+//               cRefactorApplication.pkg. The split is the whole point: accessors early, the registry read later.
+//
+//               WHY NOT LEAVE IT TO THE HOSTS
+//               cFTThemeHost_mixin.pkg seeds lazily, on the first FlexTron host to construct. That covers everything
+//               whose colour is applied at RUNTIME, but the FT dialogs colour themselves at CONSTRUCTION - and
+//               ProgramSetupFT.dg is Used at DFRefactorFT.src:1352, one line BEFORE the first dialog that owns a
+//               host. It therefore built itself with the dark values no matter what the setting said, which is
+//               exactly what Nils saw: "the program settings dialog is still dark" (2026-08-13). Seeding here,
+//               straight after the application object exists and ~1150 lines before the first dialog, means every
+//               construction-time colour already knows the answer.
+//
+//               The host-side lazy seed stays as a backstop: it is idempotent (both guard on CI_FTThemeUnset) and
+//               it still covers any program that Uses a host without Using this.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use FTConstants.h.pkg   // CI_FTTheme*, ghiFTThemeMode, CS_FTThemeSection / CS_FTTheme
+
+Procedure SeedFTTheme Global
+    Integer iMode
+
+    If (ghiFTThemeMode <> CI_FTThemeUnset) ;
+        Procedure_Return
+    If (ghoApplication = 0) ;
+        Procedure_Return
+
+    Get ReadInteger of ghoApplication CS_FTThemeSection CS_FTTheme CI_FTThemeDark to iMode
+    // A value written by a future version - or a hand-edited registry - must not leave the global on
+    // a meaningless number, so anything unrecognised falls back to dark.
+    If (iMode < CI_FTThemeDark or iMode > CI_FTThemeSystem) ;
+        Move CI_FTThemeDark to iMode
+    Move iMode to ghiFTThemeMode
+End_Procedure

@@ -1,0 +1,53 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTModalPanel
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-07-11
+//
+// Description : FlexTron variant of RDCToolsLib's cRDCModalPanel (Nils + Claude 2026-07-12). The ONLY delta is
+//               the dark CodeJock theme on the dialog's status-bar command bar - until today that lived as a
+//               local uncommitted patch INSIDE the RDCToolsLib submodule (invisible, and one submodule update
+//               away from being lost). A thin SUBCLASS rather than a copy: the library class stays the single
+//               source of the panel behaviour, so this file cannot drift from it.
+//               FlexTron dialogs declare 'is a cFTModalPanel'; non-FlexTron dialogs keep the plain class.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cRDCModalPanel.pkg
+Use cCJCommandBarSystem.pkg
+Use FTThemeColors.pkg            // FTWebBg / FTCJTheme - the FT palette
+
+{ DDOHost=False }
+{ DataAware=False }
+{ DesignerClass=cDTModalPanel }
+{ ComponentType=SLClass }
+{ HelpTopic=ModalPanel }
+Class cFTModalPanel is a cRDCModalPanel
+
+    /* THE FT GROUND, set once. Every instance that stated a Color stated this one - not a single
+       site anywhere picks a different colour - so it is the class's, not a per-object decision.
+    
+       It also reaches the handful that stated NOTHING and were therefore left on the framework's
+       pale default: the native surround behind a dark web page. That is the same fault, on the
+       native side, that piBackColor fixes on the WebView2 side in cFTThemeHost_mixin.pkg - and the same
+       argument that comment makes: set it in the one place every FT surface passes through. */
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set Color to (FTWebBg())
+    End_Procedure
+
+    // The base's End_Construct_Object builds oDialogCommandbar > oStatusBar and stores the
+    // STATUS BAR handle in phoDialogCommandbar (see the base's oStatusBar object). Theme the
+    // command-bar SYSTEM - its parent - dark AFTER the forward; a CodeJock Set before COM
+    // realization lands in the private store and is applied when the control realizes.
+    Procedure End_Construct_Object
+        Handle hoStatusBar
+        Forward Send End_Construct_Object
+        Get phoDialogCommandbar to hoStatusBar
+        If (hoStatusBar <> 0) ;
+            Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+    End_Procedure
+
+End_Class

@@ -1,0 +1,30 @@
+{
+    "dependencies": [
+        "DataFlex-dev/Web UI FlexTron#1.0.52",
+        {
+            "source": "https://github.com/NilsSve/Library-RDCToolsLib.git",
+            "sws": "RDCToolsLibLibrary26.0.sws",
+            "version": "d464eb17fdb1ba2a743cb0643fb5d772946f1cbf"
+        }
+    ],
+    "description": "RDC Tools' FlexTron toolkit: themed FlexTron hosts, web controls and modal panels, HTML markup builders and inline SVG icons for DataFlex Windows applications.",
+    "df": 26.0,
+    "package": {
+        "df-min": 26.0,
+        "icon": "RDC-Mark.svg",
+        "includeFiles": [
+            "AppHtml/RDCFlexTron/**/*"
+        ],
+        "install": [
+            "${AppHtml}/RDCFlexTron/palette.css",
+            "${AppHtml}/RDCFlexTron/buttons.css",
+            "${AppHtml}/RDCFlexTron/bars.css",
+            "${AppHtml}/RDCFlexTron/pagefit.css",
+            "${AppHtml}/RDCFlexTron/pills.css"
+        ],
+        "license": "MIT",
+        "licenseFile": "LICENSE",
+        "version": "0.1.0"
+    },
+    "workspaceName": "RDCFlexTron"
+}

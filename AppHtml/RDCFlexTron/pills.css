@@ -1,0 +1,17 @@
+/* pills.css - the status pills in the Modernization Analyzer and Compiler Output strips.
+
+   A SHARED sheet because both dialogs draw the same pills, and before this each carried its own
+   inline colours: six pairs, two of them the same "set aside" grey one shade apart. Duplicated
+   colour is the drift that .rpbar and .sfbar already demonstrated, and a pill is a worse place for
+   it - the whole point of a coloured count is that the colour means something consistent.
+
+   Named by MEANING, not hue. A caller writes class="pill err"; if the error red ever changes it
+   changes once, in palette.css, for both dialogs.
+
+   Linked with CssLink("pills") after CS_PaletteCssLink, alongside each dialog's own sheet. */
+
+.pill.err { background: var(--dfr-pill-err-bg, #791f1f); color: var(--dfr-pill-err-ink, #fcebeb); }
+.pill.warn { background: var(--dfr-pill-warn-bg, #633806); color: var(--dfr-pill-warn-ink, #faeeda); }
+.pill.review { background: var(--dfr-pill-review-bg, #854f0b); color: var(--dfr-pill-review-ink, #faeeda); }
+.pill.ok { background: var(--dfr-pill-ok-bg, #0f6e56); color: var(--dfr-pill-ok-ink, #e1f5ee); }
+.pill.mute { background: var(--dfr-pill-mute-bg, #3a3a37); color: var(--dfr-pill-mute-ink, #d0cfca); }

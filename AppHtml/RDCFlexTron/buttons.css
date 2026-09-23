@@ -1,0 +1,174 @@
+/* buttons.css - the ONE definition of a DFRefactor dialog button.
+
+   Why this file exists (Nils 2026-08-20: "I have lost count on the number of different looks on
+   buttons for different dialogs"). Seventeen dialogs each carried their own copy of the same rule,
+   and the copies had drifted: heights 24 and 26, min-widths from 64 to 104, padding from 4px to
+   16px, some with a 15px glyph rule and some with none at all. Every copy was a fair local edit;
+   together they were ten slightly different buttons.
+
+   The BASE MARK is BackupFilesFT's .rpbtn - the Undo-refactoring dialog's bottom-right buttons -
+   because that is the one Nils named as correct. Everything here is its metrics verbatim.
+
+   NOT in palette.css: that file is deliberately the :root token block and nothing else, so a
+   fragment can take the palette without importing layout. This is a component sheet, linked
+   alongside it by CS_PaletteCssLink - one Define, so all 34 fragments get both.
+
+   The legacy class names are all listed rather than renamed to one: the markup in those dialogs
+   keeps working untouched, and a dialog that later wants the shared name can just use .dfrbtn.
+   DASHBOARD buttons are deliberately absent - they are their own visual language (Nils).
+
+   min-width is a FLOOR. A longer label widens its own button; nothing needs a bespoke width. */
+
+.dfrbtn, .rpbtn, .sfbtn, .csbtn, .ml-btn, .mph-btn, .psbtn, .tcbtn, .mtbtn, .sabtn, .cw-btn, .apb, .act, .cfb, .tcbtnc,
+.ml-btn-off, .mtbtn-off, .psbtn-off, .tcbtn-off {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 76px;
+    padding: 0 10px;
+    height: 24px;
+    color: var(--dfr-btn-ink, #d8d8d8);
+    background: var(--dfr-btn-bg, #3a3937);
+    border: 1px solid var(--dfr-btn-line, #4a4948);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex: none;
+    /* PINNED, not inherited (Nils 2026-08-20: the Libraries and Modernization-progress
+       buttons came out larger than the base mark). The base mark gets its 12px from the ROW
+       it sits in - .rpbar declares it - but .ml-foot and .mph-foot declare none, so their
+       buttons inherited from whatever wrapped them, and those dialogs run font sizes from
+       10.5px to 17px. A shared component must not depend on its surroundings to be the
+       right size. */
+    font-size: 12px;
+}
+
+.dfrbtn:hover, .rpbtn:hover, .sfbtn:hover, .csbtn:hover, .ml-btn:hover, .mph-btn:hover,
+.psbtn:hover, .tcbtn:hover, .mtbtn:hover, .sabtn:hover, .cw-btn:hover, .apb:hover, .cfb:hover, .tcbtnc:hover {
+    background: var(--dfr-btn-bg-hover, #454341);
+    border-color: var(--dfr-btn-line-hover, #5d5b58);
+}
+
+/* The shut state - same opacity everywhere, and hover must not light it up. */
+.dfrbtn.dis, .rpbtn.dis, .sfbtn.dis, .csbtn.dis, .ml-btn.dis, .mph-btn.dis,
+.psbtn.dis, .tcbtn.dis, .mtbtn.dis, .sabtn.dis, .cw-btn.dis, .apb.dis, .act.dis, .cfb.dis, .tcbtnc.dis {
+    opacity: 0.45;
+    cursor: default;
+}
+.dfrbtn.dis:hover, .rpbtn.dis:hover, .sfbtn.dis:hover, .csbtn.dis:hover, .ml-btn.dis:hover,
+.mph-btn.dis:hover, .psbtn.dis:hover, .tcbtn.dis:hover, .mtbtn.dis:hover, .sabtn.dis:hover,
+.cw-btn.dis:hover, .apb.dis:hover, .act.dis:hover, .cfb.dis:hover, .tcbtnc.dis:hover {
+    background: var(--dfr-btn-bg, #3a3937);
+    border-color: var(--dfr-btn-line, #4a4948);
+}
+
+/* THE SHUT TWIN - .<family>-off, the second disabled convention.
+
+   Two of them exist and both are legitimate: ".dis" above dims a button in place (opacity), while
+   "-off" is a SEPARATE class the markup swaps in, on its own dim tokens. The gate model is the same
+   either way - a shut element carries no data-ServerOnClick - so which one a dialog uses is a look,
+   not a behaviour.
+
+   What was NOT legitimate: the button sweep of 2026-08-20 normalised the ENABLED classes and left
+   their shut twins behind, each still carrying the metrics its dialog had before. FOUR of them,
+   measured 2026-08-22 against the family's 76px floor / 0 10px / 24px / 12px. (A fifth was listed
+   here at first, .apb-off, and is not a twin at all: NOTHING produces it. Add Package builds its
+   buttons with BarButtonHtml, which appends " dis" - so that rule had never rendered and its odd
+   metrics had never been seen. Dropped rather than normalised; found by the 2026-08-22 audit.)
+
+     .psbtn-off    86px  0 16px  26px  (and no font-size, so it took 13px from .psbar)
+     .ml-btn-off  104px  0 12px  26px  radius 5px, and its glyph had no size rule at all
+     .mtbtn-off      -   0 12px  24px  no width floor
+     .tcbtn-off      -   0 12px  24px  no width floor
+
+   So Save was 86x26 while shut and 76x24 the moment anything changed - the button resized when it
+   came alive. The twins now take the shape block above and keep ONLY their colours, which is what
+   made them a pair in the first place.
+
+   .tchip-off is deliberately NOT here. Its enabled twin .tchip is not a family member either, and
+   the two already match each other exactly - the one pair that never drifted, which is also the
+   control that shows the five above really had. */
+.ml-btn-off, .mtbtn-off, .psbtn-off, .tcbtn-off {
+    color: var(--dfr-btn-off-ink, #67655f);
+    background: var(--dfr-btn-off-bg, #2e2d2b);
+    border-color: var(--dfr-btn-off-line, #393836);
+    cursor: default;
+}
+/* Every shut glyph was already dimmed to 0.35 by its own sheet - kept, in one place. */
+.ml-btn-off img, .mtbtn-off img, .psbtn-off img, .tcbtn-off img,
+.ml-btn-off svg, .mtbtn-off svg, .psbtn-off svg, .tcbtn-off svg { opacity: 0.35; }
+
+/* 15px glyph - the size the base mark uses. Several dialogs had no img rule at all, so their
+   SVGs rendered at intrinsic size and dwarfed the label. */
+.dfrbtn img, .rpbtn img, .sfbtn img, .csbtn img, .ml-btn img, .mph-btn img,
+.psbtn img, .tcbtn img, .mtbtn img, .sabtn img, .cw-btn img, .apb img, .act img, .cfb img, .tcbtnc img,
+.ml-btn-off img, .mtbtn-off img, .psbtn-off img, .tcbtn-off img {
+    width: 15px;
+    height: 15px;
+    display: block;
+    flex: none;
+}
+
+/* The same 15px for an INLINE svg. DashIcon returns markup, not an <img>, because it carries
+   stroke="currentColor" so the glyph takes the button's own ink - which an <img> cannot do. Without
+   this rule such a glyph renders at its intrinsic viewBox size and dwarfs the label. */
+.dfrbtn svg, .rpbtn svg, .sfbtn svg, .csbtn svg, .ml-btn svg, .mph-btn svg,
+.psbtn svg, .tcbtn svg, .mtbtn svg, .sabtn svg, .cw-btn svg, .apb svg, .act svg, .cfb svg, .tcbtnc svg,
+.ml-btn-off svg, .mtbtn-off svg, .psbtn-off svg, .tcbtn-off svg {
+    width: 15px;
+    height: 15px;
+    display: block;
+    flex: none;
+}
+
+/* AMBER variant - the flow colour, for a button that STARTS something rather than confirming it.
+
+   Select Functions' Run Refactoring uses it: that screen is the end of the manual trail and the
+   button is the trail's last step, so it carries the flow's own hue rather than neutral chrome.
+   Same shape and metrics as every other family button - only the three colour declarations differ,
+   which is the same bargain the .ok variant makes. Use class="<family> amber". 2026-08-22. */
+.dfrbtn.amber, .rpbtn.amber, .sfbtn.amber, .csbtn.amber, .ml-btn.amber, .mph-btn.amber,
+.psbtn.amber, .tcbtn.amber, .mtbtn.amber, .sabtn.amber, .cw-btn.amber, .apb.amber, .cfb.amber {
+    color: var(--dfr-amber-bright, #f4c194);
+    background: var(--dfr-amber-bg, #4a4126);
+    border-color: var(--dfr-amber-line, #7a6a3a);
+}
+
+/* AFFIRMATIVE variant - same shape, deliberately NOT the same colour.
+
+   Browse packages' .act is the green "install this one" action, on the --dfr-ok tokens rather
+   than the neutral button ones. Making every button identical would have erased a distinction
+   that carries meaning, so it takes the shared metrics above (24px, 76px floor, 12px text -
+   it was 30px and 13px) and keeps its own colour. Any dialog wanting an affirmative button
+   should use class="dfrbtn ok" rather than inventing another one. 2026-08-20. */
+.dfrbtn.ok, .act {
+    color: var(--dfr-ok-ink, #eaf5ea);
+    background: var(--dfr-ok-bg, #3d6a3d);
+    border-color: var(--dfr-ok-line, #4f8a4f);
+}
+.dfrbtn.ok:hover, .act:hover {
+    background: var(--dfr-ok-bg-hover, #477a47);
+    border-color: var(--dfr-ok-line, #4f8a4f);
+    color: var(--dfr-ok-ink-hover, #ffffff);
+}
+
+/* COMPACT variant - same look, no 76px floor.
+
+   .tcbtnc is the Test Compile bar's Clear/Close pair, and it lives in a cLocalWebControlHost only
+   120 DIALOG UNITS wide. Dialog units convert to somewhere between ~1.1 and ~1.7 CSS px (see
+   feedback_ft_bar_units_vs_css_pixels), so that host can be as little as ~132px. The shared 76px
+   floor made the pair demand 76+76+8+8 = 168px, and because the row is justify-content:flex-end
+   the overflow spills LEFT and eats Clear, the leftmost button. Nils 2026-08-20: the compile text
+   "overwrite half of the Clear button".
+
+   This pair keeps the shared height, radius, colour, 12px text and 15px glyph, and opts out of the
+   width floor ONLY. Do not add a min-width here without checking the host's unit width first. */
+.tcbtnc {
+    min-width: 0;
+    padding: 0 9px;
+    gap: 5px;
+}
+
+/* The Add Package dialog's "Copy link" affordance USED to be a compact chip in this family. It is
+   a text link now and lives in addpackage.css - a link shares nothing with a button but its click. */

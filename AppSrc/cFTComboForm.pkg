@@ -1,0 +1,73 @@
+//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTComboForm
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-08-22
+//
+// Description : FlexTron (FT) subclass of RDCToolsLib's cRDCComboForm for the FT build.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cRDCComboForm.pkg
+
+/*
+    Class:      cFTComboForm
+    Purpose:    A cRDCComboForm that REFUSES the dialog's dark colouring, because Windows will not
+                carry it into the drop-down list.
+
+    THE PROBLEM (Nils 2026-08-22, Program Setup): "when the dark theme is applied the drop-down list
+    for combos becomes hard to read - the not selected items have black text on a dark background".
+
+    He is right, and it cannot be fixed by setting the colours harder. An FT dialog paints its native
+    children with
+
+        Broadcast Recursive Set Color     to (FTWebBg())
+        Broadcast Recursive Set TextColor to (FTThemeInk())
+
+    and that reaches the combo's EDIT portion. The drop-down is a separate window that Windows paints
+    itself: it picks up the dark background but leaves unselected items at the system text colour,
+    which is black. DataFlex offers no hook for it - DFBaseComboBox (Windows.pkg:6302) has no
+    list-colour property, and the framework does not forward WM_CTLCOLORLISTBOX. The only way to
+    colour those items would be to owner-draw the control and paint every row by hand.
+
+    THE TRADE, AND IT IS NILS'S CALL: the combo stays in system colours - light - among dark
+    controls. That is visibly inconsistent, and it is the better half of the bargain, because the
+    alternative is a list nobody can read. A control that looks slightly out of place still works; a
+    dark list with black text does not.
+
+    HOW IT WORKS: the two Set messages are swallowed. The parent's Broadcast Recursive reaches every
+    child AFTER each child's own End_Construct_Object, so a combo cannot simply re-assert its colours
+    at construct time - whatever it set would be overwritten a moment later. Refusing the message is
+    what survives the broadcast.
+
+    Only ProgramSetupFT uses this. The non-FT ProgramSetup.dg keeps plain cRDCComboForm: that dialog
+    is light, so its list was always readable and there is nothing to guard against.
+*/
+
+Class cFTComboForm is a cRDCComboForm
+
+    /* ALL FIVE of this class's instances set exactly these four, identically - the strongest
+       case in the app for a class default. A combo that wants a different size or a
+       left-justified label still says so and wins; nothing else has to say anything.
+    */
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set Size to 13 100
+        Set Entry_State to False
+        Set Label_Col_Offset to 2
+        Set Label_Justification_Mode to JMode_Right
+    End_Procedure
+
+    // Swallowed on purpose - see the note above. Not "not implemented": deliberately inert, so the
+    // dialog's Broadcast Recursive cannot drag this control into a colour scheme Windows will only
+    // half-apply.
+    Procedure Set Color Integer iColor
+    End_Procedure
+
+    Procedure Set TextColor Integer iColor
+    End_Procedure
+
+End_Class

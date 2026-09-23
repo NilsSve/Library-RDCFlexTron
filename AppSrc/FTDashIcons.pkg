@@ -1,0 +1,171 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTDashIcons
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-07-31
+//
+// Description : Inline SVG icon markup for the FlexTron dashboard and its tiles.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+
+/* THE GLYPH NAMES this file answers to. Moved here from RefactorConstants.h.pkg on 2026-09-23, so the
+   icon set carries its own vocabulary and needs no DFRefactor header.
+
+   CS_Glyph* is a DashIcon name - a branch below that returns inline SVG. DashIcon ENDS in a
+   fallback, so a misspelt name does not fail: it quietly returns the default glyph and the button
+   wears the wrong picture. That is the whole reason these are named.
+
+   Not to be confused with CS_Ico*, the IconLabel file stems (AppHtml\Svg), which stay in
+   RefactorConstants.h.pkg: "compare" is a glyph and "Compare" is a file, and they are not
+   interchangeable. */
+Define CS_GlyphChevron                   for "chevron"
+Define CS_GlyphRepeat                    for "repeat"      // TestCompileFT wrote this SVG out four times
+Define CS_GlyphArrowRight                for "arrowright"  // the hand-over marker on the Test Compile tail
+Define CS_GlyphPlayFilled                for "playfilled"  // solid triangle - the tour poster button
+Define CS_GlyphCompare                   for "compare"
+Define CS_GlyphFile                      for "file"
+Define CS_GlyphFiletext                  for "filetext"
+Define CS_GlyphFolder                    for "folder"
+Define CS_GlyphFoldercheck               for "foldercheck"
+Define CS_GlyphHand                      for "hand"
+Define CS_GlyphListcheck                 for "listcheck"
+Define CS_GlyphPlaycircleline            for "playcircleline"
+Define CS_GlyphSettings                  for "settings"
+Define CS_GlyphStack                     for "stack"
+Define CS_GlyphTrend                     for "trend"
+Define CS_GlyphUndo                      for "undo"
+Define CS_GlyphVideofilled               for "videofilled"
+
+/*  DashIcon - the inline SVG glyph set used by every board tile.
+
+    Lifted out of DashboardFT.vw (2026-07-31) as part of untangling the guided trail from the
+    dashboard view: the trail borrows the dashboard's tile builders, and every one of them draws
+    its glyph from here, so this had to stop living inside one of the two views that need it.
+
+    A plain global function - it holds no state and reads none.
+*/
+// Returns an inline Tabler-style SVG icon (stroke=currentColor; sized by CSS per context - .dash-ico
+// 22px on tiles/banner, .dash-label 14px, .dash-cyc-tail 13px). One multi-subpath <path> per glyph. Colour
+// is inherited from the surrounding .dash-* class, so the same glyph dims on a disabled tile.
+//
+// The <svg> DOES carry width/height matching its viewBox, reversed 2026-08-13. It was left off on
+// purpose so CSS could size each placement - but CSS still can: a width/height ATTRIBUTE is a
+// presentation attribute, and every .dash-* svg rule overrides it. What the attribute buys is an
+// INTRINSIC size, and without one an <svg viewBox=...> falls back to the default replaced-element
+// box - 300x150 in Chromium, not 24px. The .dash-* svg sizing rules live in application.css, an
+// EXTERNAL sheet, so on the first dashboard activation of a run there is a window where the markup
+// is painted before that sheet applies, and 17 glyphs briefly render at 300px (Nils 2026-08-13:
+// "one big image that looks a bit like a flower flashes by" - the Tidy Up sparkles).
+Function DashIcon Global String sName Returns String
+    String sD
+
+    Move "" to sD
+    // The "plan" glyph (clipboard) is the same artwork as AppHtml\Svg\Plan.svg, but inlined with
+    // stroke="currentColor" so the action-row CSS can tint it amber (an <img> can't be recoloured).
+    // Its native 21-viewBox stroke (1) is bumped to 1.6 to match the visual weight of the 24-viewBox icons below.
+    If (sName = "plan") ;
+        Function_Return ('<svg width="21" height="21" viewBox="0 0 21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5,3v-0.25C6.5,2.0596,7.0596,1.5,7.75,1.5h5.5c0.6904,0,1.25,0.5596,1.25,1.25V3.1"/><path d="M11.7,13.5H9.3c-0.4418,0,-0.8,-0.3582,-0.8,-0.8v-2.4c0,-0.4418,0.3582,-0.8,0.8,-0.8h2.4c0.4418,0,0.8,0.3582,0.8,0.8v2.4C12.5,13.1418,12.1418,13.5,11.7,13.5z"/><path d="M18.26,19.5H2.74c-0.6848,0,-1.24,-0.5552,-1.24,-1.24V5.74C1.5,5.0552,2.0552,4.5,2.74,4.5h15.52c0.6848,0,1.24,0.5552,1.24,1.24v12.52C19.5,18.9448,18.9448,19.5,18.26,19.5z"/><path d="M8.4,11.533c-2.5589,-0.165,-4.891,-0.6267,-6.7993,-1.3009"/><path d="M19.3,10.2668c-1.8897,0.6553,-4.1853,1.1041,-6.7,1.2662"/></svg>')
+    If (sName = CS_GlyphFile) ;
+        Move "M14 3v4a1 1 0 0 0 1 1h4 M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" to sD
+    // file + text lines (Tabler file-text). Used by "Read log" so it no longer shares the plain "file"
+    // glyph with the "Single file" tile.
+    If (sName = CS_GlyphFiletext) ;
+        Move "M14 3v4a1 1 0 0 0 1 1h4 M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z M9 9l1 0 M9 13l6 0 M9 17l6 0" to sD
+    If (sName = CS_GlyphListcheck) ;
+        Move "M3.5 5.5l1.5 1.5l2.5 -2.5 M3.5 11.5l1.5 1.5l2.5 -2.5 M3.5 17.5l1.5 1.5l2.5 -2.5 M11 6l9 0 M11 12l9 0 M11 18l9 0" to sD
+    If (sName = "bolt") ;
+        Move "M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11" to sD
+    If (sName = "eraser") ;
+        Move "M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3 M18 13.3l-6.3 -6.3" to sD
+    // sparkles (Tabler) - the "Cleanup" tile glyph; reads as "tidied / cleaned up" rather than the
+    // delete-ish eraser. (The eraser branch above is now unused but kept in case it's wanted elsewhere.)
+    If (sName = "sparkles") ;
+        Move "M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z" to sD
+    If (sName = CS_GlyphFolder) ;
+        Move "M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" to sD
+    If (sName = CS_GlyphFoldercheck) ;
+        Move "M11 19h-6a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v4 M15 19l2 2l4 -4" to sD
+    If (sName = CS_GlyphStack) ;
+        Move "M12 4l-8 4l8 4l8 -4l-8 -4 M4 12l8 4l8 -4 M4 16l8 4l8 -4" to sD
+    // cpu (Tabler) - the "x64 + Unicode" tile glyph (a chip = the 64-bit/Unicode platform move).
+    If (sName = "cpu") ;
+        Move "M5 5m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z M9 9h6v6h-6z M3 10h2 M3 14h2 M10 3v2 M14 3v2 M21 10h-2 M21 14h-2 M10 21v-2 M14 21v-2" to sD
+    If (sName = CS_GlyphSettings) ;
+        Move "M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" to sD
+    If (sName = CS_GlyphChevron) ;
+        Move "M9 6l6 6l-6 6" to sD
+    If (sName = CS_GlyphUndo) ;
+        Move "M9 14l-4 -4l4 -4 M5 10h11a4 4 0 1 1 0 8h-1" to sD
+    // "compare" = the Tabler git-compare glyph (two nodes + branch arrows) - the one from the alpha reel.
+    // Multi-path, so it early-returns with stroke="currentColor" (the action-row CSS still tints it); the
+    // single-path template below can't hold it. (Was the two-rectangles "M5 4h5v16h-5z M14 4h5v16h-5z".)
+    If (sName = CS_GlyphCompare) ;
+        Function_Return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M11 6h5a2 2 0 0 1 2 2v8"/><path d="M14 9l-3 -3l3 -3"/><path d="M13 18h-5a2 2 0 0 1 -2 -2v-8"/><path d="M10 15l3 3l-3 3"/></svg>'
+    // trending-down (Tabler) - the burn-down glyph for the modernization-progress strip (values falling
+    // over time = good). Single-path, so it rides the template below.
+    If (sName = CS_GlyphTrend) ;
+        Move "M3 7l6 6l4 -4l8 8 M21 10l0 7l-7 0" to sD
+    // repeat (Tabler) - the loop-back arrows on the guided cycle strip ("repeat until clean").
+    // arrow-right (Tabler) - the hand-over marker on the Test Compile tail ("now do this instead").
+    If (sName = CS_GlyphArrowRight) ;
+        Move "M5 12h13 M13 6l6 6l-6 6" to sD
+    If (sName = "repeat") ;
+        Move "M4 12v-3a3 3 0 0 1 3 -3h13 M17 3l3 3l-3 3 M20 12v3a3 3 0 0 1 -3 3h-13 M7 21l-3 -3l3 -3" to sD
+    // player-play (Tabler) - the Compile step glyph ("run the compiler"). Outline triangle at stroke weight.
+    If (sName = "play") ;
+        Move "M7 4v16l13 -8z" to sD
+    // search (Tabler) - the Analyze step glyph ("inspect the compile output").
+    If (sName = "search") ;
+        Move "M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0 M21 21l-6 -6" to sD
+    // scan (Tabler viewfinder + scanline) - the Deep Scan glyph; distinct from the Tidy Up sparkles.
+    If (sName = "scan") ;
+        Move "M4 7v-1a2 2 0 0 1 2 -2h2 M4 17v1a2 2 0 0 1 2 2h2 M16 4h2a2 2 0 0 1 2 2v1 M16 20h2a2 2 0 0 1 2 -2v-1 M5 12l14 0" to sD
+    // playcircle - a filled circle with a solid WHITE left-pointing triangle, matching DataFlex Studio's
+    // Compile button (Nils 2026-07-12). Two-tone + filled, so it early-returns its own SVG: a bolder-amber
+    // circle (Compile buttons are amber) with a white triangle. .dash-fbtn svg sizes it to 14px.
+    // Colours use rgb() not #hex: a #hex that starts with a LETTER (#c37e30, #ffffff) can be mis-read as a
+    // preprocessor directive inside a DataFlex string literal (the arrow #9a7c54 hexes are digit-first, so safe).
+    // video (Tabler) - a film camera: the Start Center's "Watch DFRefactor in action" card (Nils
+    // 2026-08-18: "perhaps a camera glyph or something similar" - it used the orange play circle).
+    If (sName = "video") ;
+        Move "M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" to sD
+    // A start triangle INSIDE a circle, in the set's stroke style - the Manual board's Run Refactoring
+    // (Nils 2026-08-18: "a circle around the right-pointing triangle"). Colour comes from the tile.
+    If (sName = CS_GlyphPlaycircleline) ;
+        Move "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0 M10 8l6 4l-6 4z" to sD
+    // The film camera, COLOURED (Nils 2026-08-18: "could the camera glyph be colored?") - the same
+    // orange the play circle wore, body filled, lens and reel window light, so the Watch card keeps
+    // its one warm accent on the Start Center. Returned whole, like playcircle - it is not a
+    // currentColor stroke glyph.
+    // Blue/purple since 2026-08-18 (Nils: "use the first camera glyph we tried, but color it blue/purple") -
+    // an indigo body, a lighter violet lens, a light reel window. Drawn 22% larger inside the same 24-box
+    // (a <g> scale about the centre) - "slightly larger" without touching the tile CSS that sizes every glyph.
+    If (sName = CS_GlyphVideofilled) ;
+        Function_Return ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(12 12) scale(1.22) translate(-12 -12)"><rect x="3" y="6" width="12" height="12" rx="2" fill="rgb(99,102,241)"/><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z" fill="rgb(167,139,250)"/><circle cx="8" cy="12" r="2.2" fill="rgb(255,255,255)" opacity="0.92"/></g></svg>')
+    // hand (Tabler "hand-finger") - the Start Center's Manual refactor lane, THIRD try.
+    // Nils 2026-08-20: the play circle "looks too much like a start button". "Manual" IS
+    // "by hand", so this glyph names WHO decides - where the gear said "settings" (and was
+    // the Target version tile's glyph beside it) and the wrench said "tools". It is the only
+    // organic shape in the set, so it cannot be confused with another glyph at 22px.
+    // Spent, do not re-propose: settings (gear clash), wrench (71b9983 "no wrench"),
+    // playcircle (c722946, "for now"). The wrench entry lived here unwired since c722946.
+    If (sName = CS_GlyphHand) ;
+        Move "M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5 M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5 M14 10.5a1.5 1.5 0 0 1 3 0v1.5 M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2a6 6 0 0 1 -5 -2.7l-2.7 -4.6a1.5 1.5 0 0 1 .5 -2a1.9 1.9 0 0 1 2.3 .3l1.9 1.9" to sD
+    // film strip, COLOURED - the Watch card, second go (Nils 2026-08-18: the camera "is a bit hard to
+    // see what it represents"). A strip of film with its perforations reads as "a video" at 22px where
+    // a camera body did not: orange strip, light frame and sprocket lines. Returned whole, like
+    // playcircle / videofilled - not a currentColor stroke glyph.
+    If (sName = "filmstrip") ;
+        Function_Return ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" fill="rgb(195,126,48)"/><path d="M8 4v16 M16 4v16 M3 8h5 M3 12h5 M3 16h5 M16 8h5 M16 12h5 M16 16h5" stroke="rgb(255,244,226)" stroke-width="1.6"/><path d="M10.5 9.5v5l4 -2.5z" fill="rgb(255,255,255)"/></svg>')
+    // player-play FILLED (Tabler) - the tour poster's play button. Returns its own <svg> because
+    // the shared wrapper below is stroked and this one is solid; same reason playcircle does.
+    If (sName = CS_GlyphPlayFilled) ;
+        Function_Return ('<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>')
+    If (sName = "playcircle") ;
+        Function_Return ('<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="rgb(195,126,48)"/><path d="M14 8.5 L14 15.5 L8 12 Z" fill="rgb(255,255,255)"/></svg>')
+    Function_Return ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + sD + '"/></svg>')
+End_Function

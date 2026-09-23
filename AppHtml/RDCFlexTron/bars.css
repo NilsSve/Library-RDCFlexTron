@@ -1,0 +1,76 @@
+/* bars.css - the button bars that sit along the bottom (or top) of a dialog.
+
+   .rpbar  the report/dialog button bar   (Close, Clear, Export ...)
+   .sfbar  the select-filter bar          (Select All, Select None, Declared only ...)
+   .csbar  Compiler Setup's two bars      (Select/Help, Save/Close)
+   .psbar  Program Setup's bar            (Save/Close)
+   .sabar  the plan dialog's toggle bar   (Show all functions)
+
+   WHY THIS FILE EXISTS
+   Every cWebHtmlBoxFT fragment is its own document and does not inherit application.css, so each
+   dialog used to carry its own copy of these rules inside a DataFlex string. .rpbar was written out
+   in 7 files and .sfbar in 5, and they had drifted: every single property matched except one each -
+   .rpbar's padding (0 in four files, 0 8px in three) and .sfbar's justify-content (flex-end in
+   three, absent in two, flex-start in one). Two Select All / Select None bars therefore sat on the
+   left while the others sat on the right, for no reason anyone chose.
+
+   Normalised 2026-08-21 on Nils's call. The visible consequences, both deliberate:
+     - the four .rpbar bars that had padding:0 gain 8px of side padding, so buttons no longer touch
+       the host edge;
+     - the three left-aligned .sfbar bars move right, matching the other three.
+   The bar in SelectCopyScopeFT that carries .sfshift/.sfgap is unaffected either way: a
+   flex:1 1 auto child absorbs the free space, so justify-content has nothing left to distribute.
+
+   Loaded through CS_PaletteCssLink (RefactorConstants.h.pkg), so every fragment gets it and the
+   path is declared in one place. Edits here take effect without recompiling. */
+
+.rpbar,
+.sfbar,
+.csbar,
+.psbar,
+.sabar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 12px;
+    background: var(--dfr-bg-page, #262624);
+}
+
+/* PADDING is the one property that stays per-bar, and on purpose. It decides how close a button
+   sits to the host edge, and these hosts are sized in DIALOG UNITS - roughly 1.1 to 1.7 CSS px each
+   (see feedback_ft_bar_units_vs_css_pixels), so the width one actually has is not knowable from this
+   file. The one time a shared floor met a host narrower than it assumed, the overflow spilled left
+   and ate a button (.tcbtnc in buttons.css). Everything else about these five bars is now identical;
+   these three numbers are declared rather than reconciled. */
+.rpbar { padding: 0 8px; }
+.sfbar { padding: 0 4px; }
+.csbar, .psbar, .sabar { padding: 0 2px; }
+
+/* For a bar that must run left. Nothing uses it today - it is here so that the next dialog needing
+   a left-hand bar says so in its markup instead of redefining .sfbar and starting the drift again. */
+.rpbar.left,
+.sfbar.left,
+.csbar.left,
+.psbar.left,
+.sabar.left { justify-content: flex-start; }
+
+/* Added 2026-08-22 - the last three bars still written inside DataFlex strings, and the last in-code
+   CSS in the program. What they brought with them, all invisible: font-size 13px on .csbar/.psbar
+   (their buttons pin 12px themselves, so it reached nothing - except .psbtn-off, which declared no
+   size and took 13px; see buttons.css), no background (pagefit.css already paints the page that
+   colour), no overflow rule, and no gap on .sabar, which holds exactly one button. */
+
+/* THE SEPARATOR between groups in a summary bar - the dim "|" (and one "&middot;").
+
+   Here rather than in a page sheet because it was defined as ".sbar .sep" in BOTH compileroutput.css
+   and modanalyzer.css, identically, and the Test Compile bar's own separator got NEITHER: that
+   fragment links testcompile.css, and its span is not inside a .sbar either, so it rendered in
+   whatever colour it inherited. Two copies and one silent miss is the same shape as .rpbar and the
+   shut twins. bars.css ships with every fragment through CS_PaletteCssLink, so a bare .sep reaches
+   all four. 2026-08-22. */
+.sep { color: var(--dfr-sep-ink, #5f5e5a); }

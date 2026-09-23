@@ -1,0 +1,70 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTConstants.h
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-23
+//
+// Description : The FlexTron layer's own constants: the theme values, the theme global, where the
+//               theme choice is saved, and the dark colours of the native side.
+//
+//               They lived in RefactorConstants.h.pkg until 2026-09-23. Here, the reusable FT packages -
+//               the web controls, both hosts, both modal panels, the theme mixin, FTThemeColors and
+//               FTThemeSeed - compile without any DFRefactor file, so another workspace can Use them.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg     // RGB and clWhite, which the dark colours below are made of
+
+// Which theme the FlexTron web hosts render in. Deliberately OUR OWN values rather than the
+// framework's tpLightMode / tpDarkMode / tpSystemPreference: ZERO has to mean "not read from the
+// settings yet", and the framework enum has no such value. cFTThemeHost_mixin.pkg maps ours onto
+// the framework's in ApplyFTTheme. Explicit values, not an Enum_List, for the same reason.
+//
+// The theme cannot be seeded from OnStartup: that runs after every object already exists, by which
+// time the view hosts have long since constructed. So FTThemeSeed.pkg seeds it as soon as the
+// application object exists, and the first host to construct seeds it too if nothing has - one
+// registry read, not one per host.
+Define CI_FTThemeUnset  for 0   // nothing has read the setting yet
+Define CI_FTThemeDark   for 1
+Define CI_FTThemeLight  for 2
+Define CI_FTThemeSystem for 3   // follow Windows; the framework watches prefers-color-scheme live
+
+// The one source of truth for the above, seeded from the saved setting on first use.
+// Re-read by Send ApplyFTTheme, which is what a runtime switch would broadcast.
+Global_Variable Integer ghiFTThemeMode
+
+// WHERE THE THEME CHOICE IS SAVED: a value under the program's own registry key, read and written
+// with ReadInteger / WriteInteger of ghoApplication. DFRefactor keeps it in Settings\FTTheme. A
+// program that wants it elsewhere defines either constant BEFORE its first Use of this package.
+#IFNDEF CS_FTThemeSection
+    Define CS_FTThemeSection for "Settings"
+#ENDIF
+#IFNDEF CS_FTTheme
+    Define CS_FTTheme        for "FTTheme"      // CI_FTTheme* - dark/light/follow-Windows
+#ENDIF
+
+// THE DARK COLOURS of the native side - the panels, hosts and margins around the web content.
+// FTThemeColors.pkg returns them while the theme is dark. They lived in DFRefactorFT.src until
+// 2026-08-13 and in RefactorConstants.h.pkg until 2026-09-23.
+//
+// The web side of clDarkViewBg and clDarkWebBg is AppHtml/CssStyle/palette.css (--dfr-bg-card-hi and
+// --dfr-bg-page). Change one, change its twin, or the native panels drift away from the web bars
+// they sit next to.
+#IFNDEF clDarkTheme
+    Define clDarkTheme for (RGB(36,36,36))
+    Define clDarkThemeText for clWhite
+#ENDIF
+
+#IFNDEF clDarkViewBg
+    // The FT views' dark tint = the dashboard's warm card colour #31302E. clDarkTheme (#242424)
+    // read as pitch-black across a whole view, so the FT view/dialog files use this lighter grey.
+    Define clDarkViewBg for (RGB(49, 48, 46))       // HTML #31302E = var(--dfr-bg-card-hi)
+
+    // The web host backdrop #262624 - the dashboard's page background, painted globally by
+    // application.css. Hosted cLocalWebControlHost bars render on this, and there is no per-host
+    // CSS hook to recolour just one host - so a native panel sitting AMONG web bars uses THIS
+    // (not clDarkViewBg) to read as one surface with them.
+    Define clDarkWebBg for (RGB(38, 38, 36))        // HTML #262624 = var(--dfr-bg-page)
+#ENDIF
