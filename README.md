@@ -45,7 +45,9 @@ It brings in `DataFlex-dev/Web UI FlexTron` and RDCToolsLib. Add a Web UI theme 
 - **Use order.** A web control needs a host Used before it - the DataFlex web framework's own rule.
   `cFTThemeHost_mixin.pkg` is part of the two hosts and not for Use on its own.
 - **Style sheets.** A page links them itself: `RDCFlexTron/palette.css` first, then `buttons.css`,
-  `bars.css` and `pagefit.css` as needed, then your own sheets. The link order is the cascade.
+  `bars.css` and `pagefit.css` as needed, then your own sheets. The link order is the cascade. The package
+  installs them into `AppHtml\RDCFlexTron`; a workspace that points at a clone of this repository by
+  PATH gets no install step, so it links that folder itself (see Demo-RDCFlexTron's `setup.bat`).
 - DataFlex 26 only.
 
 ## Licence

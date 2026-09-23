@@ -40,3 +40,6 @@ AppHtml/WebUI/
 AppHtml/WebUI_Designer/
 AppHtml/CssThemes/
 AppHtml/RDCFlexTron/
+
+# df-cli writes a flat Config.ws beside a library workspace when it packs or configures it
+/Config.ws
