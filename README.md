@@ -38,8 +38,14 @@ Add the dependency to your workspace:
 }
 ```
 
-It brings in `DataFlex-dev/Web UI FlexTron` and RDCToolsLib. Add a Web UI theme package (for example
-`DataFlex-dev/Web UI Material Theme`) for the web controls themselves.
+It brings in RDCToolsLib and `DataFlex-dev/Web UI FlexTron` 1.0.52 or later (`^1.0.52`, so any later
+1.x will do). Add a Web UI theme package (for example `DataFlex-dev/Web UI Material Theme`) for the web
+controls themselves.
+
+If your workspace pins its own Web UI FlexTron version, list it BEFORE this package. df-cli 1.0.0 settles
+the requirements in list order: whichever comes first installs its version, and a later one must accept
+it. Listed after this package, an older exact pin finds the newest 1.x already installed, and the
+workspace reports "installed version ... does not satisfy".
 
 - **Seed the theme early.** `Use FTThemeSeed.pkg` and `Send SeedFTTheme` after your application
   object exists and before any panel that colours itself while it is constructed.
