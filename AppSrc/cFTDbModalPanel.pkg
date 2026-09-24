@@ -5,11 +5,12 @@
 // Web-site    : http://www.rdctools.com
 // Created     : 2026-07-11
 //
-// Description : FlexTron variant of RDCToolsLib's cRDCDbModalPanel (Nils + Claude 2026-07-12). The ONLY delta
-//               is the dark CodeJock theme on the dialog's status-bar command bar - until today that lived as a
-//               local uncommitted patch INSIDE the RDCToolsLib submodule (invisible, and one submodule update
-//               away from being lost). A thin SUBCLASS rather than a copy: the library class stays the single
-//               source of the panel behaviour, so this file cannot drift from it.
+// Description : FlexTron variant of RDCToolsLib's cRDCDbModalPanel (Nils + Claude 2026-07-12). It adds the FT
+//               ground colour, DataFlex's Default.ico as the default icon, and the dark CodeJock theme on the
+//               dialog's status-bar command bar - which until 2026-07-12 lived as a local uncommitted patch
+//               INSIDE the RDCToolsLib submodule (invisible, and one submodule update away from being lost).
+//               A thin SUBCLASS rather than a copy: the library class stays the single source of the panel
+//               behaviour, so this file cannot drift from it.
 //               FlexTron dialogs declare 'is a cFTDbModalPanel'; non-FlexTron dialogs keep the plain class.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
@@ -39,6 +40,9 @@ Class cFTDbModalPanel is a cRDCDbModalPanel
     Procedure Construct_Object
         Forward Send Construct_Object
         Set Color to (FTWebBg())
+        // DataFlex's own Default.ico, unless the dialog names an icon of its own. After the Forward: the
+        // base creates the property its Set Icon keeps the name in, and applies it again in Page.
+        Set Icon to "Default.ico"
     End_Procedure
 
     // The base's End_Construct_Object builds oDialogCommandbar > oStatusBar and stores the

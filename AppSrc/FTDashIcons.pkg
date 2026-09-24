@@ -39,6 +39,7 @@ Define CS_GlyphStack                     for "stack"
 Define CS_GlyphTrend                     for "trend"
 Define CS_GlyphUndo                      for "undo"
 Define CS_GlyphVideofilled               for "videofilled"
+Define CS_GlyphClose                     for "close"       // an x - a dialog's Close button
 
 /*  DashIcon - the inline SVG glyph set used by every board tile.
 
@@ -96,6 +97,10 @@ Function DashIcon Global String sName Returns String
         Move "M5 5m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z M9 9h6v6h-6z M3 10h2 M3 14h2 M10 3v2 M14 3v2 M21 10h-2 M21 14h-2 M10 21v-2 M14 21v-2" to sD
     If (sName = CS_GlyphSettings) ;
         Move "M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" to sD
+    // x (Tabler) - a dialog's Close button. The same mark as DFRefactor's Svg\Close.svg, but inline, so it
+    // takes the button's own ink in both themes.
+    If (sName = CS_GlyphClose) ;
+        Move "M18 6l-12 12 M6 6l12 12" to sD
     If (sName = CS_GlyphChevron) ;
         Move "M9 6l6 6l-6 6" to sD
     If (sName = CS_GlyphUndo) ;

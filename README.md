@@ -13,7 +13,8 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 |---|---|
 | `cFTLocalWebControlHost.pkg`, `cFTDbLocalWebControlHost.pkg` | FlexTron hosts that take the theme (`cFTThemeHost_mixin.pkg` is their shared part) |
 | `cFTWebButton`, `cFTWebCheckbox`, `cFTWebCombo`, `cFTWebForm`, `cFTWebLabel`, `cFTWebHtmlBox` | the web controls |
-| `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel` |
+| `cFTPanel.pkg` | a program's main window: a `Panel` in the theme's colour |
+| `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, with DataFlex's `Default.ico` unless the dialog sets its own; subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel` |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
 | `FTConstants.h.pkg` | the theme values, `ghiFTThemeMode`, the dark colours, and where the theme choice is saved |
@@ -47,7 +48,7 @@ It brings in `DataFlex-dev/Web UI FlexTron` and RDCToolsLib. Add a Web UI theme 
 - **Style sheets.** A page links them itself: `RDCFlexTron/palette.css` first, then `buttons.css`,
   `bars.css` and `pagefit.css` as needed, then your own sheets. The link order is the cascade. The package
   installs them into `AppHtml\RDCFlexTron`; a workspace that points at a clone of this repository by
-  PATH gets no install step, so it links that folder itself (see Demo-RDCFlexTron's `setup.bat`).
+  PATH gets no install step, so it copies the sheets there itself (see Demo-RDCFlexTron's `setup.bat`).
 - DataFlex 26 only.
 
 ## Licence

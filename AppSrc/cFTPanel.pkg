@@ -1,0 +1,31 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTPanel
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-24
+//
+// Description : FlexTron variant of DataFlex's Panel, for a program's main window. It adds the FT ground
+//               colour, so the native backdrop around the web hosts follows the theme - what cFTModalPanel
+//               does for a dialog.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use DFPanel.pkg
+Use FTThemeColors.pkg            // FTWebBg - the FT palette
+
+// Inherited from BasicPanel (Windows.pkg); stated so the Designer models this class without the pooled
+// package having been parsed first.
+{ DesignerClass=cDTPanel }
+{ HelpTopic=Panel }
+Class cFTPanel is a Panel
+
+    /* THE FT GROUND, set once, as cFTModalPanel sets it for every dialog: the window's own colour shows
+       wherever its web hosts do not cover it - the margins around them. */
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set Color to (FTWebBg())
+    End_Procedure
+
+End_Class
