@@ -49,7 +49,8 @@ Global_Variable Integer giFTThemeMode
 // FTThemeColors.pkg returns them while the theme is dark. They lived in DFRefactorFT.src until
 // 2026-08-13 and in RefactorConstants.h.pkg until 2026-09-23.
 //
-// The web side of clDarkViewBg and clDarkWebBg is AppHtml/CssStyle/palette.css (--dfr-bg-card-hi and
+// The web side of clDarkViewBg and clDarkWebBg is palette.css, which the package installs as
+// AppHtml/RDCFlexTron/palette.css (--dfr-bg-card-hi and
 // --dfr-bg-page). Change one, change its twin, or the native panels drift away from the web bars
 // they sit next to.
 #IFNDEF clDarkTheme

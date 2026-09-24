@@ -5,7 +5,8 @@ modal panels that follow a Dark / Light / Follow-Windows theme, plus HTML markup
 SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefactor.
 
 > **Private until FlexTron is released.** This repository is the package only - an installed package
-> is read-only, so it carries no programs. The samples live in **Demo-RDCFlexTron**.
+> is read-only, so it carries no programs. For sample usage see
+> [Demo-RDCFlexTron](https://github.com/NilsSve/Demo-RDCFlexTron).
 
 ## What is in it
 
