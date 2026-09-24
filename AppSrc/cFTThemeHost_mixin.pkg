@@ -114,7 +114,7 @@ Class cFTThemeHost_mixin is a Mixin
        DataFlex update rewords the template the inject silently misses, so a future white flash
        means: read the base VirtualHtml again. */
     Function VirtualHtml Returns String
-        String sHtml sBg sTheme sLinks
+        String sHtml sBg sTheme sLinks sImportant
 
         Forward Get VirtualHtml to sHtml
         /* THE STYLESHEETS GO IN THE HEAD (Nils 2026-09-19: on the first open of the Guided board for
@@ -151,8 +151,19 @@ Class cFTThemeHost_mixin is a Mixin
            first-activation flash and the resize lag. So the same surfaces are painted here, inline
            in the head with !important - dark from the first style computation, before any sheet
            has loaded, and immune to the theme arriving later. */
-        Move (Replaces("html, body{", sHtml, "html, body{ background: " + sBg + " !important;")) to sHtml
-        Move (Replaces("</style>", sHtml, "#viewport, .WebApp.WebContainer, .WebCon_ContentWrp { background: " + sBg + " !important; } </style>")) to sHtml
+        /* THE "!" IS ASSEMBLED, NEVER WRITTEN (2026-09-24). Inside a string literal the compiler reads
+           "!i" as a macro token - the family of "!C" and "!1" - so " !important" compiled as
+           " 0mportant", an invalid declaration, and the browser dropped both rules below. DFRefactor
+           never showed it: its application.css paints the same surfaces again. The RDCFlexTron demo,
+           which has no application.css, showed the theme's own #191919 behind every page.
+           Character(33) is the "!".
+
+           The three surfaces take var(--dfr-bg-page), with the theme colour as the fallback for the
+           first paint, before palette.css has loaded. The token follows the class the framework puts
+           on the body, so with "Follow Windows" the backdrop matches the web content drawn on it. */
+        Move (Character(33) + "important") to sImportant
+        Move (Replaces("html, body{", sHtml, "html, body{ background: " + sBg + " " + sImportant + ";")) to sHtml
+        Move (Replaces("</style>", sHtml, "#viewport, .WebApp.WebContainer, .WebCon_ContentWrp { background: var(--dfr-bg-page, " + sBg + ") " + sImportant + "; } </style>")) to sHtml
         Function_Return sHtml
     End_Function
 
