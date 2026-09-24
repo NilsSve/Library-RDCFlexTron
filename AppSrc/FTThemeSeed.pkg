@@ -5,7 +5,7 @@
 // Web-site    : http://www.rdctools.com
 // Created     : 2026-08-13
 //
-// Description : Seeds ghiFTThemeMode from the saved setting, ONCE, early.
+// Description : Seeds giFTThemeMode from the saved setting, ONCE, early.
 //
 //               WHY THIS EXISTS SEPARATELY FROM FTThemeColors.pkg
 //               FTThemeColors has to be compiled near the top of the program - the shared files that call its
@@ -28,12 +28,12 @@
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
-Use FTConstants.h.pkg   // CI_FTTheme*, ghiFTThemeMode, CS_FTThemeSection / CS_FTTheme
+Use FTConstants.h.pkg   // CI_FTTheme*, giFTThemeMode, CS_FTThemeSection / CS_FTTheme
 
 Procedure SeedFTTheme Global
     Integer iMode
 
-    If (ghiFTThemeMode <> CI_FTThemeUnset) ;
+    If (giFTThemeMode <> CI_FTThemeUnset) ;
         Procedure_Return
     If (ghoApplication = 0) ;
         Procedure_Return
@@ -43,5 +43,5 @@ Procedure SeedFTTheme Global
     // a meaningless number, so anything unrecognised falls back to dark.
     If (iMode < CI_FTThemeDark or iMode > CI_FTThemeSystem) ;
         Move CI_FTThemeDark to iMode
-    Move iMode to ghiFTThemeMode
+    Move iMode to giFTThemeMode
 End_Procedure

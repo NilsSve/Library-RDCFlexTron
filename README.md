@@ -18,7 +18,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, with DataFlex's `Default.ico` unless the dialog sets its own; subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel` |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
-| `FTConstants.h.pkg` | the theme values, `ghiFTThemeMode`, the dark colours, and where the theme choice is saved |
+| `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the dark colours, and where the theme choice is saved |
 | `FTThemeColors.pkg`, `FTThemeSeed.pkg` | native colours that follow the theme; seeding the theme from the saved choice |
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables - and `FTHtmlEscape` |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG icons, and their `CS_Glyph*` names |

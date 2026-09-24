@@ -32,39 +32,39 @@
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
-Use FTConstants.h.pkg           // CI_FTTheme*, ghiFTThemeMode, where the theme is saved
+Use FTConstants.h.pkg           // CI_FTTheme*, giFTThemeMode, where the theme is saved
 Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
 
 Class cFTThemeHost_mixin is a Mixin
 
-    // Seed ghiFTThemeMode from the saved setting, once per run. Deliberately lazy rather than done at
+    // Seed giFTThemeMode from the saved setting, once per run. Deliberately lazy rather than done at
     // startup: OnStartup runs AFTER every object exists (see ApplyDarkStatusPanel at the foot of
     // DFRefactorFT.src), so the view hosts would already have been constructed and themed by then.
     // Whoever constructs first pays for one registry read; the other 32 hosts find the global set.
     Procedure SeedFTThemeMode
         Integer iMode
-        If (ghiFTThemeMode = CI_FTThemeUnset) Begin
+        If (giFTThemeMode = CI_FTThemeUnset) Begin
             Get ReadInteger of ghoApplication CS_FTThemeSection CS_FTTheme CI_FTThemeDark to iMode
             // A value written by a future version - or a hand-edited registry - must not leave the
             // global on a meaningless number, so anything unrecognised falls back to dark.
             If (iMode < CI_FTThemeDark or iMode > CI_FTThemeSystem) Begin
                 Move CI_FTThemeDark to iMode
             End
-            Move iMode to ghiFTThemeMode
+            Move iMode to giFTThemeMode
         End
     End_Procedure
 
-    // Push ghiFTThemeMode onto this host. Called as the host is constructed, and again by a runtime
+    // Push giFTThemeMode onto this host. Called as the host is constructed, and again by a runtime
     // theme switch - broadcast it to re-read the global rather than setting peThemePreference directly,
     // so the mapping lives in exactly one place.
     Procedure ApplyFTTheme
         Integer eWanted
         Send SeedFTThemeMode
         Move tpDarkMode to eWanted
-        If (ghiFTThemeMode = CI_FTThemeLight) Begin
+        If (giFTThemeMode = CI_FTThemeLight) Begin
             Move tpLightMode to eWanted
         End
-        If (ghiFTThemeMode = CI_FTThemeSystem) Begin
+        If (giFTThemeMode = CI_FTThemeSystem) Begin
             Move tpSystemPreference to eWanted
         End
         Set peThemePreference to eWanted
@@ -109,7 +109,7 @@ Class cFTThemeHost_mixin is a Mixin
 
        The override injects an INLINE background into the template, so it applies at the very first
        paint, before any external CSS - and permanently, so a resize-exposed body region is dark
-       too. ghiFTThemeMode is seeded by ApplyFTTheme at construction; VirtualHtml runs at OnCreate,
+       too. giFTThemeMode is seeded by ApplyFTTheme at construction; VirtualHtml runs at OnCreate,
        which is later. The Replaces target is the template's own spelling, "html, body{" - if a
        DataFlex update rewords the template the inject silently misses, so a future white flash
        means: read the base VirtualHtml again. */
@@ -140,7 +140,7 @@ Class cFTThemeHost_mixin is a Mixin
             + '<link rel="stylesheet" href="CssStyle/application.css">' ;
             + C_NewLine + '<!-- DataFlex Engine -->') to sLinks
         Move (Replaces("<!-- DataFlex Engine -->", sHtml, sLinks)) to sHtml
-        If (ghiFTThemeMode = CI_FTThemeLight) ;
+        If (giFTThemeMode = CI_FTThemeLight) ;
             Move "#F7F5F0" to sBg
         Else ;
             Move "#262624" to sBg

@@ -16,7 +16,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use cDbLocalWebControlHost.pkg
-Use FTConstants.h.pkg           // CI_FTTheme* + ghiFTThemeMode
+Use FTConstants.h.pkg           // CI_FTTheme* + giFTThemeMode
 Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
 Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc)
 

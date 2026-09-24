@@ -28,14 +28,14 @@ Use seq_chnl.pkg               // Seq_New_Channel - the design-time dump below
    Every FlexTron dialog seeds its HTML boxes with an EXPRESSION at construct, which the Studio's
    Windows Designer cannot evaluate, so each box also carries a LITERAL copy of that markup for
    the Designer (2026-09-21). Those literals must be regenerated when a builder changes. A
-   throwaway copy of the program sets ghbFTDesignDump before any object constructs, and every
-   box then appends '<full object name>|<psHtml>' to ghsFTDesignDumpFile as it finishes
+   throwaway copy of the program sets gbFTDesignDump before any object constructs, and every
+   box then appends '<full object name>|<psHtml>' to gsFTDesignDumpFile as it finishes
    constructing - the exact string the runtime seeds, in the no-workspace state. The real
-   program never sets the flag, so this costs one integer compare per box. */
-Global_Variable Integer ghbFTDesignDump
-Global_Variable String  ghsFTDesignDumpFile
-Move 0  to ghbFTDesignDump
-Move "" to ghsFTDesignDumpFile
+   program never sets the flag, so this costs one Boolean test per box. */
+Global_Variable Boolean gbFTDesignDump
+Global_Variable String  gsFTDesignDumpFile
+Move False to gbFTDesignDump
+Move "" to gsFTDesignDumpFile
 
 Class cFTWebHtmlBox is a cWebHtmlBox
 
@@ -55,7 +55,7 @@ Class cFTWebHtmlBox is a cWebHtmlBox
         String  sHtml sLine
         Integer iCh
         Forward Send End_Construct_Object
-        If (ghbFTDesignDump <> 0 and ghsFTDesignDumpFile <> "") Begin
+        If (gbFTDesignDump and gsFTDesignDumpFile <> "") Begin
             Get psHtml to sHtml
             If (sHtml <> "") Begin
                 Move (Replaces(Character(13), sHtml, "")) to sHtml
@@ -63,7 +63,7 @@ Class cFTWebHtmlBox is a cWebHtmlBox
                 Move (Name(Self) + "|" + sHtml) to sLine
                 Move (Seq_New_Channel()) to iCh
                 If (iCh >= 0) Begin
-                    Append_Output channel iCh ghsFTDesignDumpFile
+                    Append_Output channel iCh gsFTDesignDumpFile
                     Writeln channel iCh sLine
                     Close_Output channel iCh
                     Send Seq_Release_Channel iCh

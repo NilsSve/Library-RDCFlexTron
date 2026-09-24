@@ -6,7 +6,7 @@
 // Created     : 2026-08-13
 //
 // Description : FT variant of the FlexTron web host: identical to cLocalWebControlHost except that it renders in
-//               the theme ghiFTThemeMode names. See cFTThemeHost_mixin.pkg for the whole story - this package is only the
+//               the theme giFTThemeMode names. See cFTThemeHost_mixin.pkg for the whole story - this package is only the
 //               class wrapper around it.
 //
 //               The theme properties live on the HOST, not on the controls. None of the FT control subclasses we
@@ -18,7 +18,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use cLocalWebControlHost.pkg
-Use FTConstants.h.pkg           // CI_FTTheme* + ghiFTThemeMode
+Use FTConstants.h.pkg           // CI_FTTheme* + giFTThemeMode
 Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
 Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc)
 

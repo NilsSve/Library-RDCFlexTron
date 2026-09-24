@@ -33,7 +33,7 @@ Define CI_FTThemeSystem for 3   // follow Windows; the framework watches prefers
 
 // The one source of truth for the above, seeded from the saved setting on first use.
 // Re-read by Send ApplyFTTheme, which is what a runtime switch would broadcast.
-Global_Variable Integer ghiFTThemeMode
+Global_Variable Integer giFTThemeMode
 
 // WHERE THE THEME CHOICE IS SAVED: a value under the program's own registry key, read and written
 // with ReadInteger / WriteInteger of ghoApplication. DFRefactor keeps it in Settings\FTTheme. A
