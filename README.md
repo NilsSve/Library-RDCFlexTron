@@ -33,7 +33,7 @@ Add the dependency to your workspace:
 ```json
 {
     "source": "https://github.com/NilsSve/Library-RDCFlexTron.git",
-    "sws": "RDCFlexTronLibrary26.0.sws",
+    "sws": "RDC-FlexTron-Library-26.0.sws",
     "version": "<commit>"
 }
 ```
