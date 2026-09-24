@@ -1,0 +1,50 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTHtmlPage
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-24
+//
+// Description : A cFTWebHtmlBox that holds a whole page, as opposed to a button band or a tile. It carries
+//               what a page has and a band does not - for now psTitleIcon, the picture beside the page's
+//               title, and TitleIconHtml, which draws it.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTWebHtmlBox.pkg
+Use FTMarkupBuilders.pkg        // ImgHtml
+Use FTDashIcons.pkg             // DashIcon
+
+// Inherited from cWebHtmlBox; stated so the Designer models this class without the pooled package.
+{ DesignerJSClass=df.WebHtmlBox }
+Class cFTHtmlPage is a cFTWebHtmlBox
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        /* The picture beside the page's title - one property for both kinds:
+             - a value with a "." is an image FILE, relative to AppHtml ("Images/RDC-Mark.svg"). It
+               keeps its own colours in both themes;
+             - anything else is a DashIcon glyph NAME (CS_GlyphListcheck ...): inline SVG that takes
+               the text colour.
+           The default is a glyph, CS_GlyphFiletext (a page with lines), because a glyph is built into
+           this library and so exists in every workspace; an image file exists only in the workspace that
+           ships it. Empty is no picture. The page is built as the box is constructed, so set this in the
+           object body - a later change does not redraw the page. */
+        { Category=Appearance }
+        Property String psTitleIcon CS_GlyphFiletext
+    End_Procedure
+
+    // The markup for psTitleIcon, for the page to put beside its title; "" when there is none.
+    Function TitleIconHtml Returns String
+        String sIcon
+        Get psTitleIcon to sIcon
+        If (sIcon = "") ;
+            Function_Return ""
+        If (Pos(".", sIcon) > 0) ;
+            Function_Return (ImgHtml(sIcon, "titleicon", "", ""))
+        Function_Return (DashIcon(sIcon))
+    End_Function
+
+End_Class

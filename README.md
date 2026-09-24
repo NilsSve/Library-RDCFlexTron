@@ -13,6 +13,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 |---|---|
 | `cFTLocalWebControlHost.pkg`, `cFTDbLocalWebControlHost.pkg` | FlexTron hosts that take the theme (`cFTThemeHost_mixin.pkg` is their shared part) |
 | `cFTWebButton`, `cFTWebCheckbox`, `cFTWebCombo`, `cFTWebForm`, `cFTWebLabel`, `cFTWebHtmlBox` | the web controls |
+| `cFTHtmlPage.pkg` | a `cFTWebHtmlBox` that holds a whole page; `psTitleIcon` is the picture beside its title - an image file or a `DashIcon` glyph name (default: the `filetext` glyph) |
 | `cFTPanel.pkg` | a program's main window: a `Panel` in the theme's colour |
 | `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, with DataFlex's `Default.ico` unless the dialog sets its own; subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel` |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
