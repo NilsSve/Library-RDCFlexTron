@@ -4,7 +4,7 @@
         {
             "source": "https://github.com/NilsSve/Library-RDCToolsLib.git",
             "sws": "RDC-Windows-Sub-Classes-Library-26.0.sws",
-            "version": "7c4dd0feb1cefa91eec142461154f22283ebed7b"
+            "version": "^1.0.0"
         }
     ],
     "description": "RDC Tools' FlexTron toolkit: themed FlexTron hosts, web controls and modal panels, HTML markup builders and inline SVG icons for DataFlex Windows applications.",

@@ -38,14 +38,16 @@ Add the dependency to your workspace:
 }
 ```
 
-It brings in RDCToolsLib and `DataFlex-dev/Web UI FlexTron` 1.0.52 or later (`^1.0.52`, so any later
-1.x will do). Add a Web UI theme package (for example `DataFlex-dev/Web UI Material Theme`) for the web
-controls themselves.
+It brings in RDCToolsLib 1.0.0 or later (`^1.0.0`, matched against RDCToolsLib's version tags) and
+`DataFlex-dev/Web UI FlexTron` 1.0.52 or later (`^1.0.52`); for both, any later 1.x will do. Add a Web UI
+theme package (for example `DataFlex-dev/Web UI Material Theme`) for the web controls themselves.
 
-If your workspace pins its own Web UI FlexTron version, list it BEFORE this package. df-cli 1.0.0 settles
-the requirements in list order: whichever comes first installs its version, and a later one must accept
-it. Listed after this package, an older exact pin finds the newest 1.x already installed, and the
-workspace reports "installed version ... does not satisfy".
+If your workspace pins its own Web UI FlexTron or RDCToolsLib version, list it BEFORE this package.
+df-cli 1.0.0 settles the requirements in list order: whichever comes first installs its version, and a
+later one must accept it. Listed after this package, an older exact pin finds the newest 1.x already
+installed, and the workspace reports "installed version ... does not satisfy" ("Incompatible ref" for
+RDCToolsLib). Pin RDCToolsLib by its version tag, such as `"1.0.0"`, never by a commit: a commit is not
+a version, so the range above cannot accept it.
 
 - **Seed the theme early.** `Use FTThemeSeed.pkg` and `Send SeedFTTheme` after your application
   object exists and before any panel that colours itself while it is constructed.
