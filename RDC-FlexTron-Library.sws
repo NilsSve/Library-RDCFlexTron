@@ -3,8 +3,8 @@
         "DataFlex-dev/Web UI FlexTron#^1.0.52",
         {
             "source": "https://github.com/NilsSve/Library-RDCToolsLib.git",
-            "sws": "RDC-Windows-Sub-Classes-Library-26.0.sws",
-            "version": "^1.0.0"
+            "sws": "RDC-Windows-Sub-Classes-Library.sws",
+            "version": "^1.0.1"
         }
     ],
     "description": "RDC Tools' FlexTron toolkit: themed FlexTron hosts, web controls and modal panels, HTML markup builders and inline SVG icons for DataFlex Windows applications.",
