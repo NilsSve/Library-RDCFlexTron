@@ -65,7 +65,9 @@ a version, so the range above cannot accept it.
   sheets at the top of that file - `@import url("../RDCFlexTron/palette.css");` and
   `@import url("../RDCFlexTron/ftcontrols.css");`. A button's own font (`psFontFamily`, `piFontSize`,
   `pbBold`) and `pbPrimary`'s amber are applied when the program runs, so the Designer shows the standard
-  FT button.
+  FT button. A `cFTHtmlPage` whose page is built at run time shows only its literal `psHtml` there: make
+  that placeholder the page's header in the page's own classes, with Lorem ipsum for the body text
+  (Demo-RDCFlexTron's two pages do).
 - DataFlex 26 only.
 
 ## Credits
