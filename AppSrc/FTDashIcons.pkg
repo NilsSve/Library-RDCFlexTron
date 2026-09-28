@@ -26,7 +26,8 @@ Use Windows.pkg
    AppHtml/RDCFlexTron/ftglyphs.css draws every glyph here as a web-button class ("ftg-<name>") and is
    GENERATED from this file: after adding or changing a glyph, run Tools/MakeFTGlyphsCss.py and commit the
    sheet with it. The script reads each branch of DashIcon below - a path moved into sD, or an <svg>
-   returned whole - so keep a branch's code on the line right after its If. */
+   returned whole - so keep a branch's code on the line right after its If. A new glyph also needs its line in
+   FTGlyphNames; the script stops if one is missing. */
 Define CS_GlyphChevron                   for "chevron"
 Define CS_GlyphRepeat                    for "repeat"      // TestCompileFT wrote this SVG out four times
 Define CS_GlyphArrowRight                for "arrowright"  // the hand-over marker on the Test Compile tail
@@ -116,6 +117,102 @@ Define CS_GlyphLogout                    for "logout"      // Tabler logout
 Define CS_GlyphLogin                     for "login"       // Tabler login
 Define CS_GlyphExit                      for "exit"        // Tabler door-exit
 Define CS_GlyphPower                     for "power"       // Tabler power
+
+/* FTGlyphNames - the name of every glyph DashIcon draws, in alphabetical order: for a combo or a list to choose a
+   glyph from, or to check a name before it is used (SearchArray) - DashIcon draws its default glyph for a name it
+   does not know, without a word. A name is what DashIcon, psGlyph and UpdateGlyph take, and "ftg-" + the name is
+   the glyph's class in ftglyphs.css.
+
+   Built from the constants, so a misspelt one is a build error. A new glyph needs its line here too:
+   Tools/MakeFTGlyphsCss.py stops when a CS_Glyph* Define is missing from this list. */
+Function FTGlyphNames Global Returns String[]
+    String[] asNames
+    // In the order of the Defines above; sorted on the way out.
+    // The board and tile glyphs
+    Move CS_GlyphChevron to asNames[-1]
+    Move CS_GlyphRepeat to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphArrowRight to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphPlayFilled to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphCompare to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphFile to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphFiletext to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphFolder to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphFoldercheck to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphHand to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphListcheck to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphPlaycircleline to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphSettings to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphStack to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphTrend to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphUndo to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphVideofilled to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphClose to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphPlan to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphBolt to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphEraser to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphSparkles to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphCpu to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphPlay to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphSearch to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphScan to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphVideo to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphFilmstrip to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphPlaycircle to asNames[SizeOfArray(asNames)]
+    // Editing
+    Move CS_GlyphAdd to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphRemove to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphEdit to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphDelete to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphSave to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphCopy to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphCheck to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphRefresh to asNames[SizeOfArray(asNames)]
+    // Files
+    Move CS_GlyphFolderOpen to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphDownload to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphUpload to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphExport to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphImport to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphPrint to asNames[SizeOfArray(asNames)]
+    // Arrows
+    Move CS_GlyphArrowLeft to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphArrowUp to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphArrowDown to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphChevronLeft to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphChevronUp to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphChevronDown to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphExternalLink to asNames[SizeOfArray(asNames)]
+    // Messages
+    Move CS_GlyphInfo to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphHelp to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphWarning to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphStop to asNames[SizeOfArray(asNames)]
+    // View
+    Move CS_GlyphFilter to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphEye to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphZoomIn to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphZoomOut to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphSun to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphMoon to asNames[SizeOfArray(asNames)]
+    // Other
+    Move CS_GlyphLock to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphUnlock to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphUser to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphCalendar to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphClock to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphMail to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphLink to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphDatabase to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphCode to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphHome to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphStar to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphMore to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphLogout to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphLogin to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphExit to asNames[SizeOfArray(asNames)]
+    Move CS_GlyphPower to asNames[SizeOfArray(asNames)]
+    Function_Return (SortArray(asNames))
+End_Function
 
 /*  DashIcon - the inline SVG glyph set used by every board tile.
 

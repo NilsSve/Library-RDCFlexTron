@@ -16,6 +16,8 @@ the function's shared <svg> template (its last Function_Return); a branch that r
 is taken whole. A one-colour glyph (currentColor) becomes a MASK painted in the button's text colour, so it
 follows the theme; a glyph with its own rgb() fills and no currentColor is a background image in its own
 colours. The classes come in the order of the CS_Glyph* Defines.
+
+It also checks FTGlyphNames, the list of every glyph's name: it must hold each CS_Glyph* Define once.
 """
 import os
 import re
@@ -26,6 +28,22 @@ PKG = os.path.join(ROOT, 'AppSrc', 'FTDashIcons.pkg')
 OUT = os.path.join(ROOT, 'AppHtml', 'RDCFlexTron', 'ftglyphs.css')
 
 
+def check_glyph_names(lines, constants):
+    """FTGlyphNames lists every glyph by its constant; a glyph left out of it never reaches a picker."""
+    start = next((i for i, line in enumerate(lines) if re.match(r'\s*Function\s+FTGlyphNames\s+Global\b', line)), None)
+    if start is None:
+        sys.exit('FTGlyphNames: not found')
+    end = next(i for i in range(start, len(lines)) if re.match(r'\s*End_Function\b', lines[i]))
+    listed = [m.group(1) for m in (re.match(r'\s*Move\s+(CS_Glyph\w+)\s+to\s+asNames\b', line)
+                                   for line in lines[start:end]) if m]
+    missing = [c for c in constants if c not in listed]
+    twice = sorted(set(c for c in listed if listed.count(c) > 1))
+    unknown = [c for c in listed if c not in constants]
+    if missing or twice or unknown:
+        sys.exit('FTGlyphNames and the CS_Glyph* Defines disagree - not listed: %s; listed twice: %s; no Define: %s'
+                 % (missing, twice, unknown))
+
+
 def read_glyphs():
     lines = open(PKG, 'rb').read().decode('utf-8-sig').splitlines()
     names, order = {}, []
@@ -34,6 +52,7 @@ def read_glyphs():
         if m:
             names[m.group(1)] = m.group(2)
             order.append(m.group(2))
+    check_glyph_names(lines, list(names))
 
     start = next(i for i, line in enumerate(lines) if re.match(r'\s*Function\s+DashIcon\s+Global\b', line))
     end = next(i for i in range(start, len(lines)) if re.match(r'\s*End_Function\b', lines[i]))

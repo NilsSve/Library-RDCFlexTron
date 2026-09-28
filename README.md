@@ -27,7 +27,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the colours, and where the theme choice is saved; the whole HTML tags the markup builders go with (`CS_DivEnd`, `CS_CodeOpen`, `CS_BulletItemEnd`, `CS_Br` ...), the named characters (`CS_EmDash`, `CS_Nbsp`, `CS_Check` ...) and the links to the library's style sheets (`CS_PaletteCssLink`, `CS_PageFitCssLink`, `CS_PillsCssLink`) |
 | `FTThemeColors.pkg` | native colours that follow the theme |
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables, style sheet and script links - `FTHtmlEscape`, and `MarkedText`: prose whose names are marked with backticks, as in a README |
-| `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant |
+| `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant; `FTGlyphNames` returns all their names, for a combo or a list to choose from |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
 | `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls, and `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated); installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last three itself |
 
@@ -100,7 +100,8 @@ a version, so the range above cannot accept it.
 ## Changing the glyphs
 
 `AppHtml/RDCFlexTron/ftglyphs.css` is generated from `AppSrc/FTDashIcons.pkg`. After adding or changing a
-glyph there, run `python Tools/MakeFTGlyphsCss.py` and commit the sheet with it.
+glyph there, run `python Tools/MakeFTGlyphsCss.py` and commit the sheet with it. A new glyph also needs its line in
+`FTGlyphNames`; the script stops if one is missing.
 
 ## Credits
 
