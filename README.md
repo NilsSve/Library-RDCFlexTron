@@ -25,7 +25,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the dark colours, and where the theme choice is saved |
-| `FTThemeColors.pkg`, `FTThemeSeed.pkg` | native colours that follow the theme; `SeedFTTheme`, the theme from the saved choice - which a `cFTApplication` sends itself |
+| `FTThemeColors.pkg` | native colours that follow the theme |
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables - and `FTHtmlEscape` |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
@@ -54,9 +54,10 @@ installed, and the workspace reports "installed version ... does not satisfy" ("
 RDCToolsLib). Pin RDCToolsLib by its version tag, such as `"1.0.1"`, never by a commit: a commit is not
 a version, so the range above cannot accept it.
 
-- **The application object** is a `cFTApplication`: it reads the theme choice as soon as it is built.
-  With an application class of your own, `Use FTThemeSeed.pkg` and `Send SeedFTTheme` after its object
-  instead. A dialog can be Used anywhere, above the application object too: an FT panel or web host
+- **The application object** is a `cFTApplication`: it reads the theme choice as soon as it is built
+  (`SeedFTTheme`). An application object of a class of your own reads it the same way: `ReadInteger` of
+  `CS_FTThemeSection` / `CS_FTTheme` into `giFTThemeMode`, then `Send FTThemeLateObjects`. A dialog can be
+  Used anywhere, above the application object too: an FT panel or web host
   built before the theme is read waits for it, and takes it as soon as it is read - before it is shown.
 - **Where the choice is saved.** `Settings\FTTheme` under the program's registry key. To keep it
   elsewhere, define `CS_FTThemeSection` and/or `CS_FTTheme` before the first Use of `FTConstants.h.pkg`.

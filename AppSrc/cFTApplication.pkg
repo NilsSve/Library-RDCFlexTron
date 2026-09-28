@@ -13,7 +13,7 @@
 //****************************************************************************
 Use cApplication.pkg
 Use FTConstants.h.pkg               // the CI_FTTheme* modes, giFTThemeMode, where the choice is saved
-Use FTThemeSeed.pkg                 // SeedFTTheme
+Use FTThemeColors.pkg               // FTThemeLateObjects - the FT objects that waited for the theme
 Use FTMessageBox.pkg                // FTInfoBox - Windows' own box in a program without FTMessageBox.dg
 
 // A theme mode in words, as a theme button names it: "Dark", "Light" or "Follow Windows".
@@ -26,14 +26,30 @@ Function FTThemeName Global Integer iMode Returns String
 End_Function
 
 /* THE THEME IS READ ONCE, when the program starts (Nils 2026-09-28: "Why not include the message in a
-   cFTApplication class, together with SwitchTheme?"). This object sends SeedFTTheme itself, at the end of
-   its construction: its own settings - psCompany and psProduct, the registry key the choice is saved
-   under - are set by then, and every FT panel and dialog built after it is built in the theme.
+   cFTApplication class, together with SwitchTheme?"). This object reads it itself (SeedFTTheme), at the end
+   of its construction: its own settings - psCompany and psProduct, the registry key the choice is saved
+   under - are set by then, and every FT panel and dialog built after it is built in the theme. Not in
+   OnCreate or OnWorkspaceOpened: those are the program's to augment, and one without a Forward would switch
+   the theme off; cApplication sends both from inside its End_Construct_Object anyway.
 
    A dialog Used ABOVE the application object is built before the theme is known: its panel and web hosts
    wait for it (FTThemeLater), and SeedFTTheme themes them as soon as it has read it - before any of them is
-   shown. */
+   shown. A program whose application object is of a class of its own reads the choice itself, the way
+   SeedFTTheme does. */
 Class cFTApplication is a cApplication
+
+    // The saved theme choice, read once, into giFTThemeMode - and every FT object that waited for it takes it
+    // (FTThemeLateObjects). A value this version does not know - written by a later one, or by hand - is dark.
+    Procedure SeedFTTheme
+        Integer iMode
+        If (giFTThemeMode <> CI_FTThemeUnset) ;
+            Procedure_Return
+        Get ReadInteger CS_FTThemeSection CS_FTTheme CI_FTThemeDark to iMode
+        If ((iMode < CI_FTThemeDark) or (iMode > CI_FTThemeSystem)) ;
+            Move CI_FTThemeDark to iMode
+        Move iMode to giFTThemeMode
+        Send FTThemeLateObjects
+    End_Procedure
 
     Procedure End_Construct_Object
         Forward Send End_Construct_Object

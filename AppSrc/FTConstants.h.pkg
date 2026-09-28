@@ -10,7 +10,7 @@
 //
 //               They lived in RefactorConstants.h.pkg until 2026-09-23. Here, the reusable FT packages -
 //               the web controls, both hosts, both modal panels, the theme mixin, FTThemeColors and
-//               FTThemeSeed - compile without any DFRefactor file, so another workspace can Use them.
+//               cFTApplication - compile without any DFRefactor file, so another workspace can Use them.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -21,7 +21,7 @@ Use Rgb.pkg
 // THE PACKAGE VERSION, as RDC-FlexTron-Library.sws states it in "package"."version" - keep the two
 // equal. Every FT host page links ftcontrols.css / ftcontrols.js with it as ?v=, because WebView2
 // keeps a copy of what it loaded, and a new version of the library must not be served the old one.
-Define CS_FTLibraryVersion for "0.6.0"
+Define CS_FTLibraryVersion for "0.7.0"
 
 // The one source of truth for the above, seeded from the saved setting on first use.
 // Re-read by Send ApplyFTTheme, which is what a runtime switch would broadcast.
@@ -33,9 +33,9 @@ Global_Variable Integer giFTThemeMode
 // the framework's in ApplyFTTheme. Explicit values, not an Enum_List, for the same reason.
 //
 // The theme cannot be seeded from OnStartup: that runs after every object already exists, by which
-// time the view hosts have long since constructed. So FTThemeSeed.pkg seeds it as soon as the
-// application object exists, and the first host to construct seeds it too if nothing has - one
-// registry read, not one per host.
+// time the view hosts have long since constructed. So cFTApplication reads it as soon as the
+// application object exists (SeedFTTheme), and the first host to construct reads it if nothing has -
+// one registry read, not one per host.
 Define CI_FTThemeUnset  for 0   // nothing has read the setting yet
 Define CI_FTThemeDark   for 1
 Define CI_FTThemeLight  for 2

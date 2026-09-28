@@ -143,8 +143,8 @@ End_Function
    the program"). The theme is read through the application object, so an FT dialog Used above it - its panel
    and web hosts, built where the dialog is Used - cannot know it yet, and a guess would stick: a dark panel
    in a light program, and the WebView2 background above (once-only) for the whole run. Such an object waits
-   on this list instead, and the seed - SeedFTTheme, or the first host built after the application object -
-   sends each one ApplyFTTheme as soon as it has read the theme: at startup, before any of them is shown. */
+   on this list instead, and the seed - cFTApplication's, or the first host built after the application
+   object - sends each one ApplyFTTheme as soon as it has read the theme: at startup, before any is shown. */
 Global_Variable Handle[] gahoFTThemeLate
 
 // Each FT panel and web host class has one: it applies the theme to the object.
