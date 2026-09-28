@@ -34,6 +34,7 @@
 //****************************************************************************
 Use FTConstants.h.pkg           // CI_FTTheme*, giFTThemeMode, where the theme is saved
 Use FTThemeColors.pkg           // FTWebBg, FTColorHex - the WebView2 back colour, and the page body's
+Use FTMarkupBuilders.pkg        // StyleSheetLink, ScriptLink - the links the page's head and its includes are made of
 
 Class cFTThemeHost_mixin is a Mixin
 
@@ -148,9 +149,9 @@ Class cFTThemeHost_mixin is a Mixin
         Get psTheme to sTheme
         If (Trim(sTheme) = "") ;
             Move "Df_Material" to sTheme
-        Move ('<link rel="stylesheet" href="DfEngine/system.css">' ;
-            + '<link rel="stylesheet" href="CssThemes/' + sTheme + '/theme.css">' ;
-            + '<link rel="stylesheet" href="CssStyle/application.css">' ;
+        Move ((StyleSheetLink("DfEngine/system.css")) ;
+            + (StyleSheetLink("CssThemes/" + sTheme + "/theme.css")) ;
+            + (StyleSheetLink("CssStyle/application.css")) ;
             + C_NewLine + '<!-- DataFlex Engine -->') to sLinks
         Move (Replaces("<!-- DataFlex Engine -->", sHtml, sLinks)) to sHtml
         // The web backdrop as CSS, from its Define (FTWebBg: clLightWebBg / clDarkWebBg). Character(35) is the
@@ -175,7 +176,7 @@ Class cFTThemeHost_mixin is a Mixin
            on the body, so with "Follow Windows" the backdrop matches the web content drawn on it. */
         Move (Character(33) + "important") to sImportant
         Move (Replaces("html, body{", sHtml, "html, body{ background: " + sBg + " " + sImportant + ";")) to sHtml
-        Move (Replaces("</style>", sHtml, "#viewport, .WebApp.WebContainer, .WebCon_ContentWrp { background: var(--dfr-bg-page, " + sBg + ") " + sImportant + "; } </style>")) to sHtml
+        Move (Replaces(CS_StyleEnd, sHtml, "#viewport, .WebApp.WebContainer, .WebCon_ContentWrp { background: var(--dfr-bg-page, " + sBg + ") " + sImportant + "; } " + CS_StyleEnd)) to sHtml
         Function_Return sHtml
     End_Function
 
@@ -189,10 +190,10 @@ Class cFTThemeHost_mixin is a Mixin
        files more. An object that augments this event must Forward it, or its page loses them. */
     Procedure OnDefineScriptIncludes String[] ByRef aScriptHtml
         Forward Send OnDefineScriptIncludes (&aScriptHtml)
-        Move '<link rel="stylesheet" href="RDCFlexTron/palette.css">' to aScriptHtml[SizeOfArray(aScriptHtml)]
-        Move ('<link rel="stylesheet" href="RDCFlexTron/ftcontrols.css?v=' + CS_FTLibraryVersion + '">') to aScriptHtml[SizeOfArray(aScriptHtml)]
-        Move ('<link rel="stylesheet" href="RDCFlexTron/ftglyphs.css?v=' + CS_FTLibraryVersion + '">') to aScriptHtml[SizeOfArray(aScriptHtml)]
-        Move ('<script src="RDCFlexTron/ftcontrols.js?v=' + CS_FTLibraryVersion + '"></script>') to aScriptHtml[SizeOfArray(aScriptHtml)]
+        Move (StyleSheetLink("RDCFlexTron/palette.css")) to aScriptHtml[SizeOfArray(aScriptHtml)]
+        Move (StyleSheetLink("RDCFlexTron/ftcontrols.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[SizeOfArray(aScriptHtml)]
+        Move (StyleSheetLink("RDCFlexTron/ftglyphs.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[SizeOfArray(aScriptHtml)]
+        Move (ScriptLink("RDCFlexTron/ftcontrols.js?v=" + CS_FTLibraryVersion)) to aScriptHtml[SizeOfArray(aScriptHtml)]
     End_Procedure
 
     /*  A NAVIGATION MAKES THE PAGE UNREADY AGAIN, and the framework's own flag does not say so.

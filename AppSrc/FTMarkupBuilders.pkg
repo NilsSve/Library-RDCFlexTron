@@ -51,11 +51,25 @@ Function FTHtmlEscape Global String sText Returns String
     Function_Return s
 End_Function
 
+/* Global Functions: StyleSheetLink, ScriptLink
+
+ The <link> for a style sheet and the <script> for a script file, by path - what a page's head, and the
+ includes the framework writes into a host page (OnDefineScriptIncludes), are made of. A query string is part
+ of the path: StyleSheetLink("RDCFlexTron/ftcontrols.css?v=" + CS_FTLibraryVersion).
+*/
+Function StyleSheetLink Global String sHref Returns String
+    Function_Return ('<link rel="stylesheet" href="' + sHref + '">')
+End_Function
+
+Function ScriptLink Global String sSrc Returns String
+    Function_Return ('<script src="' + sSrc + '"></script>')
+End_Function
+
 /* Global Function: CssLink
 
- The <link> for one stylesheet in AppHtml/CssStyle. A function rather than a Define per sheet: there
- are a dozen page-specific sheets now, and a dozen more CS_*CssLink constants would say nothing that
- the file name does not.
+ The <link> for one stylesheet in AppHtml/CssStyle, by its name - StyleSheetLink with the folder and the .css
+ filled in. A function rather than a Define per sheet: there are a dozen page-specific sheets now, and a dozen
+ more CS_*CssLink constants would say nothing that the file name does not.
 
  ORDER IS THE CONTRACT. Emit it AFTER CS_PaletteCssLink so a page rule still wins a tie against
  palette/buttons/bars, exactly as the inline <style> block it replaced did, and anything the caller
@@ -64,7 +78,7 @@ End_Function
      Move (CS_PaletteCssLink + CssLink("testcompile") + '<div ..>') to sHtml
 */
 Function CssLink Global String sName Returns String
-    Function_Return ('<link rel="stylesheet" href="CssStyle/' + sName + '.css">')
+    Function_Return (StyleSheetLink("CssStyle/" + sName + ".css"))
 End_Function
 
 /* Global Function: ElemHtml
@@ -155,9 +169,8 @@ End_Function
    call site was making by hand, sometimes by forgetting. Escaping is FTHtmlEscape
    (top of this package), the same three replacements as cEncodingHelpers' rfHtmlEscape.
 
-   NO CLOSING-TAG BUILDER, on purpose. A literal '</div>' is shorter and clearer than any
-   function that could return it, and it cannot drift. 100 of the 457 div/span lines are bare
-   closes; they stay as they are.
+   NO CLOSING-TAG BUILDER, on purpose. A closing tag never varies, so it is a constant -
+   CS_DivEnd, CS_SpanEnd and the rest, in FTConstants.h.pkg, which this package Uses.
 
    A BLANK sCls emits no class attribute, so these serve unclassed elements too.
    ============================================================================================ */
@@ -452,6 +465,43 @@ Function CodeText Global String sText Returns String
     Function_Return (TagHtml("code", "", s))
 End_Function
 
+/* Global Function: MarkedText
+
+ Plain TEXT with its names marked the way a README marks them, between backticks: each one comes out in
+ <code>, and the rest is escaped (FTHtmlEscape), so a < or an & in the text needs no entity.
+ MarkedText("Set `piColumnSpan` to 10") gives Set <code>piColumnSpan</code> to 10.
+
+ It lets a page's prose be a """ string - and a constant cannot go inside a string, so without it every
+ name in the prose was a <code> tag written by hand:
+
+     Append sItems (BulletItem(MarkedText("""
+         This page is a `cFTHtmlPage`, built with `FTMarkupBuilders`.
+         """)))
+
+ It returns MARKUP: give it to TagHtml, BulletItem or HelpParagraph, never to TagText, which would escape
+ the <code> it made. A backtick with no partner is left as it is.
+*/
+Function MarkedText Global String sText Returns String
+    String sRest sAfter sOut
+    Integer iOpen iClose
+
+    Move (FTHtmlEscape(sText)) to sRest
+    Move "" to sOut
+    Move (Pos("`", sRest)) to iOpen
+    While (iOpen > 0)
+        Move (Right(sRest, (Length(sRest) - iOpen))) to sAfter
+        Move (Pos("`", sAfter)) to iClose
+        If (iClose > 0) Begin
+            Move (sOut + Left(sRest, (iOpen - 1)) + CS_CodeOpen + Left(sAfter, (iClose - 1)) + CS_CodeEnd) to sOut
+            Move (Right(sAfter, (Length(sAfter) - iClose))) to sRest
+            Move (Pos("`", sRest)) to iOpen
+        End
+        Else ;
+            Move 0 to iOpen
+    Loop
+    Function_Return (sOut + sRest)
+End_Function
+
 // A plain bulleted list. Items are markup, so an item may itself carry CodeText or a link.
 Function BulletList Global String sItems Returns String
     Function_Return (TagHtml("ul", "", sItems))
@@ -467,7 +517,7 @@ End_Function
  span out; the glyph and its class live here now.
 */
 Function SepHtml Global Returns String
-    Function_Return ('<span class="sep">|</span>')
+    Function_Return (TagHtml("span", "sep", "|"))
 End_Function
 
 
@@ -533,12 +583,12 @@ End_Function
  text is a count, a message number or a word, and some rows carry an <span class="fmsg"> after it
  and some do not. Folding the whole row would need a parameter per variant; folding the part that
  never varies is what puts the row SHAPE in one place, which is the thing that was duplicated.
- Close the badge span at the call site, as before.
+ Close the badge span at the call site (CS_SpanEnd), as before.
 
  sDot is the severity class: "e" error, "w" warning, "s" scan.
 */
 Function FindingRepOpen Global String sDot Returns String
-    Function_Return ('<div class="fnd rep"><span class="fdot ' + sDot + '"></span><span class="bdg bdg-c">')
+    Function_Return ((DivOpen("fnd rep")) + (TagHtml("span", ("fdot " + sDot), "")) + (SpanOpen("bdg bdg-c")))
 End_Function
 
 /* Global Function: IconLabel

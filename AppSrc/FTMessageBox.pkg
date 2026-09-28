@@ -13,7 +13,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use Msgbox.pkg              // Message_Box, the MB_ and MBR_ values, and C_$Information / C_$Stop / C_$Question
-Use FTMarkupBuilders.pkg    // FTHtmlEscape
+Use FTMarkupBuilders.pkg    // FTHtmlEscape, DivOpen, ParaHtml - and, from FTConstants.h.pkg, CS_Br and CS_DivEnd
 Use FTDashIcons.pkg         // CS_GlyphInfo, CS_GlyphStop, CS_GlyphHelp
 
 /* WHY A REPLACEMENT (it follows DFRefactor's FTRefactorMessageBox.pkg, 2026-07-30): Info_Box, Stop_Box and
@@ -59,11 +59,11 @@ Function FTMessageBoxHtml Global String sMessage Returns String
     Move (Replaces(">", FTHtmlEscape(sMessage), "&gt;")) to sOut
     Move "" to sBreak
     Append sBreak "\" "n"
-    Move (Replaces(sBreak, sOut, "<br>")) to sOut
-    Move (Replaces((Character(13) + Character(10)), sOut, "<br>")) to sOut
-    Move (Replaces(Character(13), sOut, "<br>")) to sOut
-    Move (Replaces(Character(10), sOut, "<br>")) to sOut
-    Function_Return ('<div class="ftmsg"><p>' + sOut + '</p></div>')
+    Move (Replaces(sBreak, sOut, CS_Br)) to sOut
+    Move (Replaces((Character(13) + Character(10)), sOut, CS_Br)) to sOut
+    Move (Replaces(Character(13), sOut, CS_Br)) to sOut
+    Move (Replaces(Character(10), sOut, CS_Br)) to sOut
+    Function_Return ((DivOpen("ftmsg")) + (ParaHtml("", sOut)) + CS_DivEnd)
 End_Function
 
 // Info_Box's twin: a procedure, 1 or 2 arguments. The caption stands in only when there is no second one.

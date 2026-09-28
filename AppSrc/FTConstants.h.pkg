@@ -7,7 +7,7 @@
 //
 // Description : The FlexTron layer's own constants: the theme values, the theme global, where the
 //               theme choice is saved, the colours of the native side, the whole HTML tags the markup
-//               builders go with, and the links to the library's style sheets.
+//               builders go with, the named HTML entities, and the links to the library's style sheets.
 //
 //               They lived in RefactorConstants.h.pkg until 2026-09-23. Here, the reusable FT packages -
 //               the web controls, both hosts, both modal panels, the theme mixin, FTThemeColors and
@@ -22,7 +22,7 @@ Use Rgb.pkg
 // THE PACKAGE VERSION, as RDC-FlexTron-Library.sws states it in "package"."version" - keep the two
 // equal. Every FT host page links ftcontrols.css / ftcontrols.js with it as ?v=, because WebView2
 // keeps a copy of what it loaded, and a new version of the library must not be served the old one.
-Define CS_FTLibraryVersion for "0.7.1"
+Define CS_FTLibraryVersion for "0.7.2"
 
 // The one source of truth for the above, seeded from the saved setting on first use.
 // Re-read by Send ApplyFTTheme, which is what a runtime switch would broadcast.
@@ -99,18 +99,68 @@ Define CS_SpanEnd                   for "</span>"
 Define CS_ParaOpen                  for "<p>"
 Define CS_ParaEnd                   for "</p>"
 Define CS_Br                        for "<br>"
+// The other tags FT markup is written with (2026-09-28). Each is named after the builder that makes its
+// whole element, where there is one - BoldText, CodeText, HelpHeading, BulletList, BulletItem, TableHtml,
+// RowHtml, CellHtml, HeadCellHtml; these are for markup built a piece at a time: the opening, what a loop
+// appends, the closing. No <i>: in FT markup it is a shape, never italics, and ShapeHtml builds it whole.
+Define CS_BoldOpen                  for "<b>"
+Define CS_BoldEnd                   for "</b>"
+Define CS_CodeOpen                  for "<code>"       // a name or a value inside a sentence
+Define CS_CodeEnd                   for "</code>"
+Define CS_CodeBlockOpen             for "<pre>"        // lines of code, or a path: spaces and line breaks show as written
+Define CS_CodeBlockEnd              for "</pre>"
+Define CS_HeadingOpen               for "<h4>"         // the heading of a help panel - HelpHeading's level
+Define CS_HeadingEnd                for "</h4>"
+Define CS_BulletListOpen            for "<ul>"
+Define CS_BulletListEnd             for "</ul>"
+Define CS_BulletItemOpen            for "<li>"
+Define CS_BulletItemEnd             for "</li>"
+Define CS_TableOpen                 for "<table>"
+Define CS_TableEnd                  for "</table>"
+Define CS_RowOpen                   for "<tr>"
+Define CS_RowEnd                    for "</tr>"
+Define CS_CellOpen                  for "<td>"
+Define CS_CellEnd                   for "</td>"
+Define CS_HeadCellOpen              for "<th>"
+Define CS_HeadCellEnd               for "</th>"
+Define CS_DetailsOpen               for "<details>"    // a section that folds open and shut
+Define CS_DetailsEnd                for "</details>"
+Define CS_SummaryOpen               for "<summary>"    // its title line - the part that is always shown
+Define CS_SummaryEnd                for "</summary>"
+Define CS_StyleOpen                 for "<style>"      // CSS written into the page itself
+Define CS_StyleEnd                  for "</style>"
 // Two ordinary characters an attribute cannot hold as they are: a new line inside title="", and an
 // apostrophe inside a single-quoted DataFlex literal.
 Define CS_NlEntity                  for "&#10;"
 Define CS_AposEntity                for "&#39;"
+
+// THE NAMED CHARACTERS. An entity writes a character by its name (&mdash;) or its number (&#9888;), which keeps
+// the source plain ASCII - and tells a reader who does not write HTML nothing; the constant says what the
+// character is. They moved here from DFRefactor's RefactorConstants.h.pkg (2026-09-28), with the same names and
+// values. The escapes (&amp; &lt; &gt; &quot;) have none: text is escaped by FTHtmlEscape and CodeText, not by
+// hand.
+Define CS_EmDash                    for "&mdash;"
+Define CS_MidDot                    for "&middot;"
+Define CS_Nbsp                      for "&nbsp;"       // a space a line never breaks at
+Define CS_Ellipsis                  for "&hellip;"
+Define CS_Check                     for "&#10003;"     // U+2713 check mark
+Define CS_RArrow                    for "&rarr;"       // right arrow
+Define CS_Times                     for "&times;"      // the multiplication sign - a small cross
+Define CS_Bullet                    for "&bull;"
+Define CS_WarnSign                  for "&#9888;"      // U+26A0 warning triangle
+Define CS_PlayTriangle              for "&#9654;"      // U+25B6 right-pointing triangle - "run this"
+Define CS_UpTriangle                for "&#9650;"      // U+25B2 - a count that went up
+Define CS_DownTriangle              for "&#9660;"      // U+25BC - and one that went down
 
 // THE LIBRARY'S STYLE SHEETS, as a page links them - the package installs them into AppHtml\RDCFlexTron. A
 // cFTWebHtmlBox fragment is a document of its own and does not inherit application.css, so it links them
 // itself: CS_PaletteCssLink first - the link order is the cascade - then CS_PageFitCssLink for a fragment
 // that fills its host exactly and never scrolls, CS_PillsCssLink for the status pills, and the program's own
 // sheets last (CssLink).
-Define CS_PaletteCssLink            for ('<link rel="stylesheet" href="RDCFlexTron/palette.css">' ;
-    + '<link rel="stylesheet" href="RDCFlexTron/buttons.css">' ;
-    + '<link rel="stylesheet" href="RDCFlexTron/bars.css">')
+//
+// CS_PaletteCssLink is ONE plain literal, on purpose: DFRefactor's RefactorConstants.h.pkg defines it too, the
+// same way. Two Defines of one name compile in either Use order only as the same plain literal; a Define of an
+// expression - even one literal in parentheses - followed by the literal is error 4332.
+Define CS_PaletteCssLink for '<link rel="stylesheet" href="RDCFlexTron/palette.css"><link rel="stylesheet" href="RDCFlexTron/buttons.css"><link rel="stylesheet" href="RDCFlexTron/bars.css">'
 Define CS_PageFitCssLink            for '<link rel="stylesheet" href="RDCFlexTron/pagefit.css">'
 Define CS_PillsCssLink              for '<link rel="stylesheet" href="RDCFlexTron/pills.css">'
