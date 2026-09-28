@@ -44,6 +44,10 @@ Class cFTThemeHost_mixin is a Mixin
     Procedure SeedFTThemeMode
         Integer iMode
         If (giFTThemeMode = CI_FTThemeUnset) Begin
+            // No application object yet - a dialog Used above it: there is nothing to read the choice through.
+            If (ghoApplication = 0) Begin
+                Procedure_Return
+            End
             Get ReadInteger of ghoApplication CS_FTThemeSection CS_FTTheme CI_FTThemeDark to iMode
             // A value written by a future version - or a hand-edited registry - must not leave the
             // global on a meaningless number, so anything unrecognised falls back to dark.
@@ -51,6 +55,8 @@ Class cFTThemeHost_mixin is a Mixin
                 Move CI_FTThemeDark to iMode
             End
             Move iMode to giFTThemeMode
+            // And every FT object built before now - waiting for the theme - takes it (FTThemeColors.pkg).
+            Send FTThemeLateObjects
         End
     End_Procedure
 
@@ -60,6 +66,13 @@ Class cFTThemeHost_mixin is a Mixin
     Procedure ApplyFTTheme
         Integer eWanted
         Send SeedFTThemeMode
+        // Built before the theme is known - a dialog Used above the application object: this host waits for
+        // it (FTThemeLater) and applies nothing now. A guess would stick: ApplyWebView2DefaultBackground below
+        // is once-only.
+        If (giFTThemeMode = CI_FTThemeUnset) Begin
+            Send FTThemeLater Self
+            Procedure_Return
+        End
         Move tpDarkMode to eWanted
         If (giFTThemeMode = CI_FTThemeLight) Begin
             Move tpLightMode to eWanted

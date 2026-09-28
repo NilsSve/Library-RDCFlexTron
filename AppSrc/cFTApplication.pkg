@@ -1,0 +1,66 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTApplication
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-28
+//
+// Description : The application object of an FT program: it reads the saved theme choice as soon as it
+//               is built, and SwitchTheme saves a new choice and starts the program again in it.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cApplication.pkg
+Use FTConstants.h.pkg               // the CI_FTTheme* modes, giFTThemeMode, where the choice is saved
+Use FTThemeSeed.pkg                 // SeedFTTheme
+Use FTMessageBox.pkg                // FTInfoBox - Windows' own box in a program without FTMessageBox.dg
+
+// A theme mode in words, as a theme button names it: "Dark", "Light" or "Follow Windows".
+Function FTThemeName Global Integer iMode Returns String
+    If (iMode = CI_FTThemeLight) ;
+        Function_Return "Light"
+    If (iMode = CI_FTThemeSystem) ;
+        Function_Return "Follow Windows"
+    Function_Return "Dark"
+End_Function
+
+/* THE THEME IS READ ONCE, when the program starts (Nils 2026-09-28: "Why not include the message in a
+   cFTApplication class, together with SwitchTheme?"). This object sends SeedFTTheme itself, at the end of
+   its construction: its own settings - psCompany and psProduct, the registry key the choice is saved
+   under - are set by then, and every FT panel and dialog built after it is built in the theme.
+
+   A dialog Used ABOVE the application object is built before the theme is known: its panel and web hosts
+   wait for it (FTThemeLater), and SeedFTTheme themes them as soon as it has read it - before any of them is
+   shown. */
+Class cFTApplication is a cApplication
+
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        Send SeedFTTheme
+    End_Procedure
+
+    // A new copy of this program, and the end of this one.
+    Procedure RestartProgram
+        String sExe sCommand
+        Get GetApplicationFileName to sExe
+        Move ('"' + sExe + '"') to sCommand
+        Runprogram Background sCommand
+        Send Exit_Application
+    End_Procedure
+
+    // A new theme choice - CI_FTThemeDark, CI_FTThemeLight or CI_FTThemeSystem: saved, and the program
+    // starts again in it when the message is closed. The theme is read once, when the program starts.
+    Procedure SwitchTheme Integer iMode
+        String sProduct sMessage
+        Send WriteInteger CS_FTThemeSection CS_FTTheme iMode
+        Get psProduct to sProduct
+        If (Trim(sProduct) = "") ;
+            Move "The program" to sProduct
+        Move ((FTThemeName(iMode)) + " is saved. " + sProduct) to sMessage
+        Move (sMessage + " restarts when you close this message.") to sMessage
+        Send FTInfoBox sMessage "Theme"
+        Send RestartProgram
+    End_Procedure
+
+End_Class

@@ -38,6 +38,10 @@ Class cFTModalPanel is a cRDCModalPanel
     Procedure Construct_Object
         Forward Send Construct_Object
         Set Color to (FTWebBg())
+        // Built before the theme is known - a dialog Used above the application object: it waits for the
+        // theme (FTThemeLater), and ApplyFTTheme colours it again as soon as the theme is read.
+        If (giFTThemeMode = CI_FTThemeUnset) ;
+            Send FTThemeLater Self
         // DataFlex's own Default.ico, unless the dialog names an icon of its own. After the Forward: the
         // base creates the property its Set Icon keeps the name in, and applies it again in Page.
         Set Icon to "Default.ico"
@@ -63,21 +67,36 @@ Class cFTModalPanel is a cRDCModalPanel
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
     End_Procedure
 
+    // The theme again, for a dialog built before it was known: the seed sends this as soon as it has read
+    // the theme - before the dialog is shown (FTThemeLateObjects).
+    Procedure ApplyFTTheme
+        Handle hoStatusBar
+        Set Color to (FTWebBg())
+        Get phoDialogCommandbar to hoStatusBar
+        If (hoStatusBar <> 0) ;
+            Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+    End_Procedure
+
     /* PLACEHOST fits phoClientHost to the panel when it is shown and on every resize: from the host's own
        top-left offset (Set Location to 4 4), with the same margin at the right, down to the top of the
        status bar. It measures the panel's Size, in dialog units - a modal panel's Size is its client area (a
        main Panel's is not: cFTPanel measures pixels) - because the base panel grows itself for its status
        bar AFTER its children are constructed, so a host anchored to the bottom would end short of the bar.
-       The demo's dialog and DFRefactor's message box placed their hosts this way before this class did. */
+       The demo's dialog and DFRefactor's message box placed their hosts this way before this class did.
+       A panel of a fixed size has no status bar (cRDCModalPanel adds one to a Border_Thick panel only): its
+       host ends the same margin above the bottom as below the top. */
     Procedure PlaceHost
         Handle hoHost
-        Integer iSize iLoc iH iW
+        Integer iSize iLoc iH iW iBottom
         Get phoClientHost to hoHost
         If (hoHost = 0) ;
             Procedure_Return
         Get Size to iSize
         Get Location of hoHost to iLoc
-        Move (Hi(iSize) - piStatusBarUnits(Self) - Hi(iLoc)) to iH
+        Move (Hi(iLoc)) to iBottom
+        If (phoDialogCommandbar(Self) <> 0) ;
+            Move (piStatusBarUnits(Self)) to iBottom
+        Move (Hi(iSize) - iBottom - Hi(iLoc)) to iH
         Move (Low(iSize) - (2 * Low(iLoc))) to iW
         If (iH < 40) ;
             Move 40 to iH

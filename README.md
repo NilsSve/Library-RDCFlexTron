@@ -17,14 +17,15 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `cFTWebButton.pkg` | the web button, in the FT look: a glyph (a `DashIcon` name, drawn by its `ftg-` class, or an image file), `psFontFamily` / `piFontSize` / `pbBold`, `pbPrimary` for the main action, and `OnButtonClick`, which runs after the web click has returned - so it can open or close a panel. It is 10 columns wide unless it says otherwise: 80 px on a grid host of 8 px columns. The Studio's Designer draws it, and its glyph when the object names it as a class: `Set psCSSClass to "ftbtn ftg-exit"` (`psGlyph` shows only when the program runs) |
 | `cFTHtmlPage.pkg` | a `cFTWebHtmlBox` that holds a whole page: its title on top is `psLabel`, and the picture beside it `psTitleIcon` - a `DashIcon` glyph name (drawn by its `ftg-` class; default `filetext`) or an image file. The Studio's Designer shows the title and its glyph, and Lorem ipsum for a body built at run time - with nothing to add |
 | `cFTWebList.pkg` | the web list, in the look of the FT tables: rows from code (`pbDataAware False`, `OnManualLoadData`) that it asks for itself when the page first draws it, `RefreshRows` for new rows while the program runs, and columns that are fixed (`pbFixedWidth`: `piWidth` in pixels) or share the rest - as in a Windows grid. The Studio's Designer draws it with its columns |
+| `cFTApplication.pkg` | the application object of an FT program: it reads the saved theme choice as soon as it is built, and `SwitchTheme` saves a new choice and starts the program again in it. `FTThemeName` names a theme mode in words |
 | `cFTPanel.pkg` | a program's main window: a `Panel` in the theme's colour, which fits one web host to its client area (`phoClientHost`) |
-| `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, with DataFlex's `Default.ico` unless the dialog sets its own; subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel`. A `cFTModalPanel` fits one web host to itself, above its status bar (`phoClientHost`), as `cFTPanel` does |
+| `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, with DataFlex's `Default.ico` unless the dialog sets its own; subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel`. A `cFTModalPanel` fits one web host to itself (`phoClientHost`), as `cFTPanel` does - above its status bar, which only a resizable panel has |
 | `cFTGridHost.pkg` | a host laid out on a grid of 8 px columns, the way a Windows dialog is: a control's `piColumnSpan` is its width in 8 px steps; one column (`psColumnWidths "<n>/1fr"`) and one row (`psRowHeights "<n>/1fr"`) take the extra space; an empty row of a fixed height (`"<n>/8px"`) is air between groups. `piColumnCount` is the widest row: the columns on the left, the one that stretches, and the ones on the right |
-| `FTMessageBox.pkg`, `FTMessageBox.dg` | `FTInfoBox`, `FTStopBox` and `FTYesNoBox`: `Info_Box`, `Stop_Box` and `YesNo_Box` in the FT look, with the same arguments and return values - the caption as the page's title, beside the glyph of its kind. Use the dialog once, where the program Uses its dialogs; until it exists they show Windows' own box |
+| `FTMessageBox.pkg`, `FTMessageBox.dg` | `FTInfoBox`, `FTStopBox` and `FTYesNoBox`: `Info_Box`, `Stop_Box` and `YesNo_Box` in the FT look, with the same arguments and return values - the caption as the page's title, beside the glyph of its kind. Use the dialog anywhere, above the application object too. Before the application object exists they show Windows' own box |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the dark colours, and where the theme choice is saved |
-| `FTThemeColors.pkg`, `FTThemeSeed.pkg` | native colours that follow the theme; seeding the theme from the saved choice |
+| `FTThemeColors.pkg`, `FTThemeSeed.pkg` | native colours that follow the theme; `SeedFTTheme`, the theme from the saved choice - which a `cFTApplication` sends itself |
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables - and `FTHtmlEscape` |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
@@ -53,8 +54,10 @@ installed, and the workspace reports "installed version ... does not satisfy" ("
 RDCToolsLib). Pin RDCToolsLib by its version tag, such as `"1.0.1"`, never by a commit: a commit is not
 a version, so the range above cannot accept it.
 
-- **Seed the theme early.** `Use FTThemeSeed.pkg` and `Send SeedFTTheme` after your application
-  object exists and before any panel that colours itself while it is constructed.
+- **The application object** is a `cFTApplication`: it reads the theme choice as soon as it is built.
+  With an application class of your own, `Use FTThemeSeed.pkg` and `Send SeedFTTheme` after its object
+  instead. A dialog can be Used anywhere, above the application object too: an FT panel or web host
+  built before the theme is read waits for it, and takes it as soon as it is read - before it is shown.
 - **Where the choice is saved.** `Settings\FTTheme` under the program's registry key. To keep it
   elsewhere, define `CS_FTThemeSection` and/or `CS_FTTheme` before the first Use of `FTConstants.h.pkg`.
 - **Use order.** A web control needs a host Used before it - the DataFlex web framework's own rule.

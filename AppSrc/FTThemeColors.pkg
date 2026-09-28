@@ -25,9 +25,10 @@
 //               both come from FTConstants.h.pkg, which this package Uses itself (until 2026-09-23 they were in
 //               RefactorConstants.h.pkg), so it can sit near the top of a program and be visible to everything.
 //
-//               Unseeded (CI_FTThemeUnset, the value before any FlexTron host has constructed) falls back to the
-//               dark constants - the look the app has always had. The panels that call these do so in
-//               End_Construct_Object, which runs after their hosts, so by then the global is seeded.
+//               Unseeded (CI_FTThemeUnset - before the theme is read) falls back to the dark constants. An FT
+//               panel or web host built then - a dialog Used above the application object - waits on a list
+//               instead (FTThemeLater), and the seed themes every object on it as soon as it has read the
+//               theme (FTThemeLateObjects), before any of them is shown.
 //
 //               CI_FTThemeSystem returns the DARK values: "follow Windows" is resolved client-side by the
 //               framework from prefers-color-scheme, and nothing native has read the OS preference. A user on
@@ -137,3 +138,30 @@ Function FTCJGridTheme Global Returns Integer
         Function_Return xtpGridThemeVisualStudio2012Light
     Function_Return xtpGridThemeVisualStudio2012Dark
 End_Function
+
+/* BUILT BEFORE THE THEME IS KNOWN (Nils 2026-09-28: "it is common to USE that sort of packages higher up in
+   the program"). The theme is read through the application object, so an FT dialog Used above it - its panel
+   and web hosts, built where the dialog is Used - cannot know it yet, and a guess would stick: a dark panel
+   in a light program, and the WebView2 background above (once-only) for the whole run. Such an object waits
+   on this list instead, and the seed - SeedFTTheme, or the first host built after the application object -
+   sends each one ApplyFTTheme as soon as it has read the theme: at startup, before any of them is shown. */
+Global_Variable Handle[] gahoFTThemeLate
+
+// Each FT panel and web host class has one: it applies the theme to the object.
+Register_Procedure ApplyFTTheme
+
+// hoObject waits for the theme: FTThemeLateObjects themes it when the theme is read.
+Procedure FTThemeLater Global Handle hoObject
+    Move hoObject to gahoFTThemeLate[SizeOfArray(gahoFTThemeLate)]
+End_Procedure
+
+// The theme is read: every object that waited for it takes it now.
+Procedure FTThemeLateObjects Global
+    Handle[] ahoLate
+    Integer i
+    Move gahoFTThemeLate to ahoLate
+    Move (ResizeArray(gahoFTThemeLate, 0)) to gahoFTThemeLate
+    For i from 0 to (SizeOfArray(ahoLate) - 1)
+        Send ApplyFTTheme of ahoLate[i]
+    Loop
+End_Procedure

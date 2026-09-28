@@ -28,12 +28,22 @@ Class cFTPanel is a Panel
     Procedure Construct_Object
         Forward Send Construct_Object
         Set Color to (FTWebBg())
+        // Built before the theme is known - Used above the application object: it waits for the
+        // theme (FTThemeLater), and ApplyFTTheme colours it again as soon as the theme is read.
+        If (giFTThemeMode = CI_FTThemeUnset) ;
+            Send FTThemeLater Self
         Set Icon to "Default.ico"
 
         // The web host that fills the client area, or 0 for none. The window sets it below its host
         // object: Set phoClientHost to (oHost(Self)).
         { DesignTime=False }
         Property Handle phoClientHost 0
+    End_Procedure
+
+    // The theme again, for a window built before it was known: the seed sends this as soon as it has read the
+    // theme - before the window is shown (FTThemeLateObjects).
+    Procedure ApplyFTTheme
+        Set Color to (FTWebBg())
     End_Procedure
 
     /* PLACEHOST fits phoClientHost to the client area, in pixels, when the window is shown and on every

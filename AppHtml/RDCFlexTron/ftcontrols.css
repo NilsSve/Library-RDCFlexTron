@@ -3,8 +3,9 @@
 
    Every FT host page links this sheet, with palette.css for its --dfr-* tokens, after the Web UI
    theme (cFTThemeHost_mixin, OnDefineScriptIncludes) - so the tokens are there even on a host that
-   holds no cFTWebHtmlBox. The button carries the .rpbtn family's size and tokens (buttons.css), so a
-   cFTWebButton and a markup button look the same side by side, in both themes.
+   holds no cFTWebHtmlBox. The button carries the .rpbtn family's tokens (buttons.css), so a
+   cFTWebButton and a markup button look alike, in both themes; a web button is 27 px tall, the
+   theme's button height, and a markup button 24.
 
    Every selector starts at .WebControl: the Material theme styles ".WebButton button", and these
    rules must win over it. psCSSClass lands on that OUTER element; the caption is the inner <button>. */
@@ -16,7 +17,11 @@
     gap: 6px;
     width: 100%;
     min-width: 76px;
-    height: 24px;
+    /* ONE HEIGHT FOR EVERY FT BUTTON, 27 px: the Material theme's own (--df-BtnHeight), which its min-height
+       gave these buttons all along, over the 24 px asked for here until 2026-09-28. Height and min-height
+       both, so no theme rule - its tablet and mobile ones raise min-height - makes one FT button taller. */
+    height: 27px;
+    min-height: 27px;
     padding: 0 10px;
     color: var(--dfr-btn-ink, #d8d8d8);
     background: var(--dfr-btn-bg, #3a3937);

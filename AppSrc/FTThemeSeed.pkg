@@ -5,30 +5,26 @@
 // Web-site    : http://www.rdctools.com
 // Created     : 2026-08-13
 //
-// Description : Seeds giFTThemeMode from the saved setting, ONCE, early.
+// Description : SeedFTTheme: giFTThemeMode from the saved choice, once, as soon as the application object
+//               exists - before any FT panel or dialog is built, since those colour themselves as they are.
 //
-//               WHY THIS EXISTS SEPARATELY FROM FTThemeColors.pkg
-//               FTThemeColors has to be compiled near the top of the program - the shared files that call its
-//               colour accessors are pulled in early - and at that point ghoApplication is not declared yet, so
-//               nothing there can read the registry. This package can, because it is Used AFTER
-//               cRefactorApplication.pkg. The split is the whole point: accessors early, the registry read later.
+//               A cFTApplication sends it itself, at the end of its construction: a program whose application
+//               object is a cFTApplication never Uses or sends it. A program whose application object is of
+//               a class of its own (DFRefactor's cRefactorApplication) Uses this package after that object and
+//               sends SeedFTTheme there.
 //
-//               WHY NOT LEAVE IT TO THE HOSTS
-//               cFTThemeHost_mixin.pkg seeds lazily, on the first FlexTron host to construct. That covers everything
-//               whose colour is applied at RUNTIME, but the FT dialogs colour themselves at CONSTRUCTION - and
-//               ProgramSetupFT.dg is Used at DFRefactorFT.src:1352, one line BEFORE the first dialog that owns a
-//               host. It therefore built itself with the dark values no matter what the setting said, which is
-//               exactly what Nils saw: "the program settings dialog is still dark" (2026-08-13). Seeding here,
-//               straight after the application object exists and ~1150 lines before the first dialog, means every
-//               construction-time colour already knows the answer.
+//               Not part of FTThemeColors.pkg: the colour functions are compiled near the top of a program,
+//               before its application class is, and this reads the registry through the application object.
 //
-//               The host-side lazy seed stays as a backstop: it is idempotent (both guard on CI_FTThemeUnset) and
-//               it still covers any program that Uses a host without Using this.
+//               cFTThemeHost_mixin.pkg seeds too, on the first FlexTron host built - a backstop for a program
+//               that does neither. Both do nothing once the theme is known (CI_FTThemeUnset), and both theme
+//               the FT objects built before it was, which waited for it (FTThemeLateObjects).
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use FTConstants.h.pkg   // CI_FTTheme*, giFTThemeMode, CS_FTThemeSection / CS_FTTheme
+Use FTThemeColors.pkg   // FTThemeLateObjects
 
 Procedure SeedFTTheme Global
     Integer iMode
@@ -44,4 +40,6 @@ Procedure SeedFTTheme Global
     If (iMode < CI_FTThemeDark or iMode > CI_FTThemeSystem) ;
         Move CI_FTThemeDark to iMode
     Move iMode to giFTThemeMode
+    // And every FT object built before now - a dialog Used above the application object - takes it.
+    Send FTThemeLateObjects
 End_Procedure

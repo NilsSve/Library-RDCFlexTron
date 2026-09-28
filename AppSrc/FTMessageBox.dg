@@ -7,7 +7,7 @@
 //
 // Description : The dialog FTInfoBox, FTStopBox and FTYesNoBox show (FTMessageBox.pkg): the message in a
 //               page - its caption as the title, beside the glyph of its kind - and the answer at the
-//               bottom right. Use it once, where the program Uses its dialogs.
+//               bottom right. Use it anywhere, above the application object too.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -35,6 +35,11 @@ Object oFTMessageBox is a cFTModalPanel
     Set Size to 178 420
     Set piMinSize to 178 420
     Set Location to 2 2
+    Set Locate_Mode to Center_On_Panel
+    // A fixed size, as Windows' own message box has: cRDCModalPanel puts a status bar and a size grip under a
+    // resizable panel only, so the answer sits at the bottom of the box, as Exit does in a main window.
+    Set Border_Style to Border_Dialog
+    Set Maximize_Icon to False
 
     // The answer: True for Yes or OK, False for No or Esc.
     Property Boolean pbYes False
@@ -75,12 +80,14 @@ Object oFTMessageBox is a cFTModalPanel
             Set psCSSClass to "ftpage ftg-info"
         End_Object
 
-        // Row 2: the answer at the bottom right. No shows only when the box asks a question.
+        // Row 2: the answer at the bottom right. No shows only when the box asks a question. A check on Yes and
+        // OK, an x on No: the two answers told apart by their shape, not by the amber alone.
         Object oMbNoBtn is a cFTWebButton
             Set piRowIndex to 2
             Set piColumnIndex to 1
             Set piColumnSpan to 10
             Set psCaption to "No"
+            Set psCSSClass to "ftbtn ftg-close"         // an x (ftglyphs.css), so the Designer draws it too
 
             Procedure OnButtonClick
                 Send FTAnswer False
@@ -92,7 +99,7 @@ Object oFTMessageBox is a cFTModalPanel
             Set piColumnIndex to 11
             Set piColumnSpan to 10
             Set psCaption to "OK"
-            Set psCSSClass to "ftbtn ftbtn-primary"     // the main action's amber
+            Set psCSSClass to "ftbtn ftbtn-primary ftg-check"   // the main action's amber, and a check
 
             Procedure OnButtonClick
                 Send FTAnswer True

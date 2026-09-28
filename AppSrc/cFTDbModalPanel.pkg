@@ -40,6 +40,10 @@ Class cFTDbModalPanel is a cRDCDbModalPanel
     Procedure Construct_Object
         Forward Send Construct_Object
         Set Color to (FTWebBg())
+        // Built before the theme is known - a dialog Used above the application object: it waits for the
+        // theme (FTThemeLater), and ApplyFTTheme colours it again as soon as the theme is read.
+        If (giFTThemeMode = CI_FTThemeUnset) ;
+            Send FTThemeLater Self
         // DataFlex's own Default.ico, unless the dialog names an icon of its own. After the Forward: the
         // base creates the property its Set Icon keeps the name in, and applies it again in Page.
         Set Icon to "Default.ico"
@@ -52,6 +56,16 @@ Class cFTDbModalPanel is a cRDCDbModalPanel
     Procedure End_Construct_Object
         Handle hoStatusBar
         Forward Send End_Construct_Object
+        Get phoDialogCommandbar to hoStatusBar
+        If (hoStatusBar <> 0) ;
+            Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+    End_Procedure
+
+    // The theme again, for a dialog built before it was known: the seed sends this as soon as it has read
+    // the theme - before the dialog is shown (FTThemeLateObjects).
+    Procedure ApplyFTTheme
+        Handle hoStatusBar
+        Set Color to (FTWebBg())
         Get phoDialogCommandbar to hoStatusBar
         If (hoStatusBar <> 0) ;
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())

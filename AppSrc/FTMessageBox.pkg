@@ -27,9 +27,11 @@ Use FTDashIcons.pkg         // CS_GlyphInfo, CS_GlyphStop, CS_GlyphHelp
      - FTYesNoBox returns MBR_Yes or MBR_No, never a Boolean: callers compare with those;
      - the two characters \n in a message are a new line, as Message_Box makes them.
 
-   UNTIL THE DIALOG EXISTS - a message while the program starts - they show Windows' own box; a light box
-   then is better than no message. A second message asked while the dialog shows gets Windows' box too
-   (FTMessageBox.dg).
+   FTMessageBox.dg CAN BE USED ANYWHERE, above the application object too: built before the theme is read,
+   the dialog takes it as soon as it is (FTThemeColors.pkg). Windows' own box answers when the dialog
+   cannot: in a program that does not Use FTMessageBox.dg, and before the application object exists. A
+   light box then is better than no message. A second message asked while the dialog shows gets Windows'
+   box too (FTMessageBox.dg).
 
    KNOWN GAP: FTYesNoBox's DfltBtn (which button Enter presses) is taken and not used. Esc declines - the
    safe way round. */
@@ -41,6 +43,14 @@ Move 0 to ghoFTMessageBox
 // FTMessageBox.dg defines it - later than this package is compiled.
 Register_Function FTShowMessage String sGlyph String sTitle String sMessage String sYesLabel ;
                                 String sNoLabel Returns Boolean
+
+// The dialog - or 0 when Windows' own box answers: the program does not Use FTMessageBox.dg, or its
+// application object does not exist yet.
+Function FTMessageBoxPanel Global Returns Handle
+    If (ghoApplication = 0) ;
+        Function_Return 0
+    Function_Return ghoFTMessageBox
+End_Function
 
 // A message written for a Win32 box, as the dialog's HTML: escaped - it is prose and paths, never markup -
 // with its line breaks kept: the two characters \n that Message_Box makes a new line, and real ones.
@@ -61,15 +71,17 @@ Procedure FTInfoBox Global String sMessage String sTitle
     String sCaption
     Boolean bVoid
     Integer iVoid
+    Handle hoPanel
     If (Num_Arguments = 1) ;
         Move C_$Information to sCaption
     Else ;
         Move sTitle to sCaption
-    If (ghoFTMessageBox = 0) Begin
+    Move (FTMessageBoxPanel()) to hoPanel
+    If (hoPanel = 0) Begin
         Move (Message_Box(sMessage, sCaption, MB_OK, MB_ICONINFORMATION)) to iVoid
         Procedure_Return
     End
-    Get FTShowMessage of ghoFTMessageBox CS_GlyphInfo sCaption sMessage "OK" "" to bVoid
+    Get FTShowMessage of hoPanel CS_GlyphInfo sCaption sMessage "OK" "" to bVoid
 End_Procedure
 
 // Stop_Box's twin: the same shape, a stop mark beside the caption. An empty caption is a missing one.
@@ -77,15 +89,17 @@ Procedure FTStopBox Global String sMessage String sTitle
     String sCaption
     Boolean bVoid
     Integer iVoid
+    Handle hoPanel
     If ((Num_Arguments = 1) or (sTitle = "")) ;
         Move C_$Stop to sCaption
     Else ;
         Move sTitle to sCaption
-    If (ghoFTMessageBox = 0) Begin
+    Move (FTMessageBoxPanel()) to hoPanel
+    If (hoPanel = 0) Begin
         Move (Message_Box(sMessage, sCaption, MB_OK, MB_ICONHAND)) to iVoid
         Procedure_Return
     End
-    Get FTShowMessage of ghoFTMessageBox CS_GlyphStop sCaption sMessage "OK" "" to bVoid
+    Get FTShowMessage of hoPanel CS_GlyphStop sCaption sMessage "OK" "" to bVoid
 End_Procedure
 
 // YesNo_Box's twin: a FUNCTION, 1 to 3 arguments, returning MBR_Yes or MBR_No. Windows' own box, the fallback,
@@ -94,18 +108,20 @@ Function FTYesNoBox Global String sMessage String sTitle Integer DfltBtn Returns
     String sCaption
     Integer iDflt
     Boolean bYes
+    Handle hoPanel
     If ((Num_Arguments = 1) or (sTitle = "")) ;
         Move C_$Question to sCaption
     Else ;
         Move sTitle to sCaption
-    If (ghoFTMessageBox = 0) Begin
+    Move (FTMessageBoxPanel()) to hoPanel
+    If (hoPanel = 0) Begin
         If ((Num_Arguments < 3) or (DfltBtn = 0) or (DfltBtn = MB_DEFBUTTON1)) ;
             Move MB_DEFBUTTON1 to iDflt
         Else ;
             Move MB_DEFBUTTON2 to iDflt
         Function_Return (Message_Box(sMessage, sCaption, MB_YESNO, (MB_ICONQUESTION ior iDflt)))
     End
-    Get FTShowMessage of ghoFTMessageBox CS_GlyphHelp sCaption sMessage "Yes" "No" to bYes
+    Get FTShowMessage of hoPanel CS_GlyphHelp sCaption sMessage "Yes" "No" to bYes
     If (bYes) ;
         Function_Return MBR_Yes
     Function_Return MBR_No
