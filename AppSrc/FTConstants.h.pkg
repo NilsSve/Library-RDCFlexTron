@@ -69,3 +69,8 @@ Global_Variable Integer giFTThemeMode
     // (not clDarkViewBg) to read as one surface with them.
     Define clDarkWebBg for (RGB(38, 38, 36))        // HTML #262624 = var(--dfr-bg-page)
 #ENDIF
+
+// THE PACKAGE VERSION, as RDC-FlexTron-Library.sws states it in "package"."version" - keep the two
+// equal. Every FT host page links ftcontrols.css / ftcontrols.js with it as ?v=, because WebView2
+// keeps a copy of what it loaded, and a new version of the library must not be served the old one.
+Define CS_FTLibraryVersion for "0.2.0"

@@ -13,7 +13,8 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | File | What it gives you |
 |---|---|
 | `cFTLocalWebControlHost.pkg`, `cFTDbLocalWebControlHost.pkg` | FlexTron hosts that take the theme (`cFTThemeHost_mixin.pkg` is their shared part) |
-| `cFTWebButton`, `cFTWebCheckbox`, `cFTWebCombo`, `cFTWebForm`, `cFTWebLabel`, `cFTWebHtmlBox` | the web controls |
+| `cFTWebCheckbox`, `cFTWebCombo`, `cFTWebForm`, `cFTWebLabel`, `cFTWebHtmlBox` | the web controls |
+| `cFTWebButton.pkg` | the web button, in the FT look: `psGlyph` (a `DashIcon` name or an image file), `psFontFamily` / `piFontSize` / `pbBold`, `pbPrimary` for the main action, and `OnButtonClick`, which runs after the web click has returned - so it can open or close a panel. The Studio's Designer draws it, without the glyph |
 | `cFTHtmlPage.pkg` | a `cFTWebHtmlBox` that holds a whole page; `psTitleIcon` is the picture beside its title - an image file or a `DashIcon` glyph name (default: the `filetext` glyph) |
 | `cFTPanel.pkg` | a program's main window: a `Panel` in the theme's colour |
 | `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, with DataFlex's `Default.ico` unless the dialog sets its own; subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel` |
@@ -24,7 +25,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables - and `FTHtmlEscape` |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG icons, and their `CS_Glyph*` names |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
-| `AppHtml/RDCFlexTron/*.css` | palette, buttons, bars, pagefit, pills - installed into your `AppHtml\RDCFlexTron` |
+| `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls; installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last two itself |
 
 ## Using it
 
@@ -59,6 +60,12 @@ a version, so the range above cannot accept it.
   `bars.css` and `pagefit.css` as needed, then your own sheets. The link order is the cascade. The package
   installs them into `AppHtml\RDCFlexTron`; a workspace that points at a clone of this repository by
   PATH gets no install step, so it copies the sheets there itself (see Demo-RDCFlexTron's `setup.bat`).
+- **The Studio's Designer** draws the web controls with the framework's scripts and the theme, and loads
+  one sheet of yours: `AppHtml\CssStyle\application.css`. To see the FT look there, import the library's
+  sheets at the top of that file - `@import url("../RDCFlexTron/palette.css");` and
+  `@import url("../RDCFlexTron/ftcontrols.css");`. A button's own font (`psFontFamily`, `piFontSize`,
+  `pbBold`) and `pbPrimary`'s amber are applied when the program runs, so the Designer shows the standard
+  FT button.
 - DataFlex 26 only.
 
 ## Licence

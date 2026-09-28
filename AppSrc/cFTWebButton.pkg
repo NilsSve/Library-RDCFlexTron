@@ -5,27 +5,154 @@
 // Web-site    : http://www.rdctools.com
 // Created     : 2026-06-17
 //
-// Description : FlexTron (FT) subclass of cWebButton: theme-aware behaviour for the FT build.
-//               FT twin files are the privacy boundary between the classic and FT builds -
-//               never merge them.
+// Description : FlexTron (FT) subclass of cWebButton: the FT look, a glyph and the caption's font as
+//               properties, a main-action variant, and a click whose work runs after the web event
+//               has returned. FT twin files are the privacy boundary between the classic and FT
+//               builds - never merge them.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
+Use cTimer.pkg
 Use cWebButton.pkg
+Use FTDashIcons.pkg              // DashIcon and the CS_Glyph* names
+Use FTMarkupBuilders.pkg         // ImgHtml
+
+/* A REAL WEB BUTTON, NOT MARKUP (Nils 2026-09-26: "Easier to set properties for a button object;
+   like font and glyph", and "easier to render the button object in the Studio designer").
+
+   The FT dialogs draw their buttons as HTML inside one cFTWebHtmlBox. The Studio's Windows Designer
+   shows such a box only as its literal placeholder - one picture, with nothing in it to select. A web
+   control on a FlexTron host is an object of its own: the Designer draws it where it sits, and its
+   properties are in the Properties panel.
+
+   The properties were first built as a subclass, cFTButton, and moved into this class the same day
+   (Nils: "merge it and keep cFTWebButton"). This class added nothing of its own before, and two names
+   for one button is a question every dialog would have had to answer.
+
+   THE CLIENT HALF is rdcft.FTWebButton in AppHtml/RDCFlexTron/ftcontrols.js, and the look is
+   ftcontrols.css; every FT host page loads both (cFTThemeHost_mixin, OnDefineScriptIncludes). The
+   framework's df.WebButton writes its caption as escaped text, so the glyph travels in a property of
+   its own, psGlyphHtml, and the client class puts it in front of the caption.
+
+   IN THE DESIGNER the framework's df.WebButton draws the button - the Designer loads only the
+   framework's own scripts - so it shows the caption in the plain web look, without the glyph. That is
+   why DesignerJSClass stays df.WebButton while psJSClass names the client class. */
+
+/* THE CLICK'S WORK WAITS FOR THE CLICK TO END. A web click is handled inside the WebView2 event, and
+   a modal panel, a Close_Panel or an Exit_Application sent from there faults (4410). So OnClick only
+   hands the button to this relay, and one tick of its timer later - after the event has returned -
+   the button's OnButtonClick runs. One relay serves every cFTWebButton and holds one pending click,
+   the way the FT dialogs' own timers always have. The first button creates it, under Desktop. */
+Class cFTClickRelay is a cTimer
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property Handle phoPending 0
+        Set piTimeout to 1
+        Set pbEnabled to False
+    End_Procedure
+
+    Procedure Relay Handle hoButton
+        Set phoPending to hoButton
+        Set pbEnabled to True
+    End_Procedure
+
+    Procedure OnTimer
+        Handle hoButton
+        Set pbEnabled to False
+        Get phoPending to hoButton
+        Set phoPending to 0
+        If (hoButton <> 0) ;
+            Send OnButtonClick of hoButton
+    End_Procedure
+End_Class
+
+Global_Variable Handle ghoFTClickRelay
+Move 0 to ghoFTClickRelay
+
+// The glyph's markup: an image file when the value has a "." (a path under AppHtml), otherwise a
+// DashIcon name - the same rule as cFTHtmlPage's psTitleIcon. "" = no glyph.
+Function FTGlyphHtml Global String sGlyph Returns String
+    Move (Trim(sGlyph)) to sGlyph
+    If (sGlyph = "") ;
+        Function_Return ""
+    If (Pos(".", sGlyph) > 0) ;
+        Function_Return (ImgHtml(sGlyph, "", "", ""))
+    Function_Return (DashIcon(sGlyph))
+End_Function
 
 // Inherited from cWebButton; stated so the Designer models this class without the pooled package.
+// The psCSSClass tag is for the Studio only. The Designer never runs End_Construct_Object, which puts
+// "ftbtn" in front of the object's own class, so the tag tells it the class starts with it - and with
+// ftcontrols.css imported by the program's CssStyle/application.css (the one sheet of ours the Designer
+// loads), it draws the FT button. At run time psCSSClass still starts empty.
 { DesignerJSClass=df.WebButton }
+{ OverrideProperty=psCSSClass InitialValue="ftbtn" }
 Class cFTWebButton is a cWebButton
-    
+
     Procedure Construct_Object
         Forward Send Construct_Object
 
+        // The picture in front of the caption: a DashIcon name (CS_GlyphClose) or an image file under
+        // AppHtml ("Images/Logo.svg"). "" = none. Read when the object is built - UpdateGlyph changes
+        // it later.
+        { Category="Appearance" }
+        Property String psGlyph ""
+        // The main action: the amber variant of the FT look. Read when the object is built.
+        { Category="Appearance" }
+        Property Boolean pbPrimary False
+
+        // The caption's font. "", 0 and False keep the FT look's own: Segoe UI, 12px, normal weight.
+        // WebSet changes them while the program runs.
+        { WebProperty=Client }
+        { Category="Appearance" }
+        Property String psFontFamily ""
+        { WebProperty=Client }
+        { Category="Appearance" }
+        Property Integer piFontSize 0
+        { WebProperty=Client }
+        { Category="Appearance" }
+        Property Boolean pbBold False
+
+        // The glyph as the client draws it - made from psGlyph, never set directly.
+        { WebProperty=Client }
+        { Visibility=Private }
+        Property String psGlyphHtml ""
+
+        Set psJSClass to "rdcft.FTWebButton"
     End_Procedure
 
     Procedure End_Construct_Object
+        String sClass
         Forward Send End_Construct_Object
+        /* psCSSClass REPLACES the class list, it never adds to it, so a class set in the object body
+           would drop the FT look. "ftbtn" goes first here, and whatever the object set follows it -
+           a "FtFixedBtn" of DFRefactor's still wins its natural width, by !important. */
+        Get psCSSClass to sClass
+        Set psCSSClass to (Trim("ftbtn" + (If(pbPrimary(Self), " ftbtn-primary", "")) + " " + sClass))
+        Set psGlyphHtml to (FTGlyphHtml(psGlyph(Self)))
+        If (ghoFTClickRelay = 0) ;
+            Get Create of Desktop (RefClass(cFTClickRelay)) to ghoFTClickRelay
+    End_Procedure
 
+    // A new glyph while the program runs - the object body's psGlyph is read only when it is built.
+    Procedure UpdateGlyph String sGlyph
+        Set psGlyph to sGlyph
+        WebSet psGlyphHtml to (FTGlyphHtml(sGlyph))
+    End_Procedure
+
+    /* The framework's click, inside the WebView2 event. It only hands the button to the relay, so put
+       a button's work in OnButtonClick. An object that overrides OnClick itself runs its code inside
+       the click, as before this class had one - Forward it, or OnButtonClick never runs. */
+    Procedure OnClick
+        Forward Send OnClick
+        If (ghoFTClickRelay <> 0) ;
+            Send Relay of ghoFTClickRelay Self
+    End_Procedure
+
+    // The button's work, after the web event has returned: a panel can open or close here.
+    { MethodType=Event }
+    Procedure OnButtonClick
     End_Procedure
 
     Procedure Request_Clear

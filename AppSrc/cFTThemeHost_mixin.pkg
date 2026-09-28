@@ -167,6 +167,20 @@ Class cFTThemeHost_mixin is a Mixin
         Function_Return sHtml
     End_Function
 
+    /* THE LIBRARY'S OWN CONTROLS COME WITH EVERY FT PAGE (2026-09-26). cFTWebButton's client class
+       (ftcontrols.js) and the FT look for real web controls (ftcontrols.css, with palette.css for its
+       tokens) join the includes the framework writes into the host page. OnDefineScriptIncludes is
+       the framework's own hook for that (cLocalWebControlHost.VirtualHtml): what it adds lands after
+       FlexTron's own includes - df-min.js among them - so df.WebButton exists when the script runs,
+       and after the theme, so the sheet wins over it. A page that uses none of it loads three small
+       files. An object that augments this event must Forward it, or its page loses them. */
+    Procedure OnDefineScriptIncludes String[] ByRef aScriptHtml
+        Forward Send OnDefineScriptIncludes (&aScriptHtml)
+        Move '<link rel="stylesheet" href="RDCFlexTron/palette.css">' to aScriptHtml[SizeOfArray(aScriptHtml)]
+        Move ('<link rel="stylesheet" href="RDCFlexTron/ftcontrols.css?v=' + CS_FTLibraryVersion + '">') to aScriptHtml[SizeOfArray(aScriptHtml)]
+        Move ('<script src="RDCFlexTron/ftcontrols.js?v=' + CS_FTLibraryVersion + '"></script>') to aScriptHtml[SizeOfArray(aScriptHtml)]
+    End_Procedure
+
     /*  A NAVIGATION MAKES THE PAGE UNREADY AGAIN, and the framework's own flag does not say so.
 
         pbInitWebApp is the readiness truth every live push is gated on (cFTWebHtmlBox.UpdateHtml folds

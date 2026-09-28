@@ -1,0 +1,87 @@
+/* RDCFlexTron - the FT look for the library's real web controls (cFTWebButton, and the accent label).
+
+   Every FT host page links this sheet, with palette.css for its --dfr-* tokens, after the Web UI
+   theme (cFTThemeHost_mixin, OnDefineScriptIncludes) - so the tokens are there even on a host that
+   holds no cFTWebHtmlBox. The button carries the .rpbtn family's size and tokens (buttons.css), so a
+   cFTWebButton and a markup button look the same side by side, in both themes.
+
+   Every selector starts at .WebControl: the Material theme styles ".WebButton button", and these
+   rules must win over it. psCSSClass lands on that OUTER element; the caption is the inner <button>. */
+
+.WebControl.WebButton.ftbtn button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 76px;
+    height: 24px;
+    padding: 0 10px;
+    color: var(--dfr-btn-ink, #d8d8d8);
+    background: var(--dfr-btn-bg, #3a3937);
+    border: 1px solid var(--dfr-btn-line, #4a4948);
+    border-radius: 4px;
+    box-shadow: none;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+/* The theme's ripple is not part of the FT look. */
+.WebControl.WebButton.ftbtn button::after {
+    display: none;
+}
+
+.WebControl.WebButton.ftbtn.Web_Enabled button:hover,
+.WebControl.WebButton.ftbtn.Web_Enabled button:focus {
+    color: var(--dfr-btn-ink, #d8d8d8);
+    background: var(--dfr-btn-bg-hover, #454341);
+    border-color: var(--dfr-btn-line-hover, #5d5b58);
+    outline: none;
+}
+
+/* Shut: dimmed in place, and hover does not light it up - the same state as .rpbtn.dis. */
+.WebControl.WebButton.ftbtn.Web_Disabled button {
+    color: var(--dfr-btn-ink, #d8d8d8);
+    background: var(--dfr-btn-bg, #3a3937);
+    border-color: var(--dfr-btn-line, #4a4948);
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* The glyph, 15px like every FT button's. An inline svg takes the caption's ink (stroke="currentColor");
+   an image file keeps its own colours. */
+.WebControl.WebButton.ftbtn .ftglyph {
+    display: inline-flex;
+    flex: none;
+}
+.WebControl.WebButton.ftbtn .ftglyph svg,
+.WebControl.WebButton.ftbtn .ftglyph img {
+    display: block;
+    width: 15px;
+    height: 15px;
+}
+
+/* pbPrimary: the amber variant - the flow colour, for the button that starts something. */
+.WebControl.WebButton.ftbtn.ftbtn-primary button {
+    color: var(--dfr-amber-bright, #f4c194);
+    background: var(--dfr-amber-bg, #4a4126);
+    border-color: var(--dfr-amber-line, #7a6a3a);
+}
+.WebControl.WebButton.ftbtn.ftbtn-primary.Web_Enabled button:hover,
+.WebControl.WebButton.ftbtn.ftbtn-primary.Web_Enabled button:focus {
+    color: var(--dfr-amber-bright, #f4c194);
+    background: var(--dfr-amber-fill-hover, #5a4d2c);
+    border-color: var(--dfr-amber-line, #7a6a3a);
+}
+
+/* A label in the accent colour - a band's caption, like the demo's "Theme". The framework writes the
+   text into .WebLabel_content, inside the element psCSSClass lands on. */
+.WebControl.WebLabel.ftaccent .WebLabel_content {
+    color: var(--dfr-amber, #e0a458);
+    font-weight: 600;
+}
