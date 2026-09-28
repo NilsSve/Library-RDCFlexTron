@@ -1,5 +1,5 @@
 /* RDCFlexTron - the FT look for the library's real web controls: cFTWebButton, the form controls
-   (FtCompact), cFTWebList, cFTHtmlPage and the accent label.
+   (FtCompact), cFTWebList, cFTHtmlPage, FTMessageBox's text and the accent label - and cFTGridHost's rows.
 
    Every FT host page links this sheet, with palette.css for its --dfr-* tokens, after the Web UI
    theme (cFTThemeHost_mixin, OnDefineScriptIncludes) - so the tokens are there even on a host that
@@ -78,6 +78,18 @@
     color: var(--dfr-amber-bright, #f4c194);
     background: var(--dfr-amber-fill-hover, #5a4d2c);
     border-color: var(--dfr-amber-line, #7a6a3a);
+}
+
+/* cFTGridHost: ONE FT ROW - the least height of a row on a grid host (its psDefaultRowHeight), so an empty
+   row keeps the height of a row of buttons. 33 px is the Material theme's 29 px control box with its 2 px
+   margins. */
+:root {
+    --ft-row: 33px;
+}
+/* On a grid host of 8 px columns (cFTGridHost) a button's SPAN is its width, so the FT button's 76 px minimum
+   steps aside there - it would push a 10-column button into its neighbour. */
+.WebCon_Content.WebCon_GridLayout > .WebControl.WebButton.ftbtn button {
+    min-width: 0;
 }
 
 /* A label in the accent colour - a band's caption, like the demo's "Theme". The framework writes the
@@ -270,4 +282,17 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
         "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante.\A\A"
         "Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra.\A\A"
         "Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui.";
+}
+
+/* FTMessageBox's message, under its title: the page's text look in the primary ink. A long path wraps
+   rather than widening the box. */
+.WebControl.WebHtmlBox .ftmsg {
+    padding: 0 18px 14px;
+    font: 13px "Segoe UI", sans-serif;
+    line-height: 1.45;
+    color: var(--dfr-ink, #eceae1);
+    overflow-wrap: anywhere;
+}
+.WebControl.WebHtmlBox .ftmsg p {
+    margin: 0 0 8px;
 }

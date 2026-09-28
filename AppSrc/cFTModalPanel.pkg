@@ -12,6 +12,7 @@
 //               A thin SUBCLASS rather than a copy: the library class stays the single source of the panel
 //               behaviour, so this file cannot drift from it.
 //               FlexTron dialogs declare 'is a cFTModalPanel'; non-FlexTron dialogs keep the plain class.
+//               It fits one web host to itself, above its status bar (phoClientHost), as cFTPanel does.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -40,6 +41,14 @@ Class cFTModalPanel is a cRDCModalPanel
         // DataFlex's own Default.ico, unless the dialog names an icon of its own. After the Forward: the
         // base creates the property its Set Icon keeps the name in, and applies it again in Page.
         Set Icon to "Default.ico"
+
+        // The web host that fills the panel above its status bar, or 0 for none. The dialog sets it below its
+        // host object: Set phoClientHost to (oHost(Self)). A grid host (cFTGridHost) then lays out the rest.
+        { DesignTime=False }
+        Property Handle phoClientHost 0
+        // The status bar's height, in dialog units: the host ends this far above the panel's bottom edge.
+        { DesignTime=False }
+        Property Integer piStatusBarUnits 20
     End_Procedure
 
     // The base's End_Construct_Object builds oDialogCommandbar > oStatusBar and stores the
@@ -52,6 +61,37 @@ Class cFTModalPanel is a cRDCModalPanel
         Get phoDialogCommandbar to hoStatusBar
         If (hoStatusBar <> 0) ;
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+    End_Procedure
+
+    /* PLACEHOST fits phoClientHost to the panel when it is shown and on every resize: from the host's own
+       top-left offset (Set Location to 4 4), with the same margin at the right, down to the top of the
+       status bar. It measures the panel's Size, in dialog units - a modal panel's Size is its client area (a
+       main Panel's is not: cFTPanel measures pixels) - because the base panel grows itself for its status
+       bar AFTER its children are constructed, so a host anchored to the bottom would end short of the bar.
+       The demo's dialog and DFRefactor's message box placed their hosts this way before this class did. */
+    Procedure PlaceHost
+        Handle hoHost
+        Integer iSize iLoc iH iW
+        Get phoClientHost to hoHost
+        If (hoHost = 0) ;
+            Procedure_Return
+        Get Size to iSize
+        Get Location of hoHost to iLoc
+        Move (Hi(iSize) - piStatusBarUnits(Self) - Hi(iLoc)) to iH
+        Move (Low(iSize) - (2 * Low(iLoc))) to iW
+        If (iH < 40) ;
+            Move 40 to iH
+        Set Size of hoHost to iH iW
+    End_Procedure
+
+    Procedure Activating
+        Forward Send Activating
+        Send PlaceHost
+    End_Procedure
+
+    Procedure OnResize
+        Forward Send OnResize
+        Send PlaceHost
     End_Procedure
 
 End_Class

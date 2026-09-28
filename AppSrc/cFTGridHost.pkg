@@ -1,0 +1,61 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTGridHost
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-28
+//
+// Description : A cFTLocalWebControlHost laid out on a grid of 8 px columns the way a Windows dialog is -
+//               controls at their size, the extra space where the window stretches.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTLocalWebControlHost.pkg
+
+/* THE GRID HOST (Nils 2026-09-27: "we are really building a Windows application"). The columns are a FIXED
+   8 px, so a control's piColumnSpan is its width in 8 px steps and piColumnIndex its place, much like dialog
+   units - the same at any window size. It began as Demo-RDCFlexTron's prototype, cDemoGridHost.
+
+   - peLayoutType ltGrid: a control sits in a column AND a row - piColumnIndex and piRowIndex, both counted
+     from 0 - and piColumnSpan / piRowSpan say how many it takes.
+   - psDefaultColumnWidth "8px": every column is 8 px unless psColumnWidths says otherwise.
+   - psDefaultRowHeight: a row is as tall as its tallest control, and never less than one FT row (--ft-row
+     in ftcontrols.css, 33 px: a button's 29 px box with its 2 px margins), so an empty row keeps the height
+     of a row of buttons.
+
+   THE COUNT. piColumnCount is the widest row's width in 8 px steps, plus the one column that stretches: the
+   controls that stay at the left, 1, and the ones that stay at the right. Every column takes 8 px whether it
+   is used or not, so the count follows the content - unused columns would be an empty strip at the right
+   edge - and the host must be at least as wide as its fixed columns at the window's MINIMUM size. Rows count
+   themselves: the framework counts them from the controls' piRowIndex.
+
+   WHERE THE WINDOW STRETCHES is the object's to say: psColumnWidths "43/1fr" gives column 43 the extra width
+   (an empty column between the left and right groups, or one under a field that grows); psRowHeights "1/1fr"
+   gives row 1 the extra height (a page or a list, with pbFillHeight). Never percentages: they are a share of
+   the WHOLE height and ignore the other rows. A width entry past piColumnCount is ignored.
+
+   AIR between groups is a row of its own: an empty row of a fixed height, psRowHeights "3/8px" (one column's
+   width), so a button row does not sit right under a list or a page. The theme puts no gap between rows -
+   only each control's own margins, 2 px above and below, which leave 4 px: right between two rows of
+   buttons, too little under a page.
+
+   The grid trap: piColumnSpan 0 means ONE column here, not "the rest of the row" as in the flow layout - a
+   control that spans the width says how many columns. A caption longer than its span is cut off, as in a
+   Windows dialog: size the control to its caption. The FT button's 76 px minimum steps aside on a grid host
+   (ftcontrols.css), where the span is the width.
+
+   The OverrideProperty tags tell the Studio these are the class's own defaults, so its Designer and property
+   panel show them; the Sets make them so at run time. */
+{ OverrideProperty=peLayoutType InitialValue=ltGrid }
+{ OverrideProperty=psDefaultColumnWidth InitialValue="8px" }
+{ OverrideProperty=psDefaultRowHeight InitialValue="minmax(var(--ft-row, 33px), max-content)" }
+Class cFTGridHost is a cFTLocalWebControlHost
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set peLayoutType to ltGrid
+        Set psDefaultColumnWidth to "8px"
+        Set psDefaultRowHeight to "minmax(var(--ft-row, 33px), max-content)"
+    End_Procedure
+End_Class

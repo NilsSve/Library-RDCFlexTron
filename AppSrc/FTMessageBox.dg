@@ -1,0 +1,200 @@
+﻿//****************************************************************************
+// $Module type: Dialog
+// $Module name: FTMessageBox
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-28
+//
+// Description : The dialog FTInfoBox, FTStopBox and FTYesNoBox show (FTMessageBox.pkg): the message in a
+//               page - its caption as the title, beside the glyph of its kind - and the answer at the
+//               bottom right. Use it once, where the program Uses its dialogs.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTModalPanel.pkg
+Use cFTLocalWebControlHost.pkg      // a web control needs a host Used before it
+Use cFTGridHost.pkg                 // the host as a grid of 8 px columns
+Use FTAllWebControlClasses.pkg      // cFTWebButton
+Use cFTHtmlPage.pkg                 // the message's page: its title (psLabel) and the glyph beside it
+Use Winkern.pkg                     // GetTickCount
+Use FTMessageBox.pkg                // ghoFTMessageBox, FTMessageBoxHtml
+
+/* THE MESSAGE BOX - one message and a fixed row of buttons, nothing else. It follows DFRefactor's
+   MessageBoxFT.dg (Nils 2026-08-15: a shared dialog is only OK "if the buttons stay the same, and there is
+   only one set of buttons"), built the way an FT dialog is built now: ONE grid host, which cFTModalPanel fits
+   to the panel (phoClientHost); a cFTHtmlPage for the message; and real cFTWebButtons, whose OnButtonClick
+   runs after the web click has returned - so it can close the panel.
+
+   THE LOOK, as a Windows task dialog's: the window's title is the program's name (psProduct); the page's
+   title is the message's caption, beside the glyph of its kind - three circled marks, an i, an x and a
+   question mark: marks that do not depend on colour; and the answer is at the bottom right, Yes or OK in the
+   main action's amber. */
+Object oFTMessageBox is a cFTModalPanel
+    Set Label to "Message"
+    Set Size to 178 420
+    Set piMinSize to 178 420
+    Set Location to 2 2
+
+    // The answer: True for Yes or OK, False for No or Esc.
+    Property Boolean pbYes False
+    // What the next showing puts on the page and the buttons: FTShowMessage sets them, Activating shows them.
+    Property String psFTGlyph ""
+    Property String psFTTitle ""
+    Property String psFTBodyHtml ""
+    Property String psFTYesLabel "OK"
+    Property String psFTNoLabel ""
+    /* WHEN THIS BOX LAST CLOSED. It is one object, and callers chain it - a question, then the answer in the
+       next box, each Popup a moment after the last close. DFRefactor's box met "Could not find object" inside
+       the next box while the last one's page was still being taken down, so a box that has just closed
+       settles - the message queue pumped, at most 150 ms - before it pops again. */
+    Property Integer piClosedTick 0
+
+    // An answer: the buttons send it, after the web click has returned. It ends the panel.
+    Procedure FTAnswer Boolean bYes
+        Set pbYes to bYes
+        Send Close_Panel
+        Set piClosedTick to (GetTickCount())
+    End_Procedure
+
+    Object oMbHost is a cFTGridHost
+        Set Location to 4 4
+        Set Size to 154 412
+        Set peAnchors to anNone         // placed by cFTModalPanel (phoClientHost)
+        Set piColumnCount to 21         // column 0, then No's 10 and Yes's 10
+        Set psColumnWidths to "0/1fr"   // column 0 takes the extra width
+        Set psRowHeights to "0/1fr 1/8px"   // row 0, the message, takes the extra height; row 1 is 8 px of air
+
+        // Row 0: the message. Its caption is the page's title, beside the glyph of its kind.
+        Object oMbPage is a cFTHtmlPage
+            Set piRowIndex to 0
+            Set piColumnIndex to 0
+            Set piColumnSpan to 21
+            Set pbFillHeight to True        // a long message scrolls in the page
+            Set psLabel to "Message"
+            Set psCSSClass to "ftpage ftg-info"
+        End_Object
+
+        // Row 2: the answer at the bottom right. No shows only when the box asks a question.
+        Object oMbNoBtn is a cFTWebButton
+            Set piRowIndex to 2
+            Set piColumnIndex to 1
+            Set piColumnSpan to 10
+            Set psCaption to "No"
+
+            Procedure OnButtonClick
+                Send FTAnswer False
+            End_Procedure
+        End_Object
+
+        Object oMbYesBtn is a cFTWebButton
+            Set piRowIndex to 2
+            Set piColumnIndex to 11
+            Set piColumnSpan to 10
+            Set psCaption to "OK"
+            Set psCSSClass to "ftbtn ftbtn-primary"     // the main action's amber
+
+            Procedure OnButtonClick
+                Send FTAnswer True
+            End_Procedure
+        End_Object
+    End_Object
+
+    // cFTModalPanel fits the host to the panel, when it is shown and on every resize.
+    Set phoClientHost to (oMbHost(Self))
+
+    /* What this showing says - stored, so a page that loads shows it, and pushed to a page that is up
+       already: the two ways an FT dialog's content reaches its page. */
+    Procedure Activating
+        Handle hoHost hoPage hoNo hoYes
+        Boolean bInitializing
+        String sClass sNo
+        Forward Send Activating
+        Move (oMbHost(Self)) to hoHost
+        Move (oMbPage(hoHost)) to hoPage
+        Move (oMbNoBtn(hoHost)) to hoNo
+        Move (oMbYesBtn(hoHost)) to hoYes
+        Move "ftpage" to sClass
+        If (psFTGlyph(Self) <> "") ;
+            Move (sClass + " ftg-" + psFTGlyph(Self)) to sClass
+        Move (psFTNoLabel(Self)) to sNo
+        Set psLabel of hoPage to (psFTTitle(Self))
+        Set psCSSClass of hoPage to sClass
+        Set psHtml of hoPage to (psFTBodyHtml(Self))
+        Set psCaption of hoYes to (psFTYesLabel(Self))
+        Set psCaption of hoNo to sNo
+        Set pbRender of hoNo to (sNo <> "")
+        Get pbInitWebApp of hoHost to bInitializing
+        If (not(bInitializing)) Begin
+            WebSet psLabel of hoPage to (psFTTitle(Self))
+            WebSet psCSSClass of hoPage to sClass
+            Send UpdateHtml of hoPage (psFTBodyHtml(Self))
+            WebSet psCaption of hoYes to (psFTYesLabel(Self))
+            WebSet psCaption of hoNo to sNo
+            WebSet pbRender of hoNo to (sNo <> "")
+        End
+    End_Procedure
+
+    // Esc declines, as Windows' own box does.
+    Procedure Cancel
+        Set pbYes to False
+        Forward Send Cancel
+        Set piClosedTick to (GetTickCount())
+    End_Procedure
+
+    /* THE one call - FTMessageBox.pkg's three send it: the glyph of the message's kind (a DashIcon name), its
+       caption, the message as written for a Win32 box, and the two button captions - sNoLabel "" for a box
+       with one button. Returns True for Yes or OK, False for No or Esc. */
+    Function FTShowMessage String sGlyph String sTitle String sMessage String sYesLabel ;
+                           String sNoLabel Returns Boolean
+        Integer iRet iWait
+        String sApp
+        If (Trim(sTitle) = "") ;
+            Move "Message" to sTitle
+        If (sYesLabel = "") ;
+            Move "OK" to sYesLabel
+        /* NEVER NESTED: this is one object, and a second call while it shows would pop the same panel over
+           itself. That one is answered by Windows' own box instead. */
+        If (Active_State(Self)) Begin
+            If (sNoLabel <> "") Begin
+                Move (Message_Box(sMessage, sTitle, MB_YESNO, MB_ICONQUESTION)) to iRet
+                Function_Return (iRet = MBR_Yes)
+            End
+            Move (Message_Box(sMessage, sTitle, MB_OK, MB_ICONINFORMATION)) to iRet
+            Function_Return True
+        End
+        // A box that has just closed settles before it pops again (piClosedTick).
+        Move 0 to iWait
+        While (((GetTickCount() - piClosedTick(Self)) < 150) and (iWait < 40))
+            Send PumpMsgQueue of Desktop
+            Increment iWait
+        Loop
+        // The window's title is the program's name; the caption is the page's.
+        Move "" to sApp
+        If (ghoApplication <> 0) ;
+            Get psProduct of ghoApplication to sApp
+        If (Trim(sApp) = "") ;
+            Move sTitle to sApp
+        Set Label to sApp
+        Set psFTGlyph to sGlyph
+        Set psFTTitle to sTitle
+        Set psFTBodyHtml to (FTMessageBoxHtml(sMessage))
+        Set psFTYesLabel to sYesLabel
+        Set psFTNoLabel to sNoLabel
+        Set pbYes to False
+        // A long message gets the tall box: a message that scrolls is worse than a box a little too tall.
+        If (Length(sMessage) > 600) Begin
+            Set Size to 258 460
+            Set piMinSize to 258 460
+        End
+        Else Begin
+            Set Size to 178 420
+            Set piMinSize to 178 420
+        End
+        Send Popup
+        Function_Return (pbYes(Self))
+    End_Function
+End_Object
+
+// FTMessageBox.pkg's three reach the dialog through this handle.
+Move (oFTMessageBox(Self)) to ghoFTMessageBox
