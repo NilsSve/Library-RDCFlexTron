@@ -33,7 +33,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use FTConstants.h.pkg           // CI_FTTheme*, giFTThemeMode, where the theme is saved
-Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
+Use FTThemeColors.pkg           // FTWebBg, FTColorHex - the WebView2 back colour, and the page body's
 
 Class cFTThemeHost_mixin is a Mixin
 
@@ -140,10 +140,9 @@ Class cFTThemeHost_mixin is a Mixin
             + '<link rel="stylesheet" href="CssStyle/application.css">' ;
             + C_NewLine + '<!-- DataFlex Engine -->') to sLinks
         Move (Replaces("<!-- DataFlex Engine -->", sHtml, sLinks)) to sHtml
-        If (giFTThemeMode = CI_FTThemeLight) ;
-            Move "#F7F5F0" to sBg
-        Else ;
-            Move "#262624" to sBg
+        // The web backdrop as CSS, from its Define (FTWebBg: clLightWebBg / clDarkWebBg). Character(35) is the
+        // "#" - in a string literal a "#" before a letter can be read as a compiler directive.
+        Move (Character(35) + FTColorHex(FTWebBg())) to sBg
         /* Probe 3 (green body, white band ABOVE it) placed the residual white exactly where
            application.css already documents it: the theme paints two opaque #EFEFEF layers ON TOP
            of #viewport - .WebApp.WebContainer and .WebCon_ContentWrp. application.css wins the
