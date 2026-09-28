@@ -21,7 +21,12 @@ Use Windows.pkg
 
    Not to be confused with CS_Ico*, the IconLabel file stems (AppHtml\Svg), which stay in
    RefactorConstants.h.pkg: "compare" is a glyph and "Compare" is a file, and they are not
-   interchangeable. */
+   interchangeable.
+
+   AppHtml/RDCFlexTron/ftglyphs.css draws every glyph here as a web-button class ("ftg-<name>") and is
+   GENERATED from this file: after adding or changing a glyph, run Tools/MakeFTGlyphsCss.py and commit the
+   sheet with it. The script reads each branch of DashIcon below - a path moved into sD, or an <svg>
+   returned whole - so keep a branch's code on the line right after its If. */
 Define CS_GlyphChevron                   for "chevron"
 Define CS_GlyphRepeat                    for "repeat"      // TestCompileFT wrote this SVG out four times
 Define CS_GlyphArrowRight                for "arrowright"  // the hand-over marker on the Test Compile tail

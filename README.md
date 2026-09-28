@@ -14,7 +14,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 |---|---|
 | `cFTLocalWebControlHost.pkg`, `cFTDbLocalWebControlHost.pkg` | FlexTron hosts that take the theme (`cFTThemeHost_mixin.pkg` is their shared part) |
 | `cFTWebCheckbox`, `cFTWebCombo`, `cFTWebForm`, `cFTWebLabel`, `cFTWebHtmlBox` | the web controls |
-| `cFTWebButton.pkg` | the web button, in the FT look: `psGlyph` (a `DashIcon` name or an image file), `psFontFamily` / `piFontSize` / `pbBold`, `pbPrimary` for the main action, and `OnButtonClick`, which runs after the web click has returned - so it can open or close a panel. The Studio's Designer draws it, without the glyph |
+| `cFTWebButton.pkg` | the web button, in the FT look: a glyph (a `DashIcon` name, drawn by its `ftg-` class, or an image file), `psFontFamily` / `piFontSize` / `pbBold`, `pbPrimary` for the main action, and `OnButtonClick`, which runs after the web click has returned - so it can open or close a panel. The Studio's Designer draws it, and its glyph when the object names it as a class: `Set psCSSClass to "ftbtn ftg-exit"` (`psGlyph` shows only when the program runs) |
 | `cFTHtmlPage.pkg` | a `cFTWebHtmlBox` that holds a whole page; `psTitleIcon` is the picture beside its title - an image file or a `DashIcon` glyph name (default: the `filetext` glyph) |
 | `cFTPanel.pkg` | a program's main window: a `Panel` in the theme's colour, which fits one web host to its client area (`phoClientHost`) |
 | `cFTModalPanel.pkg`, `cFTDbModalPanel.pkg` | modal panels in the theme's colours, with DataFlex's `Default.ico` unless the dialog sets its own; subclasses of RDCToolsLib's `cRDCModalPanel` / `cRDCDbModalPanel` |
@@ -25,7 +25,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables - and `FTHtmlEscape` |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
-| `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls; installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last two itself |
+| `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls, and `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated); installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last three itself |
 
 ## Using it
 
@@ -62,13 +62,21 @@ a version, so the range above cannot accept it.
   PATH gets no install step, so it copies the sheets there itself (see Demo-RDCFlexTron's `setup.bat`).
 - **The Studio's Designer** draws the web controls with the framework's scripts and the theme, and loads
   one sheet of yours: `AppHtml\CssStyle\application.css`. To see the FT look there, import the library's
-  sheets at the top of that file - `@import url("../RDCFlexTron/palette.css");` and
-  `@import url("../RDCFlexTron/ftcontrols.css");`. A button's own font (`psFontFamily`, `piFontSize`,
-  `pbBold`) and `pbPrimary`'s amber are applied when the program runs, so the Designer shows the standard
-  FT button. A `cFTHtmlPage` whose page is built at run time shows only its literal `psHtml` there: make
+  sheets at the top of that file - `@import url("../RDCFlexTron/palette.css");`,
+  `@import url("../RDCFlexTron/ftcontrols.css");` and `@import url("../RDCFlexTron/ftglyphs.css");`. The
+  Designer runs none of the library's code, so what it shows is an object's LITERAL properties: a button
+  shows its glyph there when the object names it as a class, `Set psCSSClass to "ftbtn ftg-exit"`, with
+  `ftbtn-primary` for the main action's amber (both are understood when the program runs, too). A button's
+  own font (`psFontFamily`, `piFontSize`, `pbBold`) is applied when the program runs only. A `cFTHtmlPage`
+  whose page is built at run time shows only its literal `psHtml` there: make
   that placeholder the page's header in the page's own classes, with Lorem ipsum for the body text
   (Demo-RDCFlexTron's two pages do).
 - DataFlex 26 only.
+
+## Changing the glyphs
+
+`AppHtml/RDCFlexTron/ftglyphs.css` is generated from `AppSrc/FTDashIcons.pkg`. After adding or changing a
+glyph there, run `python Tools/MakeFTGlyphsCss.py` and commit the sheet with it.
 
 ## Credits
 

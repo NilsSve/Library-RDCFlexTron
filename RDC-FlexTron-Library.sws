@@ -22,11 +22,12 @@
             "${AppHtml}/RDCFlexTron/pagefit.css",
             "${AppHtml}/RDCFlexTron/pills.css",
             "${AppHtml}/RDCFlexTron/ftcontrols.css",
-            "${AppHtml}/RDCFlexTron/ftcontrols.js"
+            "${AppHtml}/RDCFlexTron/ftcontrols.js",
+            "${AppHtml}/RDCFlexTron/ftglyphs.css"
         ],
         "license": "MIT",
         "licenseFile": "LICENSE",
-        "version": "0.2.0"
+        "version": "0.3.0"
     },
     "workspaceName": "RDCFlexTron"
 }

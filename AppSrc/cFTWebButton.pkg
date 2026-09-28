@@ -30,14 +30,19 @@ Use FTMarkupBuilders.pkg         // ImgHtml
    (Nils: "merge it and keep cFTWebButton"). This class added nothing of its own before, and two names
    for one button is a question every dialog would have had to answer.
 
-   THE CLIENT HALF is rdcft.FTWebButton in AppHtml/RDCFlexTron/ftcontrols.js, and the look is
-   ftcontrols.css; every FT host page loads both (cFTThemeHost_mixin, OnDefineScriptIncludes). The
-   framework's df.WebButton writes its caption as escaped text, so the glyph travels in a property of
-   its own, psGlyphHtml, and the client class puts it in front of the caption.
+   THE CLIENT HALF is rdcft.FTWebButton in AppHtml/RDCFlexTron/ftcontrols.js, the look is
+   ftcontrols.css, and the glyphs are ftglyphs.css; every FT host page loads all three
+   (cFTThemeHost_mixin, OnDefineScriptIncludes). A DashIcon glyph is a CLASS ("ftg-exit"), which the
+   sheet draws in front of the caption. An image file cannot be a class: the framework's df.WebButton
+   writes its caption as escaped text, so that glyph travels in a property of its own, psGlyphHtml,
+   and the client class puts it in front of the caption.
 
    IN THE DESIGNER the framework's df.WebButton draws the button - the Designer loads only the
-   framework's own scripts - so it shows the caption in the plain web look, without the glyph. That is
-   why DesignerJSClass stays df.WebButton while psJSClass names the client class. */
+   framework's own scripts and runs none of ours - which is why DesignerJSClass stays df.WebButton while
+   psJSClass names the client class. What the Designer does apply is a LITERAL psCSSClass, styled by the
+   program's application.css: so a glyph shows there when the object names it as a class,
+   Set psCSSClass to "ftbtn ftg-exit" (ftglyphs.css, which application.css imports). When the program
+   runs, a psGlyph NAME becomes that same class, so both spellings draw alike. */
 
 /* THE CLICK'S WORK WAITS FOR THE CLICK TO END. A web click is handled inside the WebView2 event, and
    a modal panel, a Close_Panel or an Exit_Application sent from there faults (4410). So OnClick only
@@ -93,9 +98,10 @@ Class cFTWebButton is a cWebButton
     Procedure Construct_Object
         Forward Send Construct_Object
 
-        // The picture in front of the caption: a DashIcon name (CS_GlyphClose) or an image file under
-        // AppHtml ("Images/Logo.svg"). "" = none. Read when the object is built - UpdateGlyph changes
-        // it later.
+        // The picture in front of the caption: a DashIcon name (CS_GlyphClose), drawn by its ftg- class
+        // (ftglyphs.css), or an image file under AppHtml ("Images/Logo.svg"). "" = none. Read when the
+        // object is built - UpdateGlyph changes it later. The Studio's Designer shows a glyph only when
+        // it is named in psCSSClass, "ftbtn ftg-close" - it never runs the code that reads this.
         { Category="Appearance" }
         Property String psGlyph ""
         // The main action: the amber variant of the FT look. Read when the object is built.
@@ -114,31 +120,88 @@ Class cFTWebButton is a cWebButton
         { Category="Appearance" }
         Property Boolean pbBold False
 
-        // The glyph as the client draws it - made from psGlyph, never set directly.
+        // An image-file glyph as the client draws it - made from psGlyph, never set directly.
         { WebProperty=Client }
         { Visibility=Private }
         Property String psGlyphHtml ""
 
+        // The object's own classes and the glyph's class, as End_Construct_Object sorted them; the class
+        // list is put together again from these when the glyph changes (UpdateGlyph).
+        { Visibility=Private }
+        Property String psFTOwnClasses ""
+        { Visibility=Private }
+        Property String psFTGlyphClass ""
+
         Set psJSClass to "rdcft.FTWebButton"
     End_Procedure
 
+    // The class list: the FT look, the main-action variant, the glyph's class, then the object's own.
+    Function FTClassList Returns String
+        String sList
+        Move "ftbtn" to sList
+        If (pbPrimary(Self)) ;
+            Move (sList + " ftbtn-primary") to sList
+        If (psFTGlyphClass(Self) <> "") ;
+            Move (sList + " " + psFTGlyphClass(Self)) to sList
+        If (psFTOwnClasses(Self) <> "") ;
+            Move (sList + " " + psFTOwnClasses(Self)) to sList
+        Function_Return sList
+    End_Function
+
     Procedure End_Construct_Object
-        String sClass
+        String sGlyph sToken sOwn
+        String[] asClasses
+        Integer i
         Forward Send End_Construct_Object
-        /* psCSSClass REPLACES the class list, it never adds to it, so a class set in the object body
-           would drop the FT look. "ftbtn" goes first here, and whatever the object set follows it -
-           a "FtFixedBtn" of DFRefactor's still wins its natural width, by !important. */
-        Get psCSSClass to sClass
-        Set psCSSClass to (Trim("ftbtn" + (If(pbPrimary(Self), " ftbtn-primary", "")) + " " + sClass))
-        Set psGlyphHtml to (FTGlyphHtml(psGlyph(Self)))
+        /* psCSSClass REPLACES the class list, it never adds to it, so the object's own classes are sorted
+           and the list is put together again (FTClassList): "ftbtn" first, whatever the object set after
+           it - a "FtFixedBtn" of DFRefactor's still wins its natural width, by !important. The spelling
+           the Studio's Designer needs is understood too, since it runs none of this: an "ftbtn" in the
+           object's list is not added twice, "ftbtn-primary" means pbPrimary, and an "ftg-<name>" class
+           is the glyph. */
+        Move (StrSplitToArray(Trim(psCSSClass(Self)), " ")) to asClasses
+        Move "" to sOwn
+        For i from 0 to (SizeOfArray(asClasses) - 1)
+            Move asClasses[i] to sToken
+            If (sToken = "ftbtn-primary") Begin
+                Set pbPrimary to True
+            End
+            Else If (Left(sToken, 4) = "ftg-") Begin
+                Set psFTGlyphClass to sToken
+            End
+            Else If ((sToken <> "ftbtn") and (sToken <> "")) Begin
+                Move (Trim(sOwn + " " + sToken)) to sOwn
+            End
+        Loop
+        Set psFTOwnClasses to sOwn
+        // psGlyph, unless the class list named the glyph: a DashIcon NAME is its ftg- class, an image
+        // file goes to the client as markup.
+        Move (Trim(psGlyph(Self))) to sGlyph
+        If ((psFTGlyphClass(Self) = "") and (sGlyph <> "")) Begin
+            If (Pos(".", sGlyph) > 0) ;
+                Set psGlyphHtml to (FTGlyphHtml(sGlyph))
+            Else ;
+                Set psFTGlyphClass to ("ftg-" + sGlyph)
+        End
+        Set psCSSClass to (FTClassList(Self))
         If (ghoFTClickRelay = 0) ;
             Get Create of Desktop (RefClass(cFTClickRelay)) to ghoFTClickRelay
     End_Procedure
 
-    // A new glyph while the program runs - the object body's psGlyph is read only when it is built.
+    // A new glyph while the program runs - the object body's psGlyph is read only when it is built. A
+    // DashIcon name becomes its ftg- class, an image file goes to the client as markup, "" is none.
     Procedure UpdateGlyph String sGlyph
+        Move (Trim(sGlyph)) to sGlyph
         Set psGlyph to sGlyph
-        WebSet psGlyphHtml to (FTGlyphHtml(sGlyph))
+        If (Pos(".", sGlyph) > 0) Begin
+            Set psFTGlyphClass to ""
+            WebSet psGlyphHtml to (FTGlyphHtml(sGlyph))
+        End
+        Else Begin
+            Set psFTGlyphClass to (If(sGlyph = "", "", "ftg-" + sGlyph))
+            WebSet psGlyphHtml to ""
+        End
+        WebSet psCSSClass to (FTClassList(Self))
     End_Procedure
 
     /* The framework's click, inside the WebView2 event. It only hands the button to the relay, so put
