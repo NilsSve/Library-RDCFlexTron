@@ -7,13 +7,15 @@
 //
 // Description : FlexTron variant of DataFlex's Panel, for a program's main window. It adds the FT ground
 //               colour, so the native backdrop around the web hosts follows the theme - what cFTModalPanel
-//               does for a dialog.
+//               does for a dialog - and fits one web host to its client area (phoClientHost).
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use DFPanel.pkg
 Use FTThemeColors.pkg            // FTWebBg - the FT palette
+Use tWinStructs.pkg              // tWinRect - PlaceHost measures the client area
+Use Winuser.pkg                  // GetClientRect
 
 // Inherited from BasicPanel (Windows.pkg); stated so the Designer models this class without the pooled
 // package having been parsed first.
@@ -26,6 +28,46 @@ Class cFTPanel is a Panel
     Procedure Construct_Object
         Forward Send Construct_Object
         Set Color to (FTWebBg())
+        Set Icon to "Default.ico"
+
+        // The web host that fills the client area, or 0 for none. The window sets it below its host
+        // object: Set phoClientHost to (oHost(Self)).
+        { DesignTime=False }
+        Property Handle phoClientHost 0
+    End_Procedure
+
+    /* PLACEHOST fits phoClientHost to the client area, in pixels, when the window is shown and on every
+       resize. A main Panel's Size is not its client area (a view's is), so a host sized and anchored in
+       dialog units stops short of the window's width; this measures what Windows reports instead. The
+       margin all round is the host's own left offset, as placed in the Designer (Set Location to 4 4).
+       A grid host then lays out everything inside it. */
+    Procedure PlaceHost
+        tWinRect rc
+        Handle hWnd hoHost
+        Integer iVoid iW iH iLoc iGap
+        Get phoClientHost to hoHost
+        If (hoHost = 0) ;
+            Procedure_Return
+        Get Window_Handle to hWnd
+        If (hWnd = 0) ;
+            Procedure_Return
+        Move (GetClientRect(hWnd, AddressOf(rc))) to iVoid
+        Move (rc.right - rc.left) to iW
+        Move (rc.bottom - rc.top) to iH
+        Get GuiLocation of hoHost to iLoc
+        Move (Low(iLoc)) to iGap
+        Set GuiLocation of hoHost to iGap iGap
+        Set GuiSize     of hoHost to (iH - (2 * iGap)) (iW - (2 * iGap))
+    End_Procedure
+
+    Procedure Page Integer iPageObject
+        Forward Send Page iPageObject
+        Send PlaceHost
+    End_Procedure
+
+    Procedure OnResize
+        Forward Send OnResize
+        Send PlaceHost
     End_Procedure
 
 End_Class
