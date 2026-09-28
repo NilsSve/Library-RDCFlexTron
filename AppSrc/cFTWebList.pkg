@@ -1,0 +1,84 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebList
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-28
+//
+// Description : FlexTron (FT) subclass of cWebList: the web list in the look of the FT tables, which asks
+//               for its rows itself when they come from code (OnManualLoadData).
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebList.pkg
+
+/* THE LIST IN THE FT LOOK (Nils 2026-09-28: "build cFTWebList with a demo list"). The framework's own list -
+   header, rows, selection, sorting, column resizing - in the look of the FT tables (ftcontrols.css, .ftlist):
+   the header on the lifted card ground, the selected row in --dfr-row-sel-bg with an amber bar. On a grid
+   host it takes a row like any control - the row that takes the extra height (psRowHeights "<row>/1fr"),
+   with pbFillHeight. The Studio's Designer draws it with its columns, in the FT look too.
+
+   ROWS FROM CODE: Set pbDataAware to False and fill the rows in OnManualLoadData - one tWebRow each, with a
+   unique sRowId and one tWebCell per column, left to right; set sCurrentRowID to select one. The framework
+   sends rows only when asked (GridRefresh), so the list asks for them itself the first time the page draws
+   it: its client class, rdcft.FTWebList (ftcontrols.js), calls FTLoadRows. A page the host builds again
+   asks again. New rows while the program runs: RefreshRows, which waits for the page. A list bound to a
+   data dictionary (Server, pbDataAware True) fills itself as a cWebList does.
+
+   COLUMNS, the Windows way: a column with pbFixedWidth True is piWidth pixels wide; the columns without it
+   share what is left, by their piWidth. So fixed columns and one that stretches, as in a Windows grid.
+
+   The OverrideProperty tag tells the Studio the class's own look; the Set makes it so at run time. */
+{ DesignerJSClass=df.WebList }
+{ CompositeClass=cWebColumn }
+{ OverrideProperty=psCSSClass InitialValue="ftlist" }
+Class cFTWebList is a cWebList
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        // True: the list asks for its rows when the page draws it - a list filled by code. Set when the
+        // object is built, from pbDataAware; never set directly.
+        { WebProperty=Client }
+        { Visibility=Private }
+        Property Boolean pbFTLoadOnShow False
+
+        // The FT look - .ftlist in ftcontrols.css.
+        Set psCSSClass to "ftlist"
+        Set psJSClass to "rdcft.FTWebList"
+    End_Procedure
+
+    Procedure End_Construct_Object
+        String sClasses
+        Forward Send End_Construct_Object
+        // psCSSClass REPLACES the class list: an object that sets its own keeps the FT look in front of it.
+        Move (Trim(psCSSClass(Self))) to sClasses
+        If (Pos(" ftlist ", (" " + sClasses + " ")) = 0) ;
+            Set psCSSClass to (Trim("ftlist " + sClasses))
+        // cWebList's own test (LoadData): these rows come from OnManualLoadData.
+        Set pbFTLoadOnShow to ((not(pbDataAware(Self))) or (peDbGridType(Self) = gtManual))
+        WebPublishProcedure FTLoadRows
+    End_Procedure
+
+    // Sent by the client (rdcft.FTWebList) the first time the page draws the list: its rows, from
+    // OnManualLoadData.
+    Procedure FTLoadRows
+        Send GridRefresh
+    End_Procedure
+
+    // New rows from OnManualLoadData while the program runs. Before the page is ready it does nothing - the
+    // list asks for its rows itself when the page draws it - because a GridRefresh that reaches a page which
+    // has not built its controls yet breaks the page (cFTWebHtmlBox's UpdateHtml waits the same way).
+    Procedure RefreshRows
+        Handle hoHost
+        Boolean bInitializing
+        Get Owner to hoHost
+        Move False to bInitializing
+        If (hoHost <> 0) ;
+            Get pbInitWebApp of hoHost to bInitializing
+        If (not(bInitializing)) ;
+            Send GridRefresh
+    End_Procedure
+
+End_Class

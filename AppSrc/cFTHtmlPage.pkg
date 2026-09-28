@@ -5,19 +5,45 @@
 // Web-site    : http://www.rdctools.com
 // Created     : 2026-09-24
 //
-// Description : A cFTWebHtmlBox that holds a whole page, as opposed to a button band or a tile. It carries
-//               what a page has and a band does not - for now psTitleIcon, the picture beside the page's
-//               title, and TitleIconHtml, which draws it.
+// Description : A cFTWebHtmlBox that holds a whole page, as opposed to a button band or a tile: its title on
+//               top (psLabel) with the picture beside it (psTitleIcon), and a body of HTML. The Studio's
+//               Designer shows the title and its glyph, and Lorem ipsum for a body built at run time.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use cFTWebHtmlBox.pkg
 Use FTMarkupBuilders.pkg        // ImgHtml
-Use FTDashIcons.pkg             // DashIcon
+Use FTDashIcons.pkg             // CS_GlyphFiletext
 
-// Inherited from cWebHtmlBox; stated so the Designer models this class without the pooled package.
+/* THE TITLE IS THE CONTROL'S OWN LABEL (Nils 2026-09-28: "it might become a nightmare to remember to add
+   something like that for every cFTHtmlPage object"). Every web control can show psLabel, and the
+   framework's own script draws it - the script the Studio's Designer runs - so a literal
+   Set psLabel to "Settings" shows there as it does in the program. This class switches the label on, on
+   top, in the page-title look (ftcontrols.css, .ftpage); the page's own HTML starts below it.
+
+   ITS PICTURE, psTitleIcon: a DashIcon glyph NAME becomes its ftg- class, which ftglyphs.css draws in
+   front of the title; an IMAGE FILE goes to the client as markup (psTitleIconHtml), which
+   rdcft.FTHtmlPage (ftcontrols.js) puts there. The Designer applies classes only, so it shows the class
+   default glyph (filetext - psTitleIcon's default too) or the one an object names in psCSSClass,
+   "ftpage ftg-listcheck"; an image file shows when the program runs. An image the Designer should show is
+   a class of the program's own, in a sheet its application.css imports: the image as the background of
+   .WebControl.WebHtmlBox.ftpage.ftg-<name> > .WebCon_Inner > label::before - the .ftpage lifts the rule
+   over the shared one in ftglyphs.css (the demo's ftg-rdcmark, in demo.css). Any ftg- class in
+   psCSSClass is the title's picture.
+
+   THE BODY: the Designer draws a literal psHtml, and a page built at run time - in End_Construct_Object,
+   which the Designer never reads - has none. So the class default is a stand-in body, an empty .ftph,
+   which ftcontrols.css fills with Lorem ipsum - twenty-four paragraphs, enough for a maximised full-HD
+   page; a meta-tag holds far less - and every page shows its shape in the Designer with nothing to add.
+   psHtml has no run-time twin of that default: an unset page stays empty when the program runs.
+
+   The OverrideProperty tags tell the Studio this class's defaults; the Sets make them so at run time. */
 { DesignerJSClass=df.WebHtmlBox }
+{ OverrideProperty=pbShowLabel InitialValue=True }
+{ OverrideProperty=peLabelPosition InitialValue=lpTop }
+{ OverrideProperty=psCSSClass InitialValue="ftpage ftg-filetext" }
+{ OverrideProperty=psHtml InitialValue="<div class='ftph'></div>" }
 Class cFTHtmlPage is a cFTWebHtmlBox
 
     Procedure Construct_Object
@@ -26,25 +52,69 @@ Class cFTHtmlPage is a cFTWebHtmlBox
         /* The picture beside the page's title - one property for both kinds:
              - a value with a "." is an image FILE, relative to AppHtml ("Images/RDC-Mark.svg"). It
                keeps its own colours in both themes;
-             - anything else is a DashIcon glyph NAME (CS_GlyphListcheck ...): inline SVG that takes
-               the text colour.
+             - anything else is a DashIcon glyph NAME (CS_GlyphListcheck ...): its ftg- class draws it,
+               in the title's colour.
            The default is a glyph, CS_GlyphFiletext (a page with lines), because a glyph is built into
            this library and so exists in every workspace; an image file exists only in the workspace that
-           ships it. Empty is no picture. The page is built as the box is constructed, so set this in the
-           object body - a later change does not redraw the page. */
+           ships it. Empty is no picture. Read when the object is built. */
         { Category=Appearance }
         Property String psTitleIcon CS_GlyphFiletext
+
+        // An image-file title picture as the client draws it - made from psTitleIcon, never set directly.
+        { WebProperty=Client }
+        { Visibility=Private }
+        Property String psTitleIconHtml ""
+
+        Set pbShowLabel to True
+        Set peLabelPosition to lpTop
+        Set psJSClass to "rdcft.FTHtmlPage"
     End_Procedure
 
-    // The markup for psTitleIcon, for the page to put beside its title; "" when there is none.
+    // The markup for an image-file title picture; "" for a glyph name (its class draws it) or none.
     Function TitleIconHtml Returns String
         String sIcon
-        Get psTitleIcon to sIcon
-        If (sIcon = "") ;
-            Function_Return ""
+        Move (Trim(psTitleIcon(Self))) to sIcon
         If (Pos(".", sIcon) > 0) ;
             Function_Return (ImgHtml(sIcon, "titleicon", "", ""))
-        Function_Return (DashIcon(sIcon))
+        Function_Return ""
     End_Function
+
+    Procedure End_Construct_Object
+        String sIcon sToken sOwn sGlyph sList
+        String[] asClasses
+        Integer i
+        Forward Send End_Construct_Object
+        /* psCSSClass REPLACES the class list, so the object's own classes are sorted, as cFTWebButton does:
+           "ftpage" is not added twice, an "ftg-<name>" class is the title's glyph - it wins over
+           psTitleIcon, being what the Designer shows - and the rest is kept. */
+        Move "" to sOwn
+        Move "" to sGlyph
+        Move (StrSplitToArray(Trim(psCSSClass(Self)), " ")) to asClasses
+        For i from 0 to (SizeOfArray(asClasses) - 1)
+            Move asClasses[i] to sToken
+            If (Left(sToken, 4) = "ftg-") Begin
+                Move sToken to sGlyph
+            End
+            Else If ((sToken <> "ftpage") and (sToken <> "")) Begin
+                Move (Trim(sOwn + " " + sToken)) to sOwn
+            End
+        Loop
+        Move (Trim(psTitleIcon(Self))) to sIcon
+        If ((sGlyph = "") and (sIcon <> "")) Begin
+            If (Pos(".", sIcon) > 0) ;
+                Set psTitleIconHtml to (TitleIconHtml(Self))
+            Else ;
+                Move ("ftg-" + sIcon) to sGlyph
+        End
+        Move "ftpage" to sList
+        If (sGlyph <> "") ;
+            Move (sList + " " + sGlyph) to sList
+        If (sOwn <> "") ;
+            Move (sList + " " + sOwn) to sList
+        Set psCSSClass to sList
+        // No title, no header: the label would stand empty over the page.
+        If (Trim(psLabel(Self)) = "") ;
+            Set pbShowLabel to False
+    End_Procedure
 
 End_Class

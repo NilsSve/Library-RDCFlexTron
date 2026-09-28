@@ -24,21 +24,33 @@ Use cWebLabel.pkg
                 and forgotten in the fifth.
 
                 Carries no colours of its own. FtCompact styles the label, the field box and the
-                value together in application.css, so a label and the field under it read as one
+                value together in ftcontrols.css, so a label and the field under it read as one
                 control rather than two shades of near-white. The framework's psTextColor and
                 friends are INLINE styles that no stylesheet can override - see the FtCompact note
-                in application.css for why nothing here sets them.
+                in ftcontrols.css for why nothing here sets them.
 */
 
-// Inherited from cWebLabel; stated so the Designer models this class without the pooled package.
+// Inherited from cWebLabel; stated so the Designer models this class without the pooled package. The
+// psCSSClass tag is for the Studio: its Designer runs none of this code, so it tells it the class's own
+// look - FtCompact (ftcontrols.css, which the program's application.css imports).
 { DesignerJSClass=df.WebLabel }
+{ OverrideProperty=psCSSClass InitialValue="FtCompact" }
 Class cFTWebLabel is a cWebLabel
 
     Procedure Construct_Object
         Forward Send Construct_Object
 
-        // The app's text size, not the framework's larger default - see FtCompact in application.css.
+        // The FT look - the app's text size, in the palette's colours: FtCompact in ftcontrols.css.
         Set psCSSClass to "FtCompact"
+    End_Procedure
+
+    // psCSSClass REPLACES the class list: an object that sets its own keeps the FT look in front of it.
+    Procedure End_Construct_Object
+        String sClasses
+        Forward Send End_Construct_Object
+        Move (Trim(psCSSClass(Self))) to sClasses
+        If (Pos(" FtCompact ", (" " + sClasses + " ")) = 0) ;
+            Set psCSSClass to (Trim("FtCompact " + sClasses))
     End_Procedure
 
 End_Class

@@ -1,4 +1,5 @@
-/* RDCFlexTron - the FT look for the library's real web controls (cFTWebButton, and the accent label).
+/* RDCFlexTron - the FT look for the library's real web controls: cFTWebButton, the form controls
+   (FtCompact), cFTWebList, cFTHtmlPage and the accent label.
 
    Every FT host page links this sheet, with palette.css for its --dfr-* tokens, after the Web UI
    theme (cFTThemeHost_mixin, OnDefineScriptIncludes) - so the tokens are there even on a host that
@@ -84,4 +85,189 @@
 .WebControl.WebLabel.ftaccent .WebLabel_content {
     color: var(--dfr-amber, #e0a458);
     font-weight: 600;
+}
+
+/* FtCompact: the FT form controls - cFTWebForm, cFTWebCombo, cFTWebCheckbox and cFTWebLabel - at the FT
+   text size, in the palette's colours. Each class sets it as its psCSSClass and keeps it in front of an
+   object's own classes; the Studio's Designer knows it from the classes' psCSSClass tag.
+
+   THE SIZE: the framework's default text is larger than the FT look's 12 px (an FT button's caption), so a
+   dialog of framework controls would read as if it were shouting. The control's rule is inherited by the
+   label and the field box; the value's element has a size of its own, so it is named too.
+
+   THE COLOURS: psCSSClass lands on the control's OUTER element, and the framework paints three elements
+   inside it - the label, the field box (.WebFrm_Wrapper) and the value (input, textarea, select) - so each
+   is named. Leave the framework's psTextColor, psLabelColor and psBackgroundColor unset: they are inline
+   styles, and no style sheet can override those. */
+.WebControl.FtCompact {
+    font-size: 12px;
+}
+.WebControl.FtCompact label {
+    color: var(--dfr-ink, #eceae1);
+}
+.WebControl.FtCompact .WebFrm_Wrapper {
+    color: var(--dfr-ink, #eceae1);
+    background: var(--dfr-bg-card-hi, #31302e);
+    font-size: 12px;
+}
+.WebControl.FtCompact input,
+.WebControl.FtCompact textarea,
+.WebControl.FtCompact select {
+    color: var(--dfr-ink, #eceae1);
+    font-size: 12px;
+}
+/* A combo: the field's edge, and its drop-down list - WebView2 draws the list itself, with the options'
+   colours; only the list's frame stays the system's. */
+.WebControl.WebCombo.FtCompact .WebFrm_Wrapper {
+    border-color: var(--dfr-line-input, #5a5853);
+}
+.WebControl.WebCombo.FtCompact select {
+    background: transparent;
+}
+.WebControl.WebCombo.FtCompact select option {
+    background-color: var(--dfr-bg-card-hi, #31302e);
+    color: var(--dfr-ink, #eceae1);
+}
+
+/* cFTWebList: the framework's list in the look of the FT tables (DFRefactor's Libraries dialog) - the
+   header on the lifted card ground, a soft line under each row, the row under the mouse on the card
+   ground, the selected one in --dfr-row-sel-bg with an amber bar at its left edge, all at 12 px - in a
+   thin rounded frame. The Material theme paints the list white; these rules outrank its selectors (the
+   selected row's is five classes deep). The frame is .WebList_Focus, which holds the header and the rows. */
+.WebControl.WebList.ftlist .WebList_Focus {
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 8px;
+    box-shadow: none;
+    overflow: hidden;
+}
+.WebControl.WebList.ftlist .WebList_Focus:focus {
+    outline: none;
+    border-color: var(--dfr-line-input, #5a5853);
+}
+.WebControl.WebList.ftlist .WebList_Head {
+    background: var(--dfr-bg-card-hi, #31302e);
+    border-bottom: 1px solid var(--dfr-line-focus, #46443f);
+    color: var(--dfr-ink-4, #a8a69b);
+}
+.WebControl.WebList.ftlist .WebList_Head .WebList_ColCap {
+    padding: 6px 9px;
+    font: 600 12px "Segoe UI", sans-serif;
+}
+/* A column that sorts: no underline - the theme's web habit, not a Windows grid's - but its caption lights
+   up under the mouse. The theme underlines the th itself, so that is where it comes off. */
+.WebControl.WebList.ftlist .WebList_Head .WebList_Sortable {
+    text-decoration: none;
+}
+.WebControl.WebList.ftlist .WebList_Head .WebList_Sortable:hover {
+    color: var(--dfr-ink, #eceae1);
+}
+.WebControl.WebList.ftlist .WebList_Head .WebList_Sorted::before,
+.WebControl.WebList.ftlist .WebList_Head .WebList_SortedReverse::before {
+    color: var(--dfr-amber, #e6a571);
+}
+.WebControl.WebList.ftlist .WebList_ColResizer {
+    border-left-color: var(--dfr-line-strong, #4a4945);
+}
+/* The rows lie on the page's ground, and the scroll bar follows the theme. */
+.WebControl.WebList.ftlist .WebList_BodyWrp {
+    background-color: var(--dfr-bg-page, #262624);
+    color-scheme: dark;
+}
+body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
+    color-scheme: light;
+}
+.WebControl.WebList.ftlist .WebList_Body .WebList_Row {
+    background-color: transparent;
+    border: none;
+    border-left: 2px solid transparent;
+    border-bottom: 1px solid var(--dfr-line-soft, #2e2d2a);
+    font: 12px "Segoe UI", sans-serif;
+}
+.WebControl.WebList.ftlist .WebList_Body .WebList_Row td {
+    padding: 5px 9px;
+    border: none;
+    color: var(--dfr-ink-2, #cbc9c0);
+}
+.WebControl.WebList.ftlist .WebList_Body .WebList_Row:hover {
+    background-color: var(--dfr-bg-card, #2c2b29);
+}
+/* The selected row: its ground, and the amber bar - so it shows by more than a change of shade. */
+.WebControl.WebList.ftlist .WebList_Body.WebList_ShowSelected .WebList_Row.WebList_Selected {
+    background-color: var(--dfr-row-sel-bg, #3b4a5c);
+    border-left: 2px solid var(--dfr-amber, #e6a571);
+}
+.WebControl.WebList.ftlist .WebList_Body.WebList_ShowSelected .WebList_Row.WebList_Selected td {
+    color: var(--dfr-ink, #eceae1);
+}
+/* The theme's ripple is not part of the FT look. */
+.WebControl.WebList.ftlist .WebList_Body .WebList_Row::after {
+    display: none;
+}
+/* A glyph in a cell (DashIcon, in a column with pbAllowHtml): the height of the text beside it. */
+.WebControl.WebList.ftlist .WebList_Body td svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+/* cFTHtmlPage: the page's title is the control's own label (psLabel, on top), in the page-title look - the
+   Studio's Designer draws that label from a literal psLabel, so it shows the title too. The glyph beside
+   it is an ftg- class (ftglyphs.css), an image file a span.fttitleicon (ftcontrols.js). The whole page
+   takes the page backdrop, so the pale title reads on whatever the Designer paints behind the host. */
+.WebControl.WebHtmlBox.ftpage {
+    background: var(--dfr-bg-page, #262624);
+}
+.WebControl.WebHtmlBox.ftpage > .WebCon_Inner > label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 14px 18px 6px;
+    font: 600 20px "Segoe UI", sans-serif;
+    line-height: 1.3;
+    color: var(--dfr-ink, #eceae1);
+}
+.WebControl.WebHtmlBox.ftpage > .WebCon_Inner > label .fttitleicon img {
+    display: block;
+    width: 32px;
+    height: 32px;
+}
+
+/* The Designer's stand-in for a page body built at run time (cFTHtmlPage's class default psHtml, an empty
+   .ftph - the Designer never runs the code that builds the real one). The Lorem ipsum lives here, where no
+   meta-tag limits its length: twenty-four paragraphs, a blank line (\A\A) between them - about 900 px of
+   text on a page 1900 px wide, more on a narrower one, so it fills even a maximised full-HD page. */
+.WebControl.WebHtmlBox .ftph {
+    padding: 0 18px 14px;
+    font: 13px "Segoe UI", sans-serif;
+    line-height: 1.45;
+    color: var(--dfr-ink-muted, #a6a49b);
+}
+.WebControl.WebHtmlBox .ftph::before {
+    white-space: pre-line;
+    content:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\A\A"
+        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\A\A"
+        "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.\A\A"
+        "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.\A\A"
+        "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.\A\A"
+        "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.\A\A"
+        "Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.\A\A"
+        "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.\A\A"
+        "Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.\A\A"
+        "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus.\A\A"
+        "Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae.\A\A"
+        "Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.\A\A"
+        "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris.\A\A"
+        "Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis.\A\A"
+        "Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus.\A\A"
+        "Phasellus ultrices nulla quis nibh. Quisque a lectus. Donec consectetuer ligula vulputate sem tristique cursus. Nam nulla quam, gravida non, commodo a, sodales sit amet, nisi.\A\A"
+        "Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum. Typi non habent claritatem insitam, est usus legentis in iis qui facit eorum claritatem.\A\A"
+        "Investigationes demonstraverunt lectores legere me lius quod ii legunt saepius. Claritas est etiam processus dynamicus, qui sequitur mutationem consuetudium lectorum.\A\A"
+        "Mirum est notare quam littera gothica, quam nunc putamus parum claram, anteposuerit litterarum formas humanitatis per seacula quarta decima et quinta decima.\A\A"
+        "Eodem modo typi, qui nunc nobis videntur parum clari, fiant sollemnes in futurum. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat.\A\A"
+        "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat, vel illum dolore eu feugiat nulla facilisis.\A\A"
+        "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante.\A\A"
+        "Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra.\A\A"
+        "Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui.";
 }

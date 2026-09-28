@@ -41,6 +41,7 @@ Use cWebIFrame.pkg
 Use cWebImage.pkg
 Use cWebLabel.pkg
 Use cWebList.pkg
+Use cFTWebList.pkg
 Use cWebListExpandPanel.pkg
 Use cWebListSwipeButton.pkg
 Use cWebMultiSelectList.pkg

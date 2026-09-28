@@ -13,23 +13,30 @@
 //****************************************************************************
 Use cWebCheckBox.pkg
 
-// Inherited from cWebCheckbox; stated so the Designer models this class without the pooled package.
+// Inherited from cWebCheckbox; stated so the Designer models this class without the pooled package. The
+// psCSSClass tag is for the Studio: its Designer runs none of this code, so it tells it the class's own
+// look - FtCompact (ftcontrols.css, which the program's application.css imports).
 { DesignerJSClass=df.WebCheckbox }
+{ OverrideProperty=psCSSClass InitialValue="FtCompact" }
 Class cFTWebCheckbox is a cWebCheckbox
-    
+
     Procedure Construct_Object
         Forward Send Construct_Object
 
-            // The app's text size, not the framework's larger default - see FtCompact in application.css.
+        // The FT look - the app's text size, in the palette's colours: FtCompact in ftcontrols.css.
         Set psCSSClass to "FtCompact"
-End_Procedure
+    End_Procedure
 
+    // psCSSClass REPLACES the class list: an object that sets its own keeps the FT look in front of it.
     Procedure End_Construct_Object
+        String sClasses
         Forward Send End_Construct_Object
-
+        Move (Trim(psCSSClass(Self))) to sClasses
+        If (Pos(" FtCompact ", (" " + sClasses + " ")) = 0) ;
+            Set psCSSClass to (Trim("FtCompact " + sClasses))
     End_Procedure
 
     Procedure Request_Clear
     End_Procedure
-    
+
 End_Class
