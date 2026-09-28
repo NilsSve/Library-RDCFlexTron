@@ -152,7 +152,7 @@ Register_Procedure ApplyFTTheme
 
 // hoObject waits for the theme: FTThemeLateObjects themes it when the theme is read.
 Procedure FTThemeLater Global Handle hoObject
-    Move hoObject to gahoFTThemeLate[SizeOfArray(gahoFTThemeLate)]
+    Move hoObject to gahoFTThemeLate[-1]
 End_Procedure
 
 // The theme is read: every object that waited for it takes it now.

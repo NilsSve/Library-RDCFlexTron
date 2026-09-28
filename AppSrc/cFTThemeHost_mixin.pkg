@@ -190,10 +190,10 @@ Class cFTThemeHost_mixin is a Mixin
        files more. An object that augments this event must Forward it, or its page loses them. */
     Procedure OnDefineScriptIncludes String[] ByRef aScriptHtml
         Forward Send OnDefineScriptIncludes (&aScriptHtml)
-        Move (StyleSheetLink("RDCFlexTron/palette.css")) to aScriptHtml[SizeOfArray(aScriptHtml)]
-        Move (StyleSheetLink("RDCFlexTron/ftcontrols.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[SizeOfArray(aScriptHtml)]
-        Move (StyleSheetLink("RDCFlexTron/ftglyphs.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[SizeOfArray(aScriptHtml)]
-        Move (ScriptLink("RDCFlexTron/ftcontrols.js?v=" + CS_FTLibraryVersion)) to aScriptHtml[SizeOfArray(aScriptHtml)]
+        Move (StyleSheetLink("RDCFlexTron/palette.css")) to aScriptHtml[-1]
+        Move (StyleSheetLink("RDCFlexTron/ftcontrols.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[-1]
+        Move (StyleSheetLink("RDCFlexTron/ftglyphs.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[-1]
+        Move (ScriptLink("RDCFlexTron/ftcontrols.js?v=" + CS_FTLibraryVersion)) to aScriptHtml[-1]
     End_Procedure
 
     /*  A NAVIGATION MAKES THE PAGE UNREADY AGAIN, and the framework's own flag does not say so.
