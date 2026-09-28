@@ -24,7 +24,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTMessageBox.pkg`, `FTMessageBox.dg` | `FTInfoBox`, `FTStopBox` and `FTYesNoBox`: `Info_Box`, `Stop_Box` and `YesNo_Box` in the FT look, with the same arguments and return values - the caption as the page's title, beside the glyph of its kind. Use the dialog anywhere, above the application object too. Before the application object exists they show Windows' own box |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
-| `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the dark colours, and where the theme choice is saved |
+| `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the colours, and where the theme choice is saved; the whole HTML tags the markup builders go with (`CS_DivEnd`, `CS_SpanEnd`, `CS_Br` ...) and the links to the library's style sheets (`CS_PaletteCssLink`, `CS_PageFitCssLink`, `CS_PillsCssLink`) |
 | `FTThemeColors.pkg` | native colours that follow the theme |
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables - and `FTHtmlEscape` |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant |
@@ -63,8 +63,9 @@ a version, so the range above cannot accept it.
   elsewhere, define `CS_FTThemeSection` and/or `CS_FTTheme` before the first Use of `FTConstants.h.pkg`.
 - **Use order.** A web control needs a host Used before it - the DataFlex web framework's own rule.
   `cFTThemeHost_mixin.pkg` is part of the two hosts and not for Use on its own.
-- **Style sheets.** A page links them itself: `RDCFlexTron/palette.css` first, then `buttons.css`,
-  `bars.css` and `pagefit.css` as needed, then your own sheets. The link order is the cascade. The package
+- **Style sheets.** A page links them itself: `CS_PaletteCssLink` first (`palette.css`, `buttons.css`,
+  `bars.css`), then `CS_PageFitCssLink` and `CS_PillsCssLink` as needed, then your own sheets (`CssLink`).
+  The link order is the cascade. The package
   installs them into `AppHtml\RDCFlexTron`; a workspace that points at a clone of this repository by
   PATH gets no install step, so it copies the sheets there itself (see Demo-RDCFlexTron's `setup.bat`).
 - **The Studio's Designer** draws the web controls with the framework's scripts and the theme, and loads

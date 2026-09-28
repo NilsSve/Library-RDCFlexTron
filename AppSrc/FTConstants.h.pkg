@@ -6,7 +6,8 @@
 // Created     : 2026-09-23
 //
 // Description : The FlexTron layer's own constants: the theme values, the theme global, where the
-//               theme choice is saved, and the dark colours of the native side.
+//               theme choice is saved, the colours of the native side, the whole HTML tags the markup
+//               builders go with, and the links to the library's style sheets.
 //
 //               They lived in RefactorConstants.h.pkg until 2026-09-23. Here, the reusable FT packages -
 //               the web controls, both hosts, both modal panels, the theme mixin, FTThemeColors and
@@ -21,7 +22,7 @@ Use Rgb.pkg
 // THE PACKAGE VERSION, as RDC-FlexTron-Library.sws states it in "package"."version" - keep the two
 // equal. Every FT host page links ftcontrols.css / ftcontrols.js with it as ?v=, because WebView2
 // keeps a copy of what it loaded, and a new version of the library must not be served the old one.
-Define CS_FTLibraryVersion for "0.7.0"
+Define CS_FTLibraryVersion for "0.7.1"
 
 // The one source of truth for the above, seeded from the saved setting on first use.
 // Re-read by Send ApplyFTTheme, which is what a runtime switch would broadcast.
@@ -85,3 +86,31 @@ Define CI_FTThemeSystem for 3   // follow Windows; the framework watches prefers
     Define clLightViewBg    for (RGB(255, 255, 255))    // HTML #FFFFFF = var(--dfr-bg-card-hi)
     Define clLightWebBg     for (RGB(247, 245, 240))    // HTML #F7F5F0 = var(--dfr-bg-page)
 #ENDIF
+
+// THE WHOLE HTML TAGS - the closing halves of what FTMarkupBuilders' DivOpen, SpanOpen and TagText open, the
+// lone openings, and the line break. A tag that carries a class has no constant: half a tag would leave the
+// class dangling at the call site - that is DivOpen("cls"). CS_ParaOpen is for a <p> whose </p> a later
+// statement appends; a whole paragraph is TagText("p", ...). They moved here from DFRefactor's
+// RefactorConstants.h.pkg (2026-09-28), with the same names and values.
+Define CS_DivOpen                   for "<div>"
+Define CS_DivEnd                    for "</div>"
+Define CS_SpanOpen                  for "<span>"
+Define CS_SpanEnd                   for "</span>"
+Define CS_ParaOpen                  for "<p>"
+Define CS_ParaEnd                   for "</p>"
+Define CS_Br                        for "<br>"
+// Two ordinary characters an attribute cannot hold as they are: a new line inside title="", and an
+// apostrophe inside a single-quoted DataFlex literal.
+Define CS_NlEntity                  for "&#10;"
+Define CS_AposEntity                for "&#39;"
+
+// THE LIBRARY'S STYLE SHEETS, as a page links them - the package installs them into AppHtml\RDCFlexTron. A
+// cFTWebHtmlBox fragment is a document of its own and does not inherit application.css, so it links them
+// itself: CS_PaletteCssLink first - the link order is the cascade - then CS_PageFitCssLink for a fragment
+// that fills its host exactly and never scrolls, CS_PillsCssLink for the status pills, and the program's own
+// sheets last (CssLink).
+Define CS_PaletteCssLink            for ('<link rel="stylesheet" href="RDCFlexTron/palette.css">' ;
+    + '<link rel="stylesheet" href="RDCFlexTron/buttons.css">' ;
+    + '<link rel="stylesheet" href="RDCFlexTron/bars.css">')
+Define CS_PageFitCssLink            for '<link rel="stylesheet" href="RDCFlexTron/pagefit.css">'
+Define CS_PillsCssLink              for '<link rel="stylesheet" href="RDCFlexTron/pills.css">'
