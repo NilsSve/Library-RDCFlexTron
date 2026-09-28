@@ -23,7 +23,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the dark colours, and where the theme choice is saved |
 | `FTThemeColors.pkg`, `FTThemeSeed.pkg` | native colours that follow the theme; seeding the theme from the saved choice |
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables - and `FTHtmlEscape` |
-| `FTDashIcons.pkg` | `DashIcon`: inline SVG icons, and their `CS_Glyph*` names |
+| `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
 | `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls; installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last two itself |
 
@@ -67,6 +67,11 @@ a version, so the range above cannot accept it.
   `pbBold`) and `pbPrimary`'s amber are applied when the program runs, so the Designer shows the standard
   FT button.
 - DataFlex 26 only.
+
+## Credits
+
+Most `DashIcon` glyphs come from [Tabler Icons](https://tabler.io/icons) - MIT License,
+Copyright (c) 2020-2026 Paweł Kuna.
 
 ## Licence
 
