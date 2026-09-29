@@ -8,6 +8,7 @@
 // Description : Info_Box, Stop_Box and YesNo_Box in the FT look: FTInfoBox, FTStopBox and FTYesNoBox take
 //               the arguments those take and return what they return, and show the message in
 //               FTMessageBox.dg - a dialog in the theme, where Windows' own message box stays light.
+//               FTHtmlMessage shows a message written in HTML, with the caller's own button captions.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -40,9 +41,11 @@ Use FTDashIcons.pkg         // CS_GlyphInfo, CS_GlyphStop, CS_GlyphHelp
 Global_Variable Handle ghoFTMessageBox
 Move 0 to ghoFTMessageBox
 
-// FTMessageBox.dg defines it - later than this package is compiled.
+// FTMessageBox.dg defines them - later than this package is compiled.
 Register_Function FTShowMessage String sGlyph String sTitle String sMessage String sYesLabel ;
                                 String sNoLabel Returns Boolean
+Register_Function FTShowMessageHtml String sGlyph String sTitle String sBodyHtml String sYesLabel ;
+                                    String sNoLabel Returns Boolean
 
 // The dialog - or 0 when Windows' own box answers: the program does not Use FTMessageBox.dg, or its
 // application object does not exist yet.
@@ -64,6 +67,43 @@ Function FTMessageBoxHtml Global String sMessage Returns String
     Move (Replaces(Character(13), sOut, CS_Br)) to sOut
     Move (Replaces(Character(10), sOut, CS_Br)) to sOut
     Function_Return ((DivOpen("ftmsg")) + (ParaHtml("", sOut)) + CS_DivEnd)
+End_Function
+
+/* The other way: a message's HTML as plain text - for Windows' own box, when the dialog cannot show it, and for
+   the length that picks the dialog's size. A paragraph, a line break and a code sample end a line, a list item
+   too; the other tags go; then the entities are decoded - after the tags are gone, so an escaped "<" in the text
+   is not taken for one. */
+Function FTMessageBoxText Global String sHtml Returns String
+    String sIn sOut sCh
+    Integer i iLen
+    Boolean bInTag
+    Move (Replaces(CS_ParaEnd, sHtml, Character(10))) to sIn
+    Move (Replaces(CS_Br, sIn, Character(10))) to sIn
+    Move (Replaces("<pre>", sIn, Character(10))) to sIn
+    Move (Replaces("</pre>", sIn, Character(10))) to sIn
+    Move (Replaces("</li>", sIn, Character(10))) to sIn
+    Move "" to sOut
+    Move False to bInTag
+    Move (Length(sIn)) to iLen
+    For i from 1 to iLen
+        Move (Mid(sIn, 1, i)) to sCh
+        If (sCh = "<") ;
+            Move True to bInTag
+        Else If (sCh = ">") ;
+            Move False to bInTag
+        Else If (bInTag = False) ;
+            Move (sOut + sCh) to sOut
+    Loop
+    Move (Replaces(CS_EmDash, sOut, "-")) to sOut
+    Move (Replaces(CS_Ellipsis, sOut, "...")) to sOut
+    Move (Replaces(CS_MidDot, sOut, "-")) to sOut
+    Move (Replaces(CS_Nbsp, sOut, " ")) to sOut
+    Move (Replaces("&lt;", sOut, "<")) to sOut
+    Move (Replaces("&gt;", sOut, ">")) to sOut
+    Move (Replaces("&quot;", sOut, '"')) to sOut
+    Move (Replaces("&#39;", sOut, "'")) to sOut
+    Move (Replaces("&amp;", sOut, "&")) to sOut         // last, or "&amp;lt;" would become "<"
+    Function_Return (Trim(sOut))
 End_Function
 
 // Info_Box's twin: a procedure, 1 or 2 arguments. The caption stands in only when there is no second one.
@@ -125,4 +165,46 @@ Function FTYesNoBox Global String sMessage String sTitle Integer DfltBtn Returns
     If (bYes) ;
         Function_Return MBR_Yes
     Function_Return MBR_No
+End_Function
+
+/* A MESSAGE WRITTEN IN HTML, with the caller's own button captions - what the three above cannot say: a body in
+   paragraphs, bold and code samples, and a verb on each button ("Rename now" / "Not now") rather than Yes and No.
+   sBodyHtml is HTML the caller has built: text in it is already escaped. sNoLabel "" gives one button; sYesLabel ""
+   is OK. Returns True for the first button, False for the second or Esc - a Boolean, where FTYesNoBox returns
+   MBR_Yes. Beside the caption: a question mark when there are two buttons, an i when there is one - or the glyph
+   named in sGlyph (CS_GlyphStop, say). Windows' own box answers when the dialog cannot, with the text of the HTML.
+
+       Get FTHtmlMessage "Rename the view?" sBodyHtml "Rename now" "Not now" to bRename                      */
+Function FTHtmlMessage Global String sTitle String sBodyHtml String sYesLabel String sNoLabel String sGlyph Returns Boolean
+    String sCaption sYes sKind
+    Integer iRet
+    Boolean bYes
+    Handle hoPanel
+    Move sTitle to sCaption
+    Move sYesLabel to sYes
+    If (sYes = "") ;
+        Move "OK" to sYes
+    If (sNoLabel <> "") ;
+        Move CS_GlyphHelp to sKind
+    Else ;
+        Move CS_GlyphInfo to sKind
+    If ((Num_Arguments >= 5) and (sGlyph <> "")) ;
+        Move sGlyph to sKind
+    If (Trim(sCaption) = "") Begin
+        If (sNoLabel <> "") ;
+            Move C_$Question to sCaption
+        Else ;
+            Move C_$Information to sCaption
+    End
+    Move (FTMessageBoxPanel()) to hoPanel
+    If (hoPanel = 0) Begin
+        If (sNoLabel <> "") Begin
+            Move (Message_Box((FTMessageBoxText(sBodyHtml)), sCaption, MB_YESNO, MB_ICONQUESTION)) to iRet
+            Function_Return (iRet = MBR_Yes)
+        End
+        Move (Message_Box((FTMessageBoxText(sBodyHtml)), sCaption, MB_OK, MB_ICONINFORMATION)) to iRet
+        Function_Return True
+    End
+    Get FTShowMessageHtml of hoPanel sKind sCaption sBodyHtml sYes sNoLabel to bYes
+    Function_Return bYes
 End_Function

@@ -301,3 +301,21 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
 .WebControl.WebHtmlBox .ftmsg p {
     margin: 0 0 8px;
 }
+/* A message written in HTML (FTHtmlMessage): a code sample in the code look, scrolling sideways rather than
+   widening the box, and a code word in the same ink. */
+.WebControl.WebHtmlBox .ftmsg pre {
+    margin: 0 0 8px;
+    padding: 8px 10px;
+    font: 12px Consolas, monospace;
+    color: var(--dfr-code-ink, #e0b34d);
+    background: var(--dfr-bg-sunken, #211f1e);
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 3px;
+    white-space: pre;
+    overflow-x: auto;
+    overflow-wrap: normal;
+}
+.WebControl.WebHtmlBox .ftmsg code {
+    font: 12px Consolas, monospace;
+    color: var(--dfr-code-ink, #e0b34d);
+}

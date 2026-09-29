@@ -5,9 +5,9 @@
 // Web-site    : http://www.rdctools.com
 // Created     : 2026-09-28
 //
-// Description : The dialog FTInfoBox, FTStopBox and FTYesNoBox show (FTMessageBox.pkg): the message in a
-//               page - its caption as the title, beside the glyph of its kind - and the answer at the
-//               bottom right. Use it anywhere, above the application object too.
+// Description : The dialog FTInfoBox, FTStopBox, FTYesNoBox and FTHtmlMessage show (FTMessageBox.pkg): the
+//               message in a page - its caption as the title, beside the glyph of its kind - and the answer
+//               at the bottom right. Use it anywhere, above the application object too.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -149,11 +149,12 @@ Object oFTMessageBox is a cFTModalPanel
         Set piClosedTick to (GetTickCount())
     End_Procedure
 
-    /* THE one call - FTMessageBox.pkg's three send it: the glyph of the message's kind (a DashIcon name), its
-       caption, the message as written for a Win32 box, and the two button captions - sNoLabel "" for a box
-       with one button. Returns True for Yes or OK, False for No or Esc. */
-    Function FTShowMessage String sGlyph String sTitle String sMessage String sYesLabel ;
-                           String sNoLabel Returns Boolean
+    /* THE CORE of the two calls below: the glyph of the message's kind (a DashIcon name), its caption, the
+       page's HTML, the same message as plain text - for Windows' own box and for the size - and the two button
+       captions, sNoLabel "" for a box with one button. Returns True for Yes or OK, False for No or Esc. Above
+       the two, as a function called in an expression must be. */
+    Function FTShowBody String sGlyph String sTitle String sBodyHtml String sPlain String sYesLabel ;
+                        String sNoLabel Returns Boolean
         Integer iRet iWait
         String sApp
         If (Trim(sTitle) = "") ;
@@ -164,10 +165,10 @@ Object oFTMessageBox is a cFTModalPanel
            itself. That one is answered by Windows' own box instead. */
         If (Active_State(Self)) Begin
             If (sNoLabel <> "") Begin
-                Move (Message_Box(sMessage, sTitle, MB_YESNO, MB_ICONQUESTION)) to iRet
+                Move (Message_Box(sPlain, sTitle, MB_YESNO, MB_ICONQUESTION)) to iRet
                 Function_Return (iRet = MBR_Yes)
             End
-            Move (Message_Box(sMessage, sTitle, MB_OK, MB_ICONINFORMATION)) to iRet
+            Move (Message_Box(sPlain, sTitle, MB_OK, MB_ICONINFORMATION)) to iRet
             Function_Return True
         End
         // A box that has just closed settles before it pops again (piClosedTick).
@@ -185,12 +186,12 @@ Object oFTMessageBox is a cFTModalPanel
         Set Label to sApp
         Set psFTGlyph to sGlyph
         Set psFTTitle to sTitle
-        Set psFTBodyHtml to (FTMessageBoxHtml(sMessage))
+        Set psFTBodyHtml to sBodyHtml
         Set psFTYesLabel to sYesLabel
         Set psFTNoLabel to sNoLabel
         Set pbYes to False
         // A long message gets the tall box: a message that scrolls is worse than a box a little too tall.
-        If (Length(sMessage) > 600) Begin
+        If (Length(sPlain) > 600) Begin
             Set Size to 258 460
             Set piMinSize to 258 460
         End
@@ -200,6 +201,18 @@ Object oFTMessageBox is a cFTModalPanel
         End
         Send Popup
         Function_Return (pbYes(Self))
+    End_Function
+
+    // FTInfoBox, FTStopBox and FTYesNoBox send this: the message as written for a Win32 box.
+    Function FTShowMessage String sGlyph String sTitle String sMessage String sYesLabel ;
+                           String sNoLabel Returns Boolean
+        Function_Return (FTShowBody(Self, sGlyph, sTitle, (FTMessageBoxHtml(sMessage)), sMessage, sYesLabel, sNoLabel))
+    End_Function
+
+    // FTHtmlMessage sends this: a message the caller wrote in HTML, in the page's message look.
+    Function FTShowMessageHtml String sGlyph String sTitle String sBodyHtml String sYesLabel ;
+                               String sNoLabel Returns Boolean
+        Function_Return (FTShowBody(Self, sGlyph, sTitle, ((DivOpen("ftmsg")) + sBodyHtml + CS_DivEnd), (FTMessageBoxText(sBodyHtml)), sYesLabel, sNoLabel))
     End_Function
 End_Object
 
