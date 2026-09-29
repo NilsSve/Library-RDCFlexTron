@@ -26,7 +26,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the colours, and where the theme choice is saved; the whole HTML tags the markup builders go with (`CS_DivEnd`, `CS_CodeOpen`, `CS_BulletItemEnd`, `CS_Br` ...), the named characters (`CS_EmDash`, `CS_Nbsp`, `CS_Check` ...) and the links to the library's style sheets (`CS_PaletteCssLink`, `CS_PageFitCssLink`, `CS_PillsCssLink`) |
 | `FTThemeColors.pkg` | native colours that follow the theme |
-| `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables, style sheet and script links - `FTHtmlEscape`, and `MarkedText`: prose whose names are marked with backticks, as in a README |
+| `FTMarkupBuilders.pkg` | HTML builders - buttons and their faces (`IconLabel`: a glyph and its words), chips, divs, tables, style sheet and script links - `FTHtmlEscape`, and `MarkedText`: prose whose names are marked with backticks, as in a README |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant; `FTGlyphNames` returns all their names, your own glyphs' too, for a combo or a list to choose from |
 | `FTAppGlyphs.pkg` | your application's own glyphs: SVG files in `AppHtml\FTGlyphs`, drawn like the library's by `DashIcon`, `psGlyph` and `psTitleIcon` - see [Your own glyphs](#your-own-glyphs) |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
@@ -116,7 +116,7 @@ glyph there, run `python Tools/MakeFTGlyphsCss.py` and commit the sheet with it.
 ## Credits
 
 Most `DashIcon` glyphs come from [Tabler Icons](https://tabler.io/icons) - MIT License,
-Copyright (c) 2020-2026 Paweł Kuna.
+Copyright (c) 2020-2026 Paweł Kuna. `plan`, `selectall`, `selectnone`, `invert` and `hierarchy` are RDC Tools' own.
 
 ## Licence
 

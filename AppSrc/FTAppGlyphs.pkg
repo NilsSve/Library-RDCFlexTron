@@ -415,7 +415,7 @@ Procedure FTLoadAppGlyphsFrom Global String sFolder
     Move (sSheet + "   PROGRAM when it starts (RDCFlexTron, FTAppGlyphs.pkg), from the files here - do not edit it: add, change or" + sNl) to sSheet
     Move (sSheet + "   remove a file, and run the program. application.css imports it after ftglyphs.css, for the Studio's Designer:" + sNl) to sSheet
     Move (sSheet + '   @import url("../' + CS_FTAppGlyphFolder + "/" + CS_FTAppGlyphSheet + '");' + sNl) to sSheet
-    Move (sSheet + "   " + String(SizeOfArray(asRules)) + " glyphs. */" + sNl) to sSheet
+    Move (sSheet + "   " + String(SizeOfArray(asRules)) + (If((SizeOfArray(asRules) = 1), " glyph. */", " glyphs. */")) + sNl) to sSheet
     Move (SizeOfArray(asRules) - 1) to iLast
     For i from 0 to iLast
         Move (sSheet + asRules[i] + sNl) to sSheet

@@ -123,6 +123,13 @@ Define CS_GlyphLogin                     for "login"       // Tabler login
 Define CS_GlyphExit                      for "exit"        // Tabler door-exit
 Define CS_GlyphPower                     for "power"       // Tabler power
 
+// Selecting - RDC Tools' own drawings, DFRefactor's selection buttons (2026-09-29): four boxes on a 21 grid, like
+// plan, the ticked ones with a square inside; the hierarchy on a 24 grid.
+Define CS_GlyphSelectAll                 for "selectall"   // every box ticked
+Define CS_GlyphSelectNone                for "selectnone"  // no box ticked
+Define CS_GlyphInvert                    for "invert"      // two of the four ticked - the selection turned over
+Define CS_GlyphHierarchy                 for "hierarchy"   // a box over two - a branch and what hangs under it
+
 /* FTGlyphNames - the name of every glyph DashIcon draws, in alphabetical order: for a combo or a list to choose a
    glyph from, or to check a name before it is used (SearchArray) - DashIcon draws its default glyph for a name it
    does not know, without a word. A name is what DashIcon, psGlyph and UpdateGlyph take, and "ftg-" + the name is
@@ -218,6 +225,11 @@ Function FTGlyphNames Global Returns String[]
     Move CS_GlyphLogin          to asNames[-1]
     Move CS_GlyphExit           to asNames[-1]
     Move CS_GlyphPower          to asNames[-1]
+    // Selecting
+    Move CS_GlyphSelectAll      to asNames[-1]
+    Move CS_GlyphSelectNone     to asNames[-1]
+    Move CS_GlyphInvert         to asNames[-1]
+    Move CS_GlyphHierarchy      to asNames[-1]
     // An application's own glyphs (FTAppGlyphs.pkg) - but not twice: one can have the name of a glyph above.
     Move (FTAppGlyphNames()) to asApp
     For i from 0 to (SizeOfArray(asApp) - 1)
@@ -458,6 +470,15 @@ Function DashIcon Global String sName Returns String
         Move "M13 12v.01 M3 21h18 M5 21v-16a2 2 0 0 1 2 -2h7.5m2.5 10.5v7.5 M14 7h7m-3 -3l3 3l-3 3" to sD
     If (sName = CS_GlyphPower) ;
         Move "M7 6a7.75 7.75 0 1 0 10 0 M12 4l0 8" to sD
+    // Selecting - RDC Tools' own drawings, taken from DFRefactor's AppHtml\Svg into currentColor.
+    If (sName = CS_GlyphSelectAll) ;
+        Function_Return ('<svg width="21" height="21" viewBox="0 0 21 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="7" height="7" rx="0.8"/><rect x="11.5" y="2.5" width="7" height="7" rx="0.8"/><rect x="2.5" y="11.5" width="7" height="7" rx="0.8"/><rect x="11.5" y="11.5" width="7" height="7" rx="0.8"/><rect x="4.5" y="4.5" width="3" height="3" fill="currentColor"/><rect x="13.5" y="4.5" width="3" height="3" fill="currentColor"/><rect x="4.5" y="13.5" width="3" height="3" fill="currentColor"/><rect x="13.5" y="13.5" width="3" height="3" fill="currentColor"/></svg>')
+    If (sName = CS_GlyphSelectNone) ;
+        Function_Return ('<svg width="21" height="21" viewBox="0 0 21 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="7" height="7" rx="0.8"/><rect x="11.5" y="2.5" width="7" height="7" rx="0.8"/><rect x="2.5" y="11.5" width="7" height="7" rx="0.8"/><rect x="11.5" y="11.5" width="7" height="7" rx="0.8"/></svg>')
+    If (sName = CS_GlyphInvert) ;
+        Function_Return ('<svg width="21" height="21" viewBox="0 0 21 21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="7" height="7" rx="0.8"/><rect x="11.5" y="2.5" width="7" height="7" rx="0.8"/><rect x="2.5" y="11.5" width="7" height="7" rx="0.8"/><rect x="11.5" y="11.5" width="7" height="7" rx="0.8"/><rect x="4.5" y="4.5" width="3" height="3" fill="currentColor"/><rect x="13.5" y="13.5" width="3" height="3" fill="currentColor"/></svg>')
+    If (sName = CS_GlyphHierarchy) ;
+        Function_Return ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1" fill="currentColor"/><path d="M12 8v3.5 M6 11.5h12 M6 11.5v4.5 M18 11.5v4.5"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/></svg>')
 
     Function_Return ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + sD + '"/></svg>')
 End_Function

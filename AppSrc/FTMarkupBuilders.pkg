@@ -12,6 +12,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use FTConstants.h.pkg   // the whole tags (CS_DivEnd ...) and the style sheet links (CS_PaletteCssLink ...)
+Use FTDashIcons.pkg     // DashIcon - the glyph IconLabel puts in front of a button's words
 
 /*
     Package:    FTMarkupBuilders.pkg
@@ -601,15 +602,20 @@ End_Function
  wrong, and 72 edits the day a standard button changes its glyph - "Close" alone appeared nine
  times in eight files, "Select All" and "Invert" five times each in five.
 
- sIcon is the file STEM, not a path: IconLabel("Close", "Close") gives
- <img src="Svg/Close.svg">Close. buttons.css sizes any <img> inside a button of the family, so
- nothing here states a size.
+ sIcon is a glyph NAME - DashIcon's, or one of the application's own (FTAppGlyphs.pkg):
+ IconLabel(CS_GlyphClose, "Close") gives the glyph inline, in the button's text colour, so it follows
+ the theme, then Close. A name with a dot is an image file under AppHtml instead,
+ IconLabel("Images/Logo.png", "Logo"), drawn as it is. Until 0.9.0 sIcon was the stem of a file in
+ AppHtml\Svg - an <img>, in the one colour it was drawn in. buttons.css sizes both inside a button
+ of the family, so nothing here states a size.
 
  Faces built INTO a larger markup string are left alone - splitting a hand-built element to
  reach its icon buys nothing.
 */
 Function IconLabel Global String sIcon String sLabel Returns String
-    Function_Return ('<img src="Svg/' + sIcon + '.svg">' + sLabel)
+    If (Pos(".", sIcon) > 0) ;
+        Function_Return (ImgHtml(sIcon, "", "", "") + sLabel)
+    Function_Return (DashIcon(sIcon) + sLabel)
 End_Function
 
 /* Global Function: ButtonHtml
