@@ -15,6 +15,7 @@ Use cApplication.pkg
 Use FTConstants.h.pkg               // the CI_FTTheme* modes, giFTThemeMode, where the choice is saved
 Use FTThemeColors.pkg               // FTThemeLateObjects - the FT objects that waited for the theme
 Use FTMessageBox.pkg                // FTInfoBox - Windows' own box in a program without FTMessageBox.dg
+Use FTAppGlyphs.pkg                 // FTLoadAppGlyphs - the application's own glyphs, and their sheet
 
 // A theme mode in words, as a theme button names it: "Dark", "Light" or "Follow Windows".
 Function FTThemeName Global Integer iMode Returns String
@@ -54,6 +55,9 @@ Class cFTApplication is a cApplication
     Procedure End_Construct_Object
         Forward Send End_Construct_Object
         Send SeedFTTheme
+        // The application's own glyphs (AppHtml\FTGlyphs) - read now, from the program's own workspace, and their
+        // sheet written when it is out of date (FTAppGlyphs.pkg).
+        Send FTLoadAppGlyphs
     End_Procedure
 
     // A new copy of this program, and the end of this one.

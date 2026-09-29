@@ -23,14 +23,13 @@ Use FTDashIcons.pkg             // CS_GlyphFiletext
    top, in the page-title look (ftcontrols.css, .ftpage); the page's own HTML starts below it.
 
    ITS PICTURE, psTitleIcon: a DashIcon glyph NAME becomes its ftg- class, which ftglyphs.css draws in
-   front of the title; an IMAGE FILE goes to the client as markup (psTitleIconHtml), which
-   rdcft.FTHtmlPage (ftcontrols.js) puts there. The Designer applies classes only, so it shows the class
-   default glyph (filetext - psTitleIcon's default too) or the one an object names in psCSSClass,
-   "ftpage ftg-listcheck"; an image file shows when the program runs. An image the Designer should show is
-   a class of the program's own, in a sheet its application.css imports: the image as the background of
-   .WebControl.WebHtmlBox.ftpage.ftg-<name> > .WebCon_Inner > label::before - the .ftpage lifts the rule
-   over the shared one in ftglyphs.css (the demo's ftg-rdcmark, in demo.css). Any ftg- class in
-   psCSSClass is the title's picture.
+   front of the title; an IMAGE FILE - a name with a dot, "Images/Logo.png" - goes to the client as markup
+   (psTitleIconHtml), which rdcft.FTHtmlPage (ftcontrols.js) puts there. The Designer applies classes only,
+   so it shows the class default glyph (filetext - psTitleIcon's default too) or the one an object names in
+   psCSSClass, "ftpage ftg-listcheck"; an image file shows when the program runs. A picture of the
+   program's own that the Designer should show is a glyph of its own - an SVG file in AppHtml\FTGlyphs
+   (FTAppGlyphs.pkg) - named by its class: the demo's "ftpage ftg-rdcmark" is AppHtml\FTGlyphs\rdcmark.svg.
+   Any ftg- class in psCSSClass is the title's picture, and wins over psTitleIcon.
 
    THE BODY: the Designer draws a literal psHtml, and a page built at run time - in End_Construct_Object,
    which the Designer never reads - has none. So the class default is a stand-in body, an empty .ftph,

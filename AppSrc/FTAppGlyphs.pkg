@@ -1,0 +1,464 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTAppGlyphs
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-29
+//
+// Description : An application's own glyphs - the SVG files in its AppHtml\FTGlyphs folder - drawn like the
+//               library's: by DashIcon, psGlyph and psTitleIcon, and by their class in the Studio's Designer.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+Use cApplication.pkg        // ghoApplication - its workspace names the AppHtml folder
+Use Seq_chnl.pkg            // Seq_New_Channel - the folder listing, and the file reads and writes
+Use FTConstants.h.pkg       // CS_FTAppGlyphFolder, CS_FTAppGlyphSheet
+
+/* AN APPLICATION'S OWN GLYPHS (Nils 2026-09-29: "any application is bound to have the need to add more glyphs,
+   specialized for that app"). The application drops SVG files into AppHtml\FTGlyphs, and a file's name is the
+   glyph's name: invoice.svg is "invoice". From then on it is a glyph like the library's own:
+
+   - DashIcon("invoice") draws it inline, in HTML the program builds;
+   - psGlyph "invoice" (cFTWebButton) and psTitleIcon "invoice" (cFTHtmlPage) draw it by its class, ftg-invoice,
+     and so does a psCSSClass that names that class - which is what the Studio's Designer shows;
+   - FTGlyphNames lists it with the library's glyphs.
+
+   A glyph drawn in ONE colour - currentColor, one fixed colour, or none at all (black) - is drawn in the text
+   colour, so it follows the theme as the library's glyphs do. One with two or more colours, or a gradient, keeps
+   its own colours: a logo. An application glyph with a library glyph's name replaces that glyph, so an
+   application can redraw one. The name is the file name in lower case, and holds only letters, digits, - and _;
+   a file named otherwise is left out.
+
+   THE SHEET. A class is the one thing of ours the Designer applies - it runs none of the program's code - so the
+   folder's glyphs are also written into a style sheet, AppHtml\FTGlyphs\ftglyphs-app.css, which the application's
+   application.css imports after the library's ftglyphs.css:
+
+       @import url("../FTGlyphs/ftglyphs-app.css");
+
+   The program writes that sheet itself when it starts (FTLoadAppGlyphs, which cFTApplication sends): it builds it
+   from the files and writes it only when it differs from the sheet already there. So on the developer's machine
+   a new glyph file takes one run of the program before the Designer shows it, and an installed program, whose
+   sheet is current, writes nothing. A program that may not write there - a read-only folder - goes on without the
+   new sheet, and says nothing: DashIcon still draws the glyph. While the program runs, the host pages link the
+   sheet themselves, after ftglyphs.css (cFTThemeHost_mixin), so a page does not depend on the import.
+
+   THE FOLDER is looked up ONCE, in the program's workspace (psAppHtmlPath), when the program starts - or when a
+   glyph is first asked for, in a program whose application object is not a cFTApplication. A program that points
+   its workspace object at another workspace while it runs - a tool that works on other workspaces, as DFRefactor
+   does - names its own folder first, before it does that: Send FTLoadAppGlyphsFrom "<its AppHtml>\FTGlyphs". */
+
+// What FTLoadAppGlyphs read: the names, sorted, and each glyph's inline <svg> in the same order.
+Global_Variable Boolean gbFTAppGlyphsLoaded
+Move False to gbFTAppGlyphsLoaded
+Global_Variable String[] gasFTAppGlyphNames
+Global_Variable String[] gasFTAppGlyphSvgs
+// The sheet's text, hashed - the ?v= of its link, so a changed sheet is fetched again rather than taken from the cache.
+Global_Variable String gsFTAppGlyphStamp
+
+// The application's glyph folder, <AppHtml>\FTGlyphs - or "" while the program has no workspace to ask.
+Function FTAppGlyphFolder Global Returns String
+    Handle hoWorkspace
+    String sHtml
+    If (ghoApplication = 0) ;
+        Function_Return ""
+    Get phoWorkspace of ghoApplication to hoWorkspace
+    If (hoWorkspace = 0) ;
+        Function_Return ""
+    Get psAppHtmlPath of hoWorkspace to sHtml
+    If (Pos(";", sHtml) > 0) ;
+        Move (Left(sHtml, (Pos(";", sHtml) - 1))) to sHtml     // a list of folders: the first one
+    Move (Trim(sHtml)) to sHtml
+    If (sHtml = "") ;
+        Function_Return ""
+    If (Right(sHtml, 1) <> "\") ;
+        Move (sHtml + "\") to sHtml
+    Function_Return (sHtml + CS_FTAppGlyphFolder)
+End_Function
+
+// The *.svg files in sFolder, by file name - none when the folder is missing. The DIR: device gives the bare
+// names, one to a line, and no error for a missing folder (measured 2026-09-29).
+Function FTSvgFileNames Global String sFolder Returns String[]
+    Integer iCh
+    String sLine
+    String[] asFiles
+    Move (Seq_New_Channel()) to iCh
+    If (iCh < 0) ;
+        Function_Return asFiles
+    Direct_Input channel iCh ("DIR:" + sFolder + "\*.svg")
+    If (not(SeqEof)) Begin
+        Readln channel iCh sLine
+        While (not(SeqEof))
+            If (Trim(sLine) <> "") ;
+                Move (Trim(sLine)) to asFiles[-1]
+            Readln channel iCh sLine
+        Loop
+    End
+    Close_Input channel iCh
+    Send Seq_Release_Channel iCh
+    Function_Return asFiles
+End_Function
+
+// A whole file as text, "" when it cannot be read; a UTF-8 byte-order mark is left out. Asked for more than the
+// file holds, Read_Block reads it to the end in one go (measured 2026-09-29); the loop is for a file that is larger.
+Function FTReadWholeFile Global String sPath Returns String
+    Integer iCh
+    UChar[] ucaChunk ucaText
+    Move (Seq_New_Channel()) to iCh
+    If (iCh < 0) ;
+        Function_Return ""
+    Direct_Input channel iCh ("binary:" + sPath)
+    If (SeqEof) Begin
+        Send Seq_Release_Channel iCh
+        Function_Return ""
+    End
+    Repeat
+        Read_Block channel iCh ucaChunk 1048576
+        If (SizeOfArray(ucaChunk) > 0) ;
+            Move (AppendArray(ucaText, ucaChunk)) to ucaText
+    Until (SeqEof or (SizeOfArray(ucaChunk) = 0))
+    Close_Input channel iCh
+    Send Seq_Release_Channel iCh
+    If (SizeOfArray(ucaText) >= 3) Begin
+        If ((ucaText[0] = 239) and (ucaText[1] = 187) and (ucaText[2] = 191)) Begin
+            Move (RemoveFromArray(ucaText, 0)) to ucaText
+            Move (RemoveFromArray(ucaText, 0)) to ucaText
+            Move (RemoveFromArray(ucaText, 0)) to ucaText
+        End
+    End
+    Function_Return (UCharArrayToString(ucaText))
+End_Function
+
+// sText written to sPath byte for byte, its line ends as they are. False when the file may not be written: a
+// read-only file, or a folder that is read-only or missing, sets SeqEof and raises no error (measured 2026-09-29).
+Function FTWriteWholeFile Global String sPath String sText Returns Boolean
+    Integer iCh
+    UChar[] ucaText
+    Move (Seq_New_Channel()) to iCh
+    If (iCh < 0) ;
+        Function_Return False
+    Direct_Output channel iCh ("binary:" + sPath)
+    If (SeqEof) Begin
+        Send Seq_Release_Channel iCh
+        Function_Return False
+    End
+    Move (StringToUCharArray(sText)) to ucaText
+    Write channel iCh ucaText
+    Close_Output channel iCh
+    Send Seq_Release_Channel iCh
+    Function_Return True
+End_Function
+
+// Whether every character of sText is one of sAllowed.
+Function FTOnlyCharacters Global String sText String sAllowed Returns Boolean
+    Integer i iLast
+    Move (Length(sText)) to iLast
+    For i from 1 to iLast
+        If (not(sAllowed contains (Mid(sText, 1, i)))) ;
+            Function_Return False
+    Loop
+    Function_Return True
+End_Function
+
+// A name a glyph can have - it is also part of a class name: lower-case letters, digits, - and _.
+Function FTIsAppGlyphName Global String sName Returns Boolean
+    If (sName = "") ;
+        Function_Return False
+    Function_Return (FTOnlyCharacters(sName, "abcdefghijklmnopqrstuvwxyz0123456789-_"))
+End_Function
+
+// sText without every stretch from sOpen to the next sClose, both included - an XML declaration, a comment.
+Function FTCutStretches Global String sText String sOpen String sClose Returns String
+    Integer iOpen iClose
+    String sFrom
+    Move (Pos(sOpen, sText)) to iOpen
+    While (iOpen > 0)
+        Move (Right(sText, (Length(sText) - iOpen + 1))) to sFrom
+        Move (Pos(sClose, sFrom)) to iClose
+        If (iClose = 0) Begin
+            Move (Left(sText, (iOpen - 1))) to sText
+        End
+        Else Begin
+            Move (Left(sText, (iOpen - 1)) + Right(sFrom, (Length(sFrom) - iClose - Length(sClose) + 1))) to sText
+        End
+        Move (Pos(sOpen, sText)) to iOpen
+    Loop
+    Function_Return sText
+End_Function
+
+// The value of attribute sName in the start tag sTag, "" when the tag has none. Either quote.
+Function FTTagAttr Global String sTag String sName Returns String
+    Integer iAt
+    String sFrom sQuote
+    Move (Pos((" " + sName + "="), sTag)) to iAt
+    If (iAt = 0) ;
+        Function_Return ""
+    Move (Right(sTag, (Length(sTag) - iAt - Length(sName) - 1))) to sFrom      // from its opening quote on
+    Move (Left(sFrom, 1)) to sQuote
+    If ((sQuote <> '"') and (sQuote <> "'")) ;
+        Function_Return ""
+    Move (Right(sFrom, (Length(sFrom) - 1))) to sFrom
+    If (Pos(sQuote, sFrom) = 0) ;
+        Function_Return ""
+    Function_Return (Left(sFrom, (Pos(sQuote, sFrom) - 1)))
+End_Function
+
+// sTag without attribute sName and its value.
+Function FTTagDropAttr Global String sTag String sName Returns String
+    Integer iAt
+    String sQuote
+    Move (Pos((" " + sName + "="), sTag)) to iAt
+    If (iAt = 0) ;
+        Function_Return sTag
+    Move (Mid(sTag, 1, (iAt + Length(sName) + 2))) to sQuote
+    Function_Return (Replace((" " + sName + "=" + sQuote + FTTagAttr(sTag, sName) + sQuote), sTag, ""))
+End_Function
+
+// Adds to asColours each colour sText paints with in the form sKey<colour>, the colour running to the first of
+// the characters in sEnds - fill="#123456", stroke:red; - spelled as it is there. none, currentColor,
+// transparent and inherit are not colours.
+Procedure FTAddColoursAfter Global String sText String sKey String sEnds String[] ByRef asColours
+    Integer iAt iEnd iEndAt i
+    String sRest sValue sLow
+    Move sText to sRest
+    Move (Pos(sKey, sRest)) to iAt
+    While (iAt > 0)
+        Move (Right(sRest, (Length(sRest) - iAt - Length(sKey) + 1))) to sRest     // just after the key
+        Move 0 to iEnd
+        For i from 1 to (Length(sEnds))
+            Move (Pos((Mid(sEnds, 1, i)), sRest)) to iEndAt
+            If ((iEndAt > 0) and ((iEnd = 0) or (iEndAt < iEnd))) ;
+                Move iEndAt to iEnd
+        Loop
+        If (iEnd = 0) ;
+            Move (Length(sRest) + 1) to iEnd
+        Move (Trim(Left(sRest, (iEnd - 1)))) to sValue
+        Move (Lowercase(sValue)) to sLow
+        If ((sValue <> "") and (sLow <> "none") and (sLow <> "currentcolor") and (sLow <> "transparent") and (sLow <> "inherit")) ;
+            Move sValue to asColours[-1]
+        Move (Pos(sKey, sRest)) to iAt
+    Loop
+End_Procedure
+
+// How many colours an <svg> paints with: 0 (it draws in the default black), 1, or 2 for two or more. A gradient
+// or a pattern counts as two. asColours comes back with each colour as it is spelled, for the one-colour case.
+Function FTSvgColourCount Global String sSvg String[] ByRef asColours Returns Integer
+    String[] asLow
+    String sLow
+    Integer i
+    Send FTAddColoursAfter sSvg 'fill="' '"' (&asColours)
+    Send FTAddColoursAfter sSvg "fill='" "'" (&asColours)
+    Send FTAddColoursAfter sSvg 'stroke="' '"' (&asColours)
+    Send FTAddColoursAfter sSvg "stroke='" "'" (&asColours)
+    Send FTAddColoursAfter sSvg "fill:" (';"' + "'}") (&asColours)
+    Send FTAddColoursAfter sSvg "stroke:" (';"' + "'}") (&asColours)
+    If (Pos("stop-color", sSvg) > 0) ;
+        Function_Return 2
+    For i from 0 to (SizeOfArray(asColours) - 1)
+        Move (Lowercase(asColours[i])) to sLow
+        If (Left(sLow, 4) = "url(") ;
+            Function_Return 2
+        If (SearchArray(sLow, asLow) = -1) ;
+            Move sLow to asLow[-1]
+    Loop
+    If (SizeOfArray(asLow) > 2) ;
+        Function_Return 2
+    Function_Return (SizeOfArray(asLow))
+End_Function
+
+// sSvg with every place colour sColour is painted with - as an attribute or in a style - painted in currentColor.
+Function FTPaintInCurrentColor Global String sSvg String sColour Returns String
+    Move (Replaces(('fill="' + sColour + '"'), sSvg, 'fill="currentColor"')) to sSvg
+    Move (Replaces(("fill='" + sColour + "'"), sSvg, "fill='currentColor'")) to sSvg
+    Move (Replaces(('stroke="' + sColour + '"'), sSvg, 'stroke="currentColor"')) to sSvg
+    Move (Replaces(("stroke='" + sColour + "'"), sSvg, "stroke='currentColor'")) to sSvg
+    Move (Replaces(("fill:" + sColour), sSvg, "fill:currentColor")) to sSvg
+    Move (Replaces(("fill: " + sColour), sSvg, "fill: currentColor")) to sSvg
+    Move (Replaces(("stroke:" + sColour), sSvg, "stroke:currentColor")) to sSvg
+    Move (Replaces(("stroke: " + sColour), sSvg, "stroke: currentColor")) to sSvg
+    Function_Return sSvg
+End_Function
+
+// An SVG file's text as the <svg> DashIcon returns, "" when it holds no <svg> element: no XML declaration,
+// DOCTYPE or comment; on one line; 24 x 24, the size of the library's glyphs - the viewBox keeps the drawing's
+// own grid, and is made from its width and height when it has none; and, drawn in one colour, drawn in
+// currentColor. bOneColour says which kind it is.
+Function FTAppGlyphInline Global String sText Boolean ByRef bOneColour Returns String
+    String sTag sRest sWidth sHeight sViewBox
+    String[] asColours
+    Integer iAt iEnd iCount i
+    Move (FTCutStretches(sText, "<?", "?>")) to sText
+    Move (FTCutStretches(sText, "<!--", "-->")) to sText
+    Move (FTCutStretches(sText, "<!DOCTYPE", ">")) to sText
+    Move (Replaces((Character(13)), sText, " ")) to sText
+    Move (Replaces((Character(10)), sText, " ")) to sText
+    Move (Replaces((Character(9)), sText, " ")) to sText
+    While (Pos("  ", sText) > 0)
+        Move (Replaces("  ", sText, " ")) to sText
+    Loop
+    Move (Pos("<svg", sText)) to iAt
+    If (iAt = 0) ;
+        Function_Return ""
+    Move (Trim(Right(sText, (Length(sText) - iAt + 1)))) to sText
+    Move (Pos(">", sText)) to iEnd
+    If (iEnd = 0) ;
+        Function_Return ""
+    Move (Left(sText, iEnd)) to sTag
+    Move (Right(sText, (Length(sText) - iEnd))) to sRest
+    // The start tag: its own size out and 24 x 24 in, a viewBox from that size when it has none, and the
+    // namespace, which a data URI needs.
+    Move (Replaces("px", (FTTagAttr(sTag, "width")), "")) to sWidth
+    Move (Replaces("px", (FTTagAttr(sTag, "height")), "")) to sHeight
+    Move (FTTagAttr(sTag, "viewBox")) to sViewBox
+    Move (FTTagDropAttr(sTag, "width")) to sTag
+    Move (FTTagDropAttr(sTag, "height")) to sTag
+    If ((sViewBox = "") and (sWidth <> "") and (sHeight <> "")) Begin
+        If (FTOnlyCharacters((sWidth + sHeight), "0123456789.")) ;
+            Move (Replace("<svg", sTag, ('<svg viewBox="0 0 ' + sWidth + " " + sHeight + '"'))) to sTag
+    End
+    If (Pos(" xmlns=", sTag) = 0) ;
+        Move (Replace("<svg", sTag, '<svg xmlns="http://www.w3.org/2000/svg"')) to sTag
+    Move (Replace("<svg", sTag, '<svg width="24" height="24"')) to sTag
+    // Its colours: one, or none, and it is drawn in the text colour.
+    Move (FTSvgColourCount((sTag + sRest), &asColours)) to iCount
+    Move (iCount < 2) to bOneColour
+    If ((iCount = 0) and (FTTagAttr(sTag, "fill") = "")) ;
+        Move (Replace("<svg", sTag, '<svg fill="currentColor"')) to sTag
+    Move (sTag + sRest) to sText
+    If (iCount = 1) Begin
+        For i from 0 to (SizeOfArray(asColours) - 1)
+            Move (FTPaintInCurrentColor(sText, asColours[i])) to sText
+        Loop
+    End
+    Function_Return sText
+End_Function
+
+// An <svg> as a CSS url("data:..."): the characters a URL may not hold as they are, escaped.
+Function FTSvgDataUrl Global String sSvg Returns String
+    Move (Replaces("%", sSvg, "%25")) to sSvg
+    Move (Replaces('"', sSvg, "%22")) to sSvg
+    Move (Replaces("<", sSvg, "%3C")) to sSvg
+    Move (Replaces(">", sSvg, "%3E")) to sSvg
+    Move (Replaces("#", sSvg, "%23")) to sSvg
+    Function_Return ('url("data:image/svg+xml,' + sSvg + '")')
+End_Function
+
+// A glyph's class as ftglyphs.css draws the library's: in front of a web button's caption and of a cFTHtmlPage's
+// title. It sets everything itself, so it can replace a library glyph of either kind - a one-colour glyph is a
+// mask painted in the text colour, a coloured one a picture.
+Function FTAppGlyphRule Global String sName String sSvg Boolean bOneColour Returns String
+    String sSelector sUrl
+    Move (".WebControl.WebButton.ftg-" + sName + " button::before, .WebControl.WebHtmlBox.ftg-" + sName + " > .WebCon_Inner > label::before") to sSelector
+    If (bOneColour) Begin
+        Move (FTSvgDataUrl(Replaces("currentColor", sSvg, "black"))) to sUrl
+        Function_Return (sSelector + " { background: currentColor; -webkit-mask: " + sUrl + " center / contain no-repeat; mask: " + sUrl + " center / contain no-repeat; }")
+    End
+    Move (FTSvgDataUrl(sSvg)) to sUrl
+    Function_Return (sSelector + " { background: " + sUrl + " center / contain no-repeat; -webkit-mask: none; mask: none; }")
+End_Function
+
+// A short fingerprint of sText: its bytes, hashed.
+Function FTTextHash Global String sText Returns String
+    UChar[] ucaText
+    BigInt biHash
+    Integer i iLast
+    Move (StringToUCharArray(sText)) to ucaText
+    Move 0 to biHash
+    Move (SizeOfArray(ucaText) - 1) to iLast
+    For i from 0 to iLast
+        Move (Mod(((biHash * 31) + ucaText[i]), 2147483647)) to biHash
+    Loop
+    Function_Return (String(biHash))
+End_Function
+
+// FTLoadAppGlyphs' work, on a folder named outright: reads its glyphs, and brings its sheet up to date.
+Procedure FTLoadAppGlyphsFrom Global String sFolder
+    String[] asFiles asNames asGlyphNames asGlyphSvgs asRules
+    String sFile sName sSvg sSheet sOld sNl sPath
+    Boolean bOneColour bWritten
+    Integer i iLast
+    Move True to gbFTAppGlyphsLoaded
+    Move (Character(13) + Character(10)) to sNl
+    If (Right(sFolder, 1) = "\") ;
+        Move (Left(sFolder, (Length(sFolder) - 1))) to sFolder
+
+    // The names: the file names in lower case, sorted, so the sheet comes out the same from the same files.
+    Move (FTSvgFileNames(sFolder)) to asFiles
+    Move (SizeOfArray(asFiles) - 1) to iLast
+    For i from 0 to iLast
+        Move asFiles[i] to sFile
+        If (Lowercase(Right(sFile, 4)) = ".svg") Begin
+            Move (Lowercase(Left(sFile, (Length(sFile) - 4)))) to sName
+            If ((FTIsAppGlyphName(sName)) and (SearchArray(sName, asNames) = -1)) ;
+                Move sName to asNames[-1]
+        End
+    Loop
+    Move (SortArray(asNames)) to asNames
+
+    Move (SizeOfArray(asNames) - 1) to iLast
+    For i from 0 to iLast
+        Move False to bOneColour
+        Move (FTAppGlyphInline((FTReadWholeFile(sFolder + "\" + asNames[i] + ".svg")), &bOneColour)) to sSvg
+        If (sSvg <> "") Begin
+            Move asNames[i] to asGlyphNames[-1]
+            Move sSvg to asGlyphSvgs[-1]
+            Move (FTAppGlyphRule(asNames[i], sSvg, bOneColour)) to asRules[-1]
+        End
+    Loop
+    Move asGlyphNames to gasFTAppGlyphNames
+    Move asGlyphSvgs to gasFTAppGlyphSvgs
+
+    // The sheet, and the file only when it differs: an installed program, whose sheet is current, writes nothing.
+    Move ("/* ftglyphs-app.css: this application's own glyphs - the SVG files in this folder - as CSS classes, " + '"ftg-<name>",' + sNl) to sSheet
+    Move (sSheet + "   for web buttons and page titles, drawn the way the library's ftglyphs.css draws its own. WRITTEN BY THE" + sNl) to sSheet
+    Move (sSheet + "   PROGRAM when it starts (RDCFlexTron, FTAppGlyphs.pkg), from the files here - do not edit it: add, change or" + sNl) to sSheet
+    Move (sSheet + "   remove a file, and run the program. application.css imports it after ftglyphs.css, for the Studio's Designer:" + sNl) to sSheet
+    Move (sSheet + '   @import url("../' + CS_FTAppGlyphFolder + "/" + CS_FTAppGlyphSheet + '");' + sNl) to sSheet
+    Move (sSheet + "   " + String(SizeOfArray(asRules)) + " glyphs. */" + sNl) to sSheet
+    Move (SizeOfArray(asRules) - 1) to iLast
+    For i from 0 to iLast
+        Move (sSheet + asRules[i] + sNl) to sSheet
+    Loop
+    Move (sFolder + "\" + CS_FTAppGlyphSheet) to sPath
+    Move (FTReadWholeFile(sPath)) to sOld
+    If ((sOld <> sSheet) and ((SizeOfArray(asRules) > 0) or (sOld <> ""))) ;
+        Move (FTWriteWholeFile(sPath, sSheet)) to bWritten
+    Move (FTTextHash(sSheet)) to gsFTAppGlyphStamp
+End_Procedure
+
+// Reads the application's glyphs - once - and brings their sheet up to date. cFTApplication sends it when the
+// program starts; DashIcon, FTGlyphNames and the host pages send it themselves, for a program whose application
+// object is not a cFTApplication. Until the program has a workspace to ask, it is asked again at the next call.
+Procedure FTLoadAppGlyphs Global
+    String sFolder
+    If (gbFTAppGlyphsLoaded) ;
+        Procedure_Return
+    Move (FTAppGlyphFolder()) to sFolder
+    If (sFolder <> "") ;
+        Send FTLoadAppGlyphsFrom sFolder
+End_Procedure
+
+// The application's glyph names, sorted - none when it has no glyphs of its own.
+Function FTAppGlyphNames Global Returns String[]
+    Send FTLoadAppGlyphs
+    Function_Return gasFTAppGlyphNames
+End_Function
+
+// The application's glyph sName as inline <svg>, "" when it has none of that name.
+Function FTAppGlyphSvg Global String sName Returns String
+    Integer iAt
+    Send FTLoadAppGlyphs
+    If (SizeOfArray(gasFTAppGlyphNames) = 0) ;
+        Function_Return ""
+    Move (SearchArray(sName, gasFTAppGlyphNames)) to iAt
+    If (iAt = -1) ;
+        Function_Return ""
+    Function_Return gasFTAppGlyphSvgs[iAt]
+End_Function
+
+// The ?v= of the sheet's link (see gsFTAppGlyphStamp).
+Function FTAppGlyphStamp Global Returns String
+    Send FTLoadAppGlyphs
+    Function_Return gsFTAppGlyphStamp
+End_Function

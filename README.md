@@ -27,7 +27,8 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the colours, and where the theme choice is saved; the whole HTML tags the markup builders go with (`CS_DivEnd`, `CS_CodeOpen`, `CS_BulletItemEnd`, `CS_Br` ...), the named characters (`CS_EmDash`, `CS_Nbsp`, `CS_Check` ...) and the links to the library's style sheets (`CS_PaletteCssLink`, `CS_PageFitCssLink`, `CS_PillsCssLink`) |
 | `FTThemeColors.pkg` | native colours that follow the theme |
 | `FTMarkupBuilders.pkg` | HTML builders - buttons, chips, divs, tables, style sheet and script links - `FTHtmlEscape`, and `MarkedText`: prose whose names are marked with backticks, as in a README |
-| `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant; `FTGlyphNames` returns all their names, for a combo or a list to choose from |
+| `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant; `FTGlyphNames` returns all their names, your own glyphs' too, for a combo or a list to choose from |
+| `FTAppGlyphs.pkg` | your application's own glyphs: SVG files in `AppHtml\FTGlyphs`, drawn like the library's by `DashIcon`, `psGlyph` and `psTitleIcon` - see [Your own glyphs](#your-own-glyphs) |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
 | `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls, and `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated); installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last three itself |
 
@@ -82,22 +83,31 @@ a version, so the range above cannot accept it.
   (`"FtCompact ftaccent"`). A `cFTWebList` shows its columns there, in the FT look. A `cFTHtmlPage`
   needs nothing: the Designer shows its title (`psLabel`), its glyph (the class default, or one named in
   `psCSSClass`, `"ftpage ftg-listcheck"`) and Lorem ipsum for a body built at run time. An image file in
-  `psTitleIcon` shows only when the program runs; for one the Designer shows too, make it a class of your
-  own, in a sheet your `application.css` imports, and name it in `psCSSClass` (`"ftpage ftg-logo"`):
-
-  ```css
-  .WebControl.WebHtmlBox.ftpage.ftg-logo > .WebCon_Inner > label::before {
-      width: 32px;
-      height: 32px;
-      background: url("../Images/Logo.svg") center / contain no-repeat;
-  }
-  ```
-
-  The `.ftpage` in the selector lifts the rule over the shared one in `ftglyphs.css`. Demo-RDCFlexTron's
-  `ftg-rdcmark` is one.
+  `psTitleIcon` shows only when the program runs; a picture of your own that the Designer shows too is a
+  glyph of your own ([Your own glyphs](#your-own-glyphs)), named in `psCSSClass`: `"ftpage ftg-logo"`.
 - DataFlex 26 only.
 
-## Changing the glyphs
+## Your own glyphs
+
+Put SVG files in `AppHtml\FTGlyphs`. A file's name is its glyph's name - `invoice.svg` is `"invoice"` - in lower
+case, and only letters, digits, `-` and `_`. From then on it is a glyph like the library's: `DashIcon("invoice")`,
+`psGlyph "invoice"`, `psTitleIcon "invoice"`, the class `ftg-invoice` in a `psCSSClass`, and a name in
+`FTGlyphNames`. A glyph of yours with a library glyph's name replaces that glyph.
+
+- **Colours.** A glyph drawn in one colour - `currentColor`, one fixed colour, or none at all (black) - is drawn
+  in the text colour, so it follows the theme. One with two or more colours, or a gradient, keeps its own: a
+  logo. Icons from [Tabler Icons](https://tabler.io/icons), where most of the library's glyphs come from, fit
+  as they are.
+- **The sheet.** The program writes the folder's classes into `AppHtml\FTGlyphs\ftglyphs-app.css` when it
+  starts, only when the files have changed, and its pages link the sheet themselves. For the Studio's Designer,
+  import it in `application.css` after `ftglyphs.css`: `@import url("../FTGlyphs/ftglyphs-app.css");`. A new
+  glyph takes one run of the program before the Designer shows it. Ship the sheet with the program: an
+  installed program whose sheet is current writes nothing, and one that may not write goes on without a word.
+- **Which folder.** The program's workspace names it (`psAppHtmlPath`), read once: when the program starts
+  (`cFTApplication`), or when a glyph is first needed. A program that points its workspace object at other
+  workspaces while it runs names its own folder before it does: `Send FTLoadAppGlyphsFrom "<AppHtml>\FTGlyphs"`.
+
+## Changing the library's glyphs
 
 `AppHtml/RDCFlexTron/ftglyphs.css` is generated from `AppSrc/FTDashIcons.pkg`. After adding or changing a
 glyph there, run `python Tools/MakeFTGlyphsCss.py` and commit the sheet with it. A new glyph also needs its line in

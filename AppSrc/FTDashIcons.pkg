@@ -11,6 +11,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use Windows.pkg
+Use FTAppGlyphs.pkg         // an application's own glyphs (AppHtml\FTGlyphs): DashIcon draws them, FTGlyphNames lists them
 
 /* THE GLYPH NAMES this file answers to. Moved here from RefactorConstants.h.pkg on 2026-09-23, so the
    icon set carries its own vocabulary and needs no DFRefactor header.
@@ -28,6 +29,10 @@ Use Windows.pkg
    sheet with it. The script reads each branch of DashIcon below - a path moved into sD, or an <svg>
    returned whole - so keep a branch's code on the line right after its If. A new glyph also needs its line in
    FTGlyphNames; the script stops if one is missing. */
+
+/* AN APPLICATION'S OWN GLYPHS - the SVG files in its AppHtml\FTGlyphs (FTAppGlyphs.pkg) - are drawn by DashIcon
+   and listed by FTGlyphNames too, and one with the name of a glyph here replaces it. They need no constant, no
+   branch below and no script: the program reads the folder when it starts, and writes their classes itself. */
 Define CS_GlyphChevron                   for "chevron"
 Define CS_GlyphRepeat                    for "repeat"      // TestCompileFT wrote this SVG out four times
 Define CS_GlyphArrowRight                for "arrowright"  // the hand-over marker on the Test Compile tail
@@ -121,12 +126,14 @@ Define CS_GlyphPower                     for "power"       // Tabler power
 /* FTGlyphNames - the name of every glyph DashIcon draws, in alphabetical order: for a combo or a list to choose a
    glyph from, or to check a name before it is used (SearchArray) - DashIcon draws its default glyph for a name it
    does not know, without a word. A name is what DashIcon, psGlyph and UpdateGlyph take, and "ftg-" + the name is
-   the glyph's class in ftglyphs.css.
+   the glyph's class in ftglyphs.css - or in ftglyphs-app.css for an application's own glyph (FTAppGlyphs.pkg),
+   which the list holds too.
 
    Built from the constants, so a misspelt one is a build error. A new glyph needs its line here too:
    Tools/MakeFTGlyphsCss.py stops when a CS_Glyph* Define is missing from this list. */
 Function FTGlyphNames Global Returns String[]
-    String[] asNames
+    String[] asNames asApp
+    Integer i
     // In the order of the Defines above; sorted on the way out.
     // The board and tile glyphs
     Move CS_GlyphChevron        to asNames[-1]
@@ -211,6 +218,12 @@ Function FTGlyphNames Global Returns String[]
     Move CS_GlyphLogin          to asNames[-1]
     Move CS_GlyphExit           to asNames[-1]
     Move CS_GlyphPower          to asNames[-1]
+    // An application's own glyphs (FTAppGlyphs.pkg) - but not twice: one can have the name of a glyph above.
+    Move (FTAppGlyphNames()) to asApp
+    For i from 0 to (SizeOfArray(asApp) - 1)
+        If (SearchArray(asApp[i], asNames) = -1) ;
+            Move asApp[i] to asNames[-1]
+    Loop
     Function_Return (SortArray(asNames))
 End_Function
 
@@ -220,7 +233,7 @@ End_Function
     dashboard view: the trail borrows the dashboard's tile builders, and every one of them draws
     its glyph from here, so this had to stop living inside one of the two views that need it.
 
-    A plain global function - it holds no state and reads none.
+    A plain global function. The one state it reads is the application's own glyphs (FTAppGlyphs.pkg).
 */
 // Returns an inline Tabler-style SVG icon (stroke=currentColor; sized by CSS per context - .dash-ico
 // 22px on tiles/banner, .dash-label 14px, .dash-cyc-tail 13px). One multi-subpath <path> per glyph. Colour
@@ -235,8 +248,12 @@ End_Function
 // is painted before that sheet applies, and 17 glyphs briefly render at 300px (Nils 2026-08-13:
 // "one big image that looks a bit like a flower flashes by" - the Tidy Up sparkles).
 Function DashIcon Global String sName Returns String
-    String sD
+    String sD sApp
 
+    // An application's own glyph of this name first (FTAppGlyphs.pkg): an application can redraw one of these.
+    Move (FTAppGlyphSvg(sName)) to sApp
+    If (sApp <> "") ;
+        Function_Return sApp
     Move "" to sD
     // The "plan" glyph (clipboard) is the same artwork as AppHtml\Svg\Plan.svg, but inlined with
     // stroke="currentColor" so the action-row CSS can tint it amber (an <img> can't be recoloured).

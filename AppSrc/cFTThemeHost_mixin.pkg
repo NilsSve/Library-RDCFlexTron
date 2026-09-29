@@ -35,6 +35,7 @@
 Use FTConstants.h.pkg           // CI_FTTheme*, giFTThemeMode, where the theme is saved
 Use FTThemeColors.pkg           // FTWebBg, FTColorHex - the WebView2 back colour, and the page body's
 Use FTMarkupBuilders.pkg        // StyleSheetLink, ScriptLink - the links the page's head and its includes are made of
+Use FTAppGlyphs.pkg             // FTAppGlyphNames, FTAppGlyphStamp - the link to the application's own glyphs
 
 Class cFTThemeHost_mixin is a Mixin
 
@@ -182,17 +183,20 @@ Class cFTThemeHost_mixin is a Mixin
 
     /* THE LIBRARY'S OWN CONTROLS COME WITH EVERY FT PAGE (2026-09-26). cFTWebButton's client class
        (ftcontrols.js), the FT look for real web controls (ftcontrols.css, with palette.css for its
-       tokens) and the button glyphs (ftglyphs.css, 2026-09-28) join the includes the framework writes
-       into the host page. OnDefineScriptIncludes is
+       tokens), the button glyphs (ftglyphs.css, 2026-09-28) and an application's own (ftglyphs-app.css,
+       2026-09-29, when it has any - after the library's, so one can redraw a library glyph) join the
+       includes the framework writes into the host page. OnDefineScriptIncludes is
        the framework's own hook for that (cLocalWebControlHost.VirtualHtml): what it adds lands after
        FlexTron's own includes - df-min.js among them - so df.WebButton exists when the script runs,
-       and after the theme, so the sheet wins over it. A page that uses none of it loads three small
+       and after the theme, so the sheet wins over it. A page that uses none of it loads a few small
        files more. An object that augments this event must Forward it, or its page loses them. */
     Procedure OnDefineScriptIncludes String[] ByRef aScriptHtml
         Forward Send OnDefineScriptIncludes (&aScriptHtml)
         Move (StyleSheetLink("RDCFlexTron/palette.css")) to aScriptHtml[-1]
         Move (StyleSheetLink("RDCFlexTron/ftcontrols.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[-1]
         Move (StyleSheetLink("RDCFlexTron/ftglyphs.css?v=" + CS_FTLibraryVersion)) to aScriptHtml[-1]
+        If (SizeOfArray(FTAppGlyphNames()) > 0) ;
+            Move (StyleSheetLink(CS_FTAppGlyphFolder + "/" + CS_FTAppGlyphSheet + "?v=" + FTAppGlyphStamp())) to aScriptHtml[-1]
         Move (ScriptLink("RDCFlexTron/ftcontrols.js?v=" + CS_FTLibraryVersion)) to aScriptHtml[-1]
     End_Procedure
 
