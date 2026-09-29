@@ -28,12 +28,18 @@ Use seq_chnl.pkg               // Seq_New_Channel - the design-time dump below
    Every FlexTron dialog seeds its HTML boxes with an EXPRESSION at construct, which the Studio's
    Windows Designer cannot evaluate, so each box also carries a LITERAL copy of that markup for
    the Designer (2026-09-21). Those literals must be regenerated when a builder changes. A
-   throwaway copy of the program sets gbFTDesignDump before any object constructs, and every
-   box then appends '<full object name>|<psHtml>' to gsFTDesignDumpFile as it finishes
-   constructing - the exact string the runtime seeds, in the no-workspace state. The real
-   program never sets the flag, so this costs one Boolean test per box. */
+   throwaway copy of the program sets gbFTDesignDump before any object constructs; every box is
+   then remembered as it is built (gahoFTDesignBoxes), and once every object is built the program
+   sends FTDesignDumpAll, which appends '<full object name>|<psHtml>' to gsFTDesignDumpFile for
+   each - the exact string the runtime seeds, in the no-workspace state. The real program never
+   sets the flag, so this costs one Boolean test per box.
+
+   WRITTEN AT THE END, NOT AS EACH BOX FINISHES (2026-09-29). A box sets its runtime markup in its
+   OWN End_Construct_Object, after "Forward Send End_Construct_Object" - so a dump written in this
+   class's End_Construct_Object came too early, and held the design-time literal instead. */
 Global_Variable Boolean gbFTDesignDump
 Global_Variable String  gsFTDesignDumpFile
+Global_Variable Handle[] gahoFTDesignBoxes
 Move False to gbFTDesignDump
 Move "" to gsFTDesignDumpFile
 
@@ -49,27 +55,9 @@ Class cFTWebHtmlBox is a cWebHtmlBox
         Forward Send Construct_Object
 
         Set piColumnIndex to 0
-    End_Procedure
-
-    Procedure End_Construct_Object
-        String  sHtml sLine
-        Integer iCh
-        Forward Send End_Construct_Object
-        If (gbFTDesignDump and gsFTDesignDumpFile <> "") Begin
-            Get psHtml to sHtml
-            If (sHtml <> "") Begin
-                Move (Replaces(Character(13), sHtml, "")) to sHtml
-                Move (Replaces(Character(10), sHtml, "")) to sHtml
-                Move (Name(Self) + "|" + sHtml) to sLine
-                Move (Seq_New_Channel()) to iCh
-                If (iCh >= 0) Begin
-                    Append_Output channel iCh gsFTDesignDumpFile
-                    Writeln channel iCh sLine
-                    Close_Output channel iCh
-                    Send Seq_Release_Channel iCh
-                End
-            End
-        End
+        // The design-time dump: remembered now, written by FTDesignDumpAll once every object is built.
+        If (gbFTDesignDump) ;
+            Move Self to gahoFTDesignBoxes[-1]
     End_Procedure
 
     Function DEO_Object Returns Boolean
@@ -108,3 +96,26 @@ Class cFTWebHtmlBox is a cWebHtmlBox
     End_Procedure
 
 End_Class
+
+// The design-time dump (see gbFTDesignDump above): '<full object name>|<psHtml>' for every box, each with the markup
+// it ended its construction with. Sent by the dump program once every object is built.
+Procedure FTDesignDumpAll Global
+    String sHtml
+    Integer i iCh
+    If ((gbFTDesignDump = False) or (gsFTDesignDumpFile = "")) ;
+        Procedure_Return
+    Move (Seq_New_Channel()) to iCh
+    If (iCh < 0) ;
+        Procedure_Return
+    Append_Output channel iCh gsFTDesignDumpFile
+    For i from 0 to (SizeOfArray(gahoFTDesignBoxes) - 1)
+        Get psHtml of gahoFTDesignBoxes[i] to sHtml
+        If (sHtml <> "") Begin
+            Move (Replaces(Character(13), sHtml, "")) to sHtml
+            Move (Replaces(Character(10), sHtml, "")) to sHtml
+            Writeln channel iCh (Name(gahoFTDesignBoxes[i]) + "|" + sHtml)
+        End
+    Loop
+    Close_Output channel iCh
+    Send Seq_Release_Channel iCh
+End_Procedure
