@@ -319,3 +319,8 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
     font: 12px Consolas, monospace;
     color: var(--dfr-code-ink, #e0b34d);
 }
+/* FTInputBox's field, under the message: its label in line with the message's text, its right edge with the
+   buttons'. */
+.WebControl.WebForm.ftinput {
+    margin: 0 2px 0 18px;
+}

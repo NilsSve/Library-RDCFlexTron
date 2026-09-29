@@ -1,0 +1,54 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTInputBox
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-29
+//
+// Description : FTInputBox: a message in the FT look with ONE field to type in, and the caller's own
+//               button captions - the prompt that asks for a name. Shown in FTInputBox.dg.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use FTMessageBox.pkg        // FTMessageBoxText - the message's length picks the box's size
+
+// FTInputBox.dg's dialog, once it exists; 0 until then.
+Global_Variable Handle ghoFTInputBox
+Move 0 to ghoFTInputBox
+
+// FTInputBox.dg defines them - later than this package is compiled.
+Register_Function FTShowInput String sTitle String sBodyHtml String sInputLabel String sValue ;
+                              String sYesLabel String sNoLabel Returns Boolean
+Register_Function FTInputValue Returns String
+
+// The dialog - or 0: the program does not Use FTInputBox.dg, or its application object does not exist yet.
+Function FTInputBoxPanel Global Returns Handle
+    If (ghoApplication = 0) ;
+        Function_Return 0
+    Function_Return ghoFTInputBox
+End_Function
+
+/* A MESSAGE WITH ONE FIELD TO TYPE IN - FTHtmlMessage's box with a field under the message: a body written in
+   HTML (paragraphs, bold, code samples - text in it already escaped), the field's label, and a verb on each
+   button ("Rename now" / "Not now"). sValue goes in as the field's text and comes back as what was typed, when
+   the first button (or Enter in the field) answers; on the second button or Esc it is left as it was. Returns
+   True for the first button. sYesLabel "" is OK; sNoLabel "" gives one button.
+
+   Windows has no box that asks for text, so where the dialog cannot show - a program that does not Use
+   FTInputBox.dg, or before the application object exists - this answers False and leaves sValue alone.
+
+       Move (sName + "X") to sNew
+       Get FTInputBox ("Rename " + sName) sBodyHtml "Rename to:" (&sNew) "Rename now" "Not now" to bRename    */
+Function FTInputBox Global String sTitle String sBodyHtml String sInputLabel String ByRef sValue ;
+                           String sYesLabel String sNoLabel Returns Boolean
+    Boolean bYes
+    Handle hoPanel
+    Move (FTInputBoxPanel()) to hoPanel
+    If (hoPanel = 0) ;
+        Function_Return False
+    Get FTShowInput of hoPanel sTitle sBodyHtml sInputLabel sValue sYesLabel sNoLabel to bYes
+    If (bYes) ;
+        Get FTInputValue of hoPanel to sValue
+    Function_Return bYes
+End_Function
