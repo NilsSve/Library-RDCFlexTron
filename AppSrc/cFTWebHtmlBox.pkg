@@ -29,6 +29,8 @@ Use seq_chnl.pkg               // Seq_New_Channel - the design-time dump below
 // Studio's Designer" lists them. Set the real content in End_Construct_Object, or when the dialog opens.
 // Inherited from cWebHtmlBox; stated so the Designer models this class without the pooled package.
 { DesignerJSClass=df.WebHtmlBox }
+// Clicks reach OnClick by default (Construct_Object below); the Studio's Properties panel shows the same default.
+{ OverrideProperty=pbServerOnClick InitialValue=True }
 /* THE DESIGN-TIME DUMP - a regeneration aid for the Designer placeholders, off by default.
    Every FlexTron dialog seeds its HTML boxes with an EXPRESSION at construct, which the Studio's
    Windows Designer cannot evaluate, so each box also carries a LITERAL copy of that markup for
@@ -55,11 +57,18 @@ Class cFTWebHtmlBox is a cWebHtmlBox
        repeated 47 times is the default, and the five that differ override it exactly as
        they did when every site spelled it out. Behaviour-neutral: nothing loses a setting,
        47 lines stop restating one.
+
+       CLICKS REACH OnClick BY DEFAULT (0.9.9), for the same reason: 22 of DFRefactor's 30 boxes
+       set pbServerOnClick to True. It costs nothing on a box with nothing to click - the web
+       engine sends a click to the server only when the clicked element, or one around it,
+       carries data-ServerOnClick (WebHtmlBox.js). A box that must ignore such an element still
+       sets it False.
     */
     Procedure Construct_Object
         Forward Send Construct_Object
 
         Set piColumnIndex to 0
+        Set pbServerOnClick to True
         // The design-time dump: remembered now, written by FTDesignDumpAll once every object is built.
         If (gbFTDesignDump) ;
             Move Self to gahoFTDesignBoxes[-1]
