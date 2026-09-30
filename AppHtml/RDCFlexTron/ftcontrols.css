@@ -1,5 +1,6 @@
 /* RDCFlexTron - the FT look for the library's real web controls: cFTWebButton, the form controls
-   (FtCompact), cFTWebList, cFTHtmlPage, FTMessageBox's text and the accent label - and cFTGridHost's rows.
+   (FtCompact), cFTWebList, cFTHtmlPage, FTMessageBox's text and the accent label - and cFTGridHost's rows,
+   and the stand-ins the Studio's Designer draws for content built at run time (.ftph and .ftph-*).
 
    Every FT host page links this sheet, with palette.css for its --dfr-* tokens, after the Web UI
    theme (cFTThemeHost_mixin, OnDefineScriptIncludes) - so the tokens are there even on a host that
@@ -292,6 +293,164 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
         "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante.\A\A"
         "Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra.\A\A"
         "Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui.";
+}
+
+/* STAND-INS FOR THE STUDIO'S DESIGNER (0.9.7). The Designer runs none of the program's code, so a box whose content
+   is built when the program runs shows nothing there: it draws the LAST literal psHtml in the object body, and an
+   expression leaves the box blank. These rules draw the SHAPE of such content from one short literal instead, the
+   way .ftph above draws Lorem ipsum:
+
+       Set psHtml to '<div class="ftph-grid"><b>Customer</b><b>City</b><b>Balance</b></div>'
+
+   Captions are <b> children; numbers are custom properties in the element's style, "--rows:5". A shape is the
+   palette's --dfr-line-strong seen through a mask - an SVG tile of bars and lines, repeated - so it follows the
+   theme. The program shows the literal too, until it sets the real content: set that in End_Construct_Object, or
+   when the dialog opens, and the stand-in is only ever seen in the Designer. In a page (cFTHtmlPage) the shapes keep
+   the title's inset. */
+.WebControl.WebHtmlBox.ftpage .ftph-grid,
+.WebControl.WebHtmlBox.ftpage .ftph-list,
+.WebControl.WebHtmlBox.ftpage .ftph-tree,
+.WebControl.WebHtmlBox.ftpage .ftph-log,
+.WebControl.WebHtmlBox.ftpage .ftph-chart,
+.WebControl.WebHtmlBox.ftpage .ftph-cards {
+    margin: 0 18px 14px;
+}
+
+/* A GRID: a header row of the <b> captions, one column each, over --rows rows (8). Without captions --cols gives the
+   columns, and there is no header: <div class="ftph-grid" style="--cols:6"></div>. The rules after this one count
+   the captions, up to 16. The rows' tile is two columns wide, so neighbouring columns differ. */
+.WebControl.WebHtmlBox .ftph-grid {
+    --cols: 1;
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(2)) { --cols: 2; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(3)) { --cols: 3; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(4)) { --cols: 4; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(5)) { --cols: 5; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(6)) { --cols: 6; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(7)) { --cols: 7; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(8)) { --cols: 8; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(9)) { --cols: 9; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(10)) { --cols: 10; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(11)) { --cols: 11; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(12)) { --cols: 12; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(13)) { --cols: 13; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(14)) { --cols: 14; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(15)) { --cols: 15; }
+.WebControl.WebHtmlBox .ftph-grid:has(> b:nth-of-type(16)) { --cols: 16; }
+.WebControl.WebHtmlBox .ftph-grid > b {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 9px;
+    background: var(--dfr-bg-card-hi, #31302e);
+    border-bottom: 1px solid var(--dfr-line-focus, #46443f);
+    color: var(--dfr-ink-4, #a8a69b);
+    font: 600 12px "Segoe UI", sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.WebControl.WebHtmlBox .ftph-grid::after {
+    content: "";
+    flex: 0 0 100%;
+    height: calc(var(--rows, 8) * 25px);
+    background-color: var(--dfr-line-strong, #4a4945);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Csvg width='50%25' height='75'%3E%3Crect x='9' y='8' width='58%25' height='9' rx='3'/%3E%3Crect x='9' y='33' width='36%25' height='9' rx='3'/%3E %3Crect x='9' y='58' width='49%25' height='9' rx='3'/%3E%3C/svg%3E %3Csvg x='50%25' width='50%25' height='75'%3E%3Crect x='9' y='8' width='41%25' height='9' rx='3'/%3E%3Crect x='9' y='33' width='63%25' height='9' rx='3'/%3E %3Crect x='9' y='58' width='29%25' height='9' rx='3'/%3E%3C/svg%3E %3Crect y='24' width='100%25' height='1' fill-opacity='.5'/%3E%3Crect y='49' width='100%25' height='1' fill-opacity='.5'/%3E %3Crect y='74' width='100%25' height='1' fill-opacity='.5'/%3E%3C/svg%3E") 0 0 / calc(200% / var(--cols)) 75px repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Csvg width='50%25' height='75'%3E%3Crect x='9' y='8' width='58%25' height='9' rx='3'/%3E%3Crect x='9' y='33' width='36%25' height='9' rx='3'/%3E %3Crect x='9' y='58' width='49%25' height='9' rx='3'/%3E%3C/svg%3E %3Csvg x='50%25' width='50%25' height='75'%3E%3Crect x='9' y='8' width='41%25' height='9' rx='3'/%3E%3Crect x='9' y='33' width='63%25' height='9' rx='3'/%3E %3Crect x='9' y='58' width='29%25' height='9' rx='3'/%3E%3C/svg%3E %3Crect y='24' width='100%25' height='1' fill-opacity='.5'/%3E%3Crect y='49' width='100%25' height='1' fill-opacity='.5'/%3E %3Crect y='74' width='100%25' height='1' fill-opacity='.5'/%3E%3C/svg%3E") 0 0 / calc(200% / var(--cols)) 75px repeat;
+}
+
+/* A LIST: <div class="ftph-list"></div> - rows of an icon and a line, --rows rows (8). */
+.WebControl.WebHtmlBox .ftph-list {
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 8px;
+}
+.WebControl.WebHtmlBox .ftph-list::after {
+    content: "";
+    display: block;
+    height: calc(var(--rows, 8) * 25px);
+    background-color: var(--dfr-line-strong, #4a4945);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Crect x='9' y='6' width='12' height='12' rx='3'/%3E%3Crect x='30' y='8' width='46%25' height='9' rx='3'/%3E %3Crect x='9' y='31' width='12' height='12' rx='3'/%3E%3Crect x='30' y='33' width='62%25' height='9' rx='3'/%3E %3Crect x='9' y='56' width='12' height='12' rx='3'/%3E%3Crect x='30' y='58' width='38%25' height='9' rx='3'/%3E %3Crect y='24' width='100%25' height='1' fill-opacity='.5'/%3E%3Crect y='49' width='100%25' height='1' fill-opacity='.5'/%3E %3Crect y='74' width='100%25' height='1' fill-opacity='.5'/%3E%3C/svg%3E") 0 0 / 100% 75px repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Crect x='9' y='6' width='12' height='12' rx='3'/%3E%3Crect x='30' y='8' width='46%25' height='9' rx='3'/%3E %3Crect x='9' y='31' width='12' height='12' rx='3'/%3E%3Crect x='30' y='33' width='62%25' height='9' rx='3'/%3E %3Crect x='9' y='56' width='12' height='12' rx='3'/%3E%3Crect x='30' y='58' width='38%25' height='9' rx='3'/%3E %3Crect y='24' width='100%25' height='1' fill-opacity='.5'/%3E%3Crect y='49' width='100%25' height='1' fill-opacity='.5'/%3E %3Crect y='74' width='100%25' height='1' fill-opacity='.5'/%3E%3C/svg%3E") 0 0 / 100% 75px repeat;
+}
+
+/* A TREE: <div class="ftph-tree"></div> - folders open and shut, with their files, --rows rows (8). */
+.WebControl.WebHtmlBox .ftph-tree {
+    padding: 4px 0;
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 8px;
+}
+.WebControl.WebHtmlBox .ftph-tree::after {
+    content: "";
+    display: block;
+    height: calc(var(--rows, 8) * 24px);
+    background-color: var(--dfr-line-strong, #4a4945);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 9h8l-4 5z'/%3E%3Crect x='21' y='6' width='12' height='12' rx='3'/%3E%3Crect x='39' y='8' width='34%25' height='8' rx='3'/%3E%3Crect x='13' y='18' width='1' height='138' fill-opacity='.35'/%3E%3Cpath d='M27 33h8l-4 5z'/%3E%3Crect x='39' y='30' width='12' height='12' rx='3'/%3E%3Crect x='57' y='32' width='28%25' height='8' rx='3'/%3E%3Crect x='31' y='42' width='1' height='42' fill-opacity='.35'/%3E%3Crect x='58' y='53' width='10' height='14' rx='2'/%3E%3Crect x='75' y='56' width='36%25' height='8' rx='3'/%3E%3Crect x='58' y='77' width='10' height='14' rx='2'/%3E%3Crect x='75' y='80' width='24%25' height='8' rx='3'/%3E%3Cpath d='M29 104v8l5-4z'/%3E%3Crect x='39' y='102' width='12' height='12' rx='3'/%3E%3Crect x='57' y='104' width='31%25' height='8' rx='3'/%3E%3Cpath d='M27 129h8l-4 5z'/%3E%3Crect x='39' y='126' width='12' height='12' rx='3'/%3E%3Crect x='57' y='128' width='22%25' height='8' rx='3'/%3E%3Crect x='31' y='138' width='1' height='18' fill-opacity='.35'/%3E%3Crect x='58' y='149' width='10' height='14' rx='2'/%3E%3Crect x='75' y='152' width='33%25' height='8' rx='3'/%3E%3Cpath d='M11 176v8l5-4z'/%3E%3Crect x='21' y='174' width='12' height='12' rx='3'/%3E%3Crect x='39' y='176' width='27%25' height='8' rx='3'/%3E%3C/svg%3E") 0 0 / 100% 192px repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 9h8l-4 5z'/%3E%3Crect x='21' y='6' width='12' height='12' rx='3'/%3E%3Crect x='39' y='8' width='34%25' height='8' rx='3'/%3E%3Crect x='13' y='18' width='1' height='138' fill-opacity='.35'/%3E%3Cpath d='M27 33h8l-4 5z'/%3E%3Crect x='39' y='30' width='12' height='12' rx='3'/%3E%3Crect x='57' y='32' width='28%25' height='8' rx='3'/%3E%3Crect x='31' y='42' width='1' height='42' fill-opacity='.35'/%3E%3Crect x='58' y='53' width='10' height='14' rx='2'/%3E%3Crect x='75' y='56' width='36%25' height='8' rx='3'/%3E%3Crect x='58' y='77' width='10' height='14' rx='2'/%3E%3Crect x='75' y='80' width='24%25' height='8' rx='3'/%3E%3Cpath d='M29 104v8l5-4z'/%3E%3Crect x='39' y='102' width='12' height='12' rx='3'/%3E%3Crect x='57' y='104' width='31%25' height='8' rx='3'/%3E%3Cpath d='M27 129h8l-4 5z'/%3E%3Crect x='39' y='126' width='12' height='12' rx='3'/%3E%3Crect x='57' y='128' width='22%25' height='8' rx='3'/%3E%3Crect x='31' y='138' width='1' height='18' fill-opacity='.35'/%3E%3Crect x='58' y='149' width='10' height='14' rx='2'/%3E%3Crect x='75' y='152' width='33%25' height='8' rx='3'/%3E%3Cpath d='M11 176v8l5-4z'/%3E%3Crect x='21' y='174' width='12' height='12' rx='3'/%3E%3Crect x='39' y='176' width='27%25' height='8' rx='3'/%3E%3C/svg%3E") 0 0 / 100% 192px repeat;
+}
+
+/* A LOG: <div class="ftph-log"></div> - lines of output in a sunken box, --rows lines (10). */
+.WebControl.WebHtmlBox .ftph-log {
+    padding: 8px 10px;
+    background: var(--dfr-bg-well, #242322);
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 6px;
+}
+.WebControl.WebHtmlBox .ftph-log::after {
+    content: "";
+    display: block;
+    height: calc(var(--rows, 10) * 16px);
+    background-color: var(--dfr-line-strong, #4a4945);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Crect y='4' width='72%25' height='7' rx='2'/%3E%3Crect y='20' width='48%25' height='7' rx='2'/%3E%3Crect y='36' width='85%25' height='7' rx='2'/%3E %3Crect y='52' width='30%25' height='7' rx='2'/%3E%3Crect y='68' width='64%25' height='7' rx='2'/%3E%3C/svg%3E") 0 0 / 100% 80px repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Crect y='4' width='72%25' height='7' rx='2'/%3E%3Crect y='20' width='48%25' height='7' rx='2'/%3E%3Crect y='36' width='85%25' height='7' rx='2'/%3E %3Crect y='52' width='30%25' height='7' rx='2'/%3E%3Crect y='68' width='64%25' height='7' rx='2'/%3E%3C/svg%3E") 0 0 / 100% 80px repeat;
+}
+
+/* A CHART: <div class="ftph-chart"></div> - ten bars in a card, --height tall (140px). */
+.WebControl.WebHtmlBox .ftph-chart {
+    height: var(--height, 140px);
+    box-sizing: border-box;
+    padding: 12px 14px;
+    background: var(--dfr-bg-card, #2c2b29);
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 8px;
+}
+.WebControl.WebHtmlBox .ftph-chart::after {
+    content: "";
+    display: block;
+    height: 100%;
+    background-color: var(--dfr-line-strong, #4a4945);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='1.5%25' y='45%25' width='7%25' height='55%25' rx='2'/%3E%3Crect x='11.5%25' y='28%25' width='7%25' height='72%25' rx='2'/%3E%3Crect x='21.5%25' y='60%25' width='7%25' height='40%25' rx='2'/%3E%3Crect x='31.5%25' y='12%25' width='7%25' height='88%25' rx='2'/%3E%3Crect x='41.5%25' y='36%25' width='7%25' height='64%25' rx='2'/%3E%3Crect x='51.5%25' y='70%25' width='7%25' height='30%25' rx='2'/%3E%3Crect x='61.5%25' y='24%25' width='7%25' height='76%25' rx='2'/%3E%3Crect x='71.5%25' y='50%25' width='7%25' height='50%25' rx='2'/%3E%3Crect x='81.5%25' y='8%25' width='7%25' height='92%25' rx='2'/%3E%3Crect x='91.5%25' y='40%25' width='7%25' height='60%25' rx='2'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='1.5%25' y='45%25' width='7%25' height='55%25' rx='2'/%3E%3Crect x='11.5%25' y='28%25' width='7%25' height='72%25' rx='2'/%3E%3Crect x='21.5%25' y='60%25' width='7%25' height='40%25' rx='2'/%3E%3Crect x='31.5%25' y='12%25' width='7%25' height='88%25' rx='2'/%3E%3Crect x='41.5%25' y='36%25' width='7%25' height='64%25' rx='2'/%3E%3Crect x='51.5%25' y='70%25' width='7%25' height='30%25' rx='2'/%3E%3Crect x='61.5%25' y='24%25' width='7%25' height='76%25' rx='2'/%3E%3Crect x='71.5%25' y='50%25' width='7%25' height='50%25' rx='2'/%3E%3Crect x='81.5%25' y='8%25' width='7%25' height='92%25' rx='2'/%3E%3Crect x='91.5%25' y='40%25' width='7%25' height='60%25' rx='2'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+}
+
+/* CARDS: <div class="ftph-cards"><b>Workspace</b><b>Libraries</b></div> - a card for each <b> caption, side by side
+   while they fit. */
+.WebControl.WebHtmlBox .ftph-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.WebControl.WebHtmlBox .ftph-cards > b {
+    flex: 1 1 140px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    background: var(--dfr-bg-card, #2c2b29);
+    border: 1px solid var(--dfr-line-card, #403f3a);
+    border-radius: 10px;
+    color: var(--dfr-ink, #eceae1);
+    font: 600 13px "Segoe UI", sans-serif;
+}
+.WebControl.WebHtmlBox .ftph-cards > b::after {
+    content: "";
+    display: block;
+    height: 30px;
+    margin-top: 6px;
+    background-color: var(--dfr-line-strong, #4a4945);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Crect y='3' width='80%25' height='8' rx='3'/%3E%3Crect y='19' width='55%25' height='8' rx='3'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E %3Crect y='3' width='80%25' height='8' rx='3'/%3E%3Crect y='19' width='55%25' height='8' rx='3'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
 }
 
 /* FTMessageBox's message, under its title: the page's text look in the primary ink. A long path wraps

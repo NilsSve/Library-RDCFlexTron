@@ -35,7 +35,10 @@ Use FTDashIcons.pkg             // CS_GlyphFiletext
    which the Designer never reads - has none. So the class default is a stand-in body, an empty .ftph,
    which ftcontrols.css fills with Lorem ipsum - twenty-four paragraphs, enough for a maximised full-HD
    page; a meta-tag holds far less - and every page shows its shape in the Designer with nothing to add.
-   psHtml has no run-time twin of that default: an unset page stays empty when the program runs.
+   psHtml has no run-time twin of that default: an unset page stays empty when the program runs. A page whose body is
+   a grid, a list, a tree, a log, a chart or cards says so in a literal of its own - one short line the same sheet
+   draws the shape from (0.9.7, the README's "Stand-ins for the Studio's Designer"):
+       Set psHtml to '<div class="ftph-grid"><b>Name</b><b>Version</b></div>'
 
    The OverrideProperty tags tell the Studio this class's defaults; the Sets make them so at run time. */
 { DesignerJSClass=df.WebHtmlBox }

@@ -22,6 +22,11 @@ Use seq_chnl.pkg               // Seq_New_Channel - the design-time dump below
 // False marks it non-data-aware so DEO-request broadcasts skip it (also covers Request_Save / Clear_All); the
 // empty Request_Clear mirrors the sibling FT web controls (cFTWebButton et al.) as a guaranteed guard for the
 // exact broadcast (a read-only HTML box has nothing to clear anyway). Otherwise identical to cWebHtmlBox.
+// STAND-INS FOR THE DESIGNER (0.9.7). A box whose content is built when the program runs shows nothing in the Studio's
+// Designer, which runs no code: it draws only a LITERAL psHtml. One short literal draws the content's shape instead -
+// ftcontrols.css does the drawing: Set psHtml to '<div class="ftph-grid"><b>Name</b><b>Version</b></div>' is a grid
+// with those two columns. There are a list, a tree, a log, a chart and cards too; the README's "Stand-ins for the
+// Studio's Designer" lists them. Set the real content in End_Construct_Object, or when the dialog opens.
 // Inherited from cWebHtmlBox; stated so the Designer models this class without the pooled package.
 { DesignerJSClass=df.WebHtmlBox }
 /* THE DESIGN-TIME DUMP - a regeneration aid for the Designer placeholders, off by default.
