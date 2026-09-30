@@ -14,7 +14,7 @@
 //****************************************************************************
 Use cFTModalPanel.pkg
 Use cFTLocalWebControlHost.pkg      // a web control needs a host Used before it
-Use cFTGridHost.pkg                 // the host as a grid of 8 px columns
+Use cFTGridHost.pkg                 // the host as a grid: the page over a row of buttons
 Use FTAllWebControlClasses.pkg      // cFTWebButton
 Use cFTHtmlPage.pkg                 // the message's page: its title (psLabel) and the glyph beside it
 Use Winkern.pkg                     // GetTickCount
@@ -66,15 +66,17 @@ Object oFTMessageBox is a cFTModalPanel
         Set Location to 4 4
         Set Size to 154 412
         Set peAnchors to anNone         // placed by cFTModalPanel (phoClientHost)
-        Set piColumnCount to 21         // column 0, then No's 10 and Yes's 10
-        Set psColumnWidths to "0/1fr"   // column 0 takes the extra width
+        // Column 0 takes the extra width; No and Yes each have a column as wide as its caption - the captions
+        // come from the caller ("Rename now"), so no fixed span fits them all (ftbtn-fit keeps 76 px at least).
+        Set piColumnCount to 3
+        Set psColumnWidths to "0/1fr 1/max-content 2/max-content"
         Set psRowHeights to "0/1fr 1/8px"   // row 0, the message, takes the extra height; row 1 is 8 px of air
 
         // Row 0: the message. Its caption is the page's title, beside the glyph of its kind.
         Object oMbPage is a cFTHtmlPage
             Set piRowIndex to 0
             Set piColumnIndex to 0
-            Set piColumnSpan to 21
+            Set piColumnSpan to 3
             Set pbFillHeight to True        // a long message scrolls in the page
             Set psLabel to "Message"
             Set psCSSClass to "ftpage ftg-info"
@@ -85,9 +87,9 @@ Object oFTMessageBox is a cFTModalPanel
         Object oMbNoBtn is a cFTWebButton
             Set piRowIndex to 2
             Set piColumnIndex to 1
-            Set piColumnSpan to 10
+            Set piColumnSpan to 1
             Set psCaption to "No"
-            Set psCSSClass to "ftbtn ftg-close"         // an x (ftglyphs.css), so the Designer draws it too
+            Set psCSSClass to "ftbtn ftbtn-fit ftg-close"   // an x (ftglyphs.css), so the Designer draws it too
 
             Procedure OnButtonClick
                 Send FTAnswer False
@@ -96,10 +98,10 @@ Object oFTMessageBox is a cFTModalPanel
 
         Object oMbYesBtn is a cFTWebButton
             Set piRowIndex to 2
-            Set piColumnIndex to 11
-            Set piColumnSpan to 10
+            Set piColumnIndex to 2
+            Set piColumnSpan to 1
             Set psCaption to "OK"
-            Set psCSSClass to "ftbtn ftbtn-primary ftg-check"   // the main action's amber, and a check
+            Set psCSSClass to "ftbtn ftbtn-primary ftbtn-fit ftg-check"   // the main action's amber, and a check
 
             Procedure OnButtonClick
                 Send FTAnswer True

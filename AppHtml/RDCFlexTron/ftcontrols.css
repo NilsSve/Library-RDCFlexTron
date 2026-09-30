@@ -96,6 +96,11 @@
 .WebCon_Content.WebCon_GridLayout > .WebControl.WebButton.ftbtn button {
     min-width: 0;
 }
+/* ...except a button whose caption the program does not know in advance - the message and input boxes' answers,
+   in a max-content column: as wide as its caption, and never narrower than the FT button's 76 px. */
+.WebCon_Content.WebCon_GridLayout > .WebControl.WebButton.ftbtn.ftbtn-fit button {
+    min-width: 76px;
+}
 
 /* A label in the accent colour - a band's caption, like the demo's "Theme". The framework writes the
    text into .WebLabel_content, inside the element psCSSClass lands on. */

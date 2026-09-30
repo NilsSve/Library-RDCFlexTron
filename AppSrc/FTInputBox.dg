@@ -14,7 +14,7 @@
 //****************************************************************************
 Use cFTModalPanel.pkg
 Use cFTLocalWebControlHost.pkg      // a web control needs a host Used before it
-Use cFTGridHost.pkg                 // the host as a grid of 8 px columns
+Use cFTGridHost.pkg                 // the host as a grid: the page over a row of buttons
 Use FTAllWebControlClasses.pkg      // cFTWebButton, cFTWebForm
 Use cFTHtmlPage.pkg                 // the message's page: its title (psLabel) and the glyph beside it
 Use Winkern.pkg                     // GetTickCount
@@ -61,15 +61,17 @@ Object oFTInputBox is a cFTModalPanel
         Set Location to 4 4
         Set Size to 174 412
         Set peAnchors to anNone         // placed by cFTModalPanel (phoClientHost)
-        Set piColumnCount to 21         // column 0, then No's 10 and Yes's 10
-        Set psColumnWidths to "0/1fr"   // column 0 takes the extra width
+        // Column 0 takes the extra width; No and Yes each have a column as wide as its caption, as in the message
+        // box (ftbtn-fit keeps 76 px at least).
+        Set piColumnCount to 3
+        Set psColumnWidths to "0/1fr 1/max-content 2/max-content"
         Set psRowHeights to "0/1fr 2/8px"   // row 0, the message, takes the extra height; row 2 is 8 px of air
 
         // Row 0: the message. Its caption is the page's title, beside a pencil.
         Object oIbPage is a cFTHtmlPage
             Set piRowIndex to 0
             Set piColumnIndex to 0
-            Set piColumnSpan to 21
+            Set piColumnSpan to 3
             Set pbFillHeight to True        // a long message scrolls in the page
             Set psLabel to "Input"
             Set psCSSClass to "ftpage ftg-edit"
@@ -79,7 +81,7 @@ Object oFTInputBox is a cFTModalPanel
         Object oIbForm is a cFTWebForm
             Set piRowIndex to 1
             Set piColumnIndex to 0
-            Set piColumnSpan to 21
+            Set piColumnSpan to 3
             Set psLabel to "Name:"
             Set peLabelAlign to alignLeft
             Set piLabelOffset to 60
@@ -103,9 +105,9 @@ Object oFTInputBox is a cFTModalPanel
         Object oIbNoBtn is a cFTWebButton
             Set piRowIndex to 3
             Set piColumnIndex to 1
-            Set piColumnSpan to 10
+            Set piColumnSpan to 1
             Set psCaption to "Cancel"
-            Set psCSSClass to "ftbtn ftg-close"
+            Set psCSSClass to "ftbtn ftbtn-fit ftg-close"
 
             Procedure OnButtonClick
                 Send FTAnswer False
@@ -114,10 +116,10 @@ Object oFTInputBox is a cFTModalPanel
 
         Object oIbYesBtn is a cFTWebButton
             Set piRowIndex to 3
-            Set piColumnIndex to 11
-            Set piColumnSpan to 10
+            Set piColumnIndex to 2
+            Set piColumnSpan to 1
             Set psCaption to "OK"
-            Set psCSSClass to "ftbtn ftbtn-primary ftg-check"
+            Set psCSSClass to "ftbtn ftbtn-primary ftbtn-fit ftg-check"
 
             // The field's text is current here, in the web event - the relay runs OnButtonClick after it.
             Procedure OnClick
