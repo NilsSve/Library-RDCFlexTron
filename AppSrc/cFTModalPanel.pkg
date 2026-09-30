@@ -13,6 +13,7 @@
 //               behaviour, so this file cannot drift from it.
 //               FlexTron dialogs declare 'is a cFTModalPanel'; non-FlexTron dialogs keep the plain class.
 //               It fits one web host to itself, above its status bar (phoClientHost), as cFTPanel does.
+//               Since 0.9.5 it colours its native children too (FTColorChildren, pbFTColorChildren).
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -53,6 +54,19 @@ Class cFTModalPanel is a cRDCModalPanel
         // The status bar's height, in dialog units: the host ends this far above the panel's bottom edge.
         { DesignTime=False }
         Property Integer piStatusBarUnits 20
+        // The native children in the FT colours too - FTColorChildren, below. False for a dialog whose children
+        // keep colours of their own, such as a colour swatch whose Color is the colour it shows.
+        Property Boolean pbFTColorChildren True
+    End_Procedure
+
+    /* THE CHILDREN'S COLOURS: the FT ground and ink on every native child - a TextBox, a Form, a CheckBox, a
+       TreeView - which would otherwise keep the framework's pale defaults on the FT ground. Broadcast Recursive
+       reaches the descendants, not the panel itself, whose ground Construct_Object sets; a web control ignores
+       both Sets. It runs after construction and again in ApplyFTTheme, so a dialog built before the theme was
+       read takes it too. Until 0.9.5 each FT dialog did this in its own End_Construct_Object, once. */
+    Procedure FTColorChildren
+        Broadcast Recursive Set Color     to (FTWebBg())
+        Broadcast Recursive Set TextColor to (FTThemeInk())
     End_Procedure
 
     // The base's End_Construct_Object builds oDialogCommandbar > oStatusBar and stores the
@@ -65,16 +79,20 @@ Class cFTModalPanel is a cRDCModalPanel
         Get phoDialogCommandbar to hoStatusBar
         If (hoStatusBar <> 0) ;
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+        If (pbFTColorChildren(Self)) ;
+            Send FTColorChildren
     End_Procedure
 
     // The theme again, for a dialog built before it was known: the seed sends this as soon as it has read
-    // the theme - before the dialog is shown (FTThemeLateObjects).
+    // the theme - before the dialog is shown (FTThemeLateObjects). The children's colours with it.
     Procedure ApplyFTTheme
         Handle hoStatusBar
         Set Color to (FTWebBg())
         Get phoDialogCommandbar to hoStatusBar
         If (hoStatusBar <> 0) ;
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+        If (pbFTColorChildren(Self)) ;
+            Send FTColorChildren
     End_Procedure
 
     /* PLACEHOST fits phoClientHost to the panel when it is shown and on every resize: from the host's own

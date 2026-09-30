@@ -12,6 +12,7 @@
 //               A thin SUBCLASS rather than a copy: the library class stays the single source of the panel
 //               behaviour, so this file cannot drift from it.
 //               FlexTron dialogs declare 'is a cFTDbModalPanel'; non-FlexTron dialogs keep the plain class.
+//               Since 0.9.5 it colours its native children too (FTColorChildren, pbFTColorChildren).
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -47,6 +48,19 @@ Class cFTDbModalPanel is a cRDCDbModalPanel
         // DataFlex's own Default.ico, unless the dialog names an icon of its own. After the Forward: the
         // base creates the property its Set Icon keeps the name in, and applies it again in Page.
         Set Icon to "Default.ico"
+        // The native children in the FT colours too - FTColorChildren, below. False for a dialog whose children
+        // keep colours of their own, such as a colour swatch whose Color is the colour it shows.
+        Property Boolean pbFTColorChildren True
+    End_Procedure
+
+    /* THE CHILDREN'S COLOURS: the FT ground and ink on every native child - a TextBox, a Form, a CheckBox, a
+       TreeView - which would otherwise keep the framework's pale defaults on the FT ground. Broadcast Recursive
+       reaches the descendants, not the panel itself, whose ground Construct_Object sets; a web control ignores
+       both Sets. It runs after construction and again in ApplyFTTheme, so a dialog built before the theme was
+       read takes it too. Until 0.9.5 each FT dialog did this in its own End_Construct_Object, once. */
+    Procedure FTColorChildren
+        Broadcast Recursive Set Color     to (FTWebBg())
+        Broadcast Recursive Set TextColor to (FTThemeInk())
     End_Procedure
 
     // The base's End_Construct_Object builds oDialogCommandbar > oStatusBar and stores the
@@ -59,16 +73,20 @@ Class cFTDbModalPanel is a cRDCDbModalPanel
         Get phoDialogCommandbar to hoStatusBar
         If (hoStatusBar <> 0) ;
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+        If (pbFTColorChildren(Self)) ;
+            Send FTColorChildren
     End_Procedure
 
     // The theme again, for a dialog built before it was known: the seed sends this as soon as it has read
-    // the theme - before the dialog is shown (FTThemeLateObjects).
+    // the theme - before the dialog is shown (FTThemeLateObjects). The children's colours with it.
     Procedure ApplyFTTheme
         Handle hoStatusBar
         Set Color to (FTWebBg())
         Get phoDialogCommandbar to hoStatusBar
         If (hoStatusBar <> 0) ;
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
+        If (pbFTColorChildren(Self)) ;
+            Send FTColorChildren
     End_Procedure
 
 End_Class

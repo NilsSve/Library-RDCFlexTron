@@ -1,0 +1,60 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTCheckBoxCaption
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-30
+//
+// Description : The caption of a native check box on an FT panel, as a TextBox beside the box: readable in
+//               the FT colours, and a click on it ticks the box.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+
+/* WHY A CHECK BOX NEEDS ONE. The FT panels give their native children the FT ground and ink
+   (cFTModalPanel's FTColorChildren), and a TextBox draws its label in that ink. A CheckBox draws its own
+   caption in the Windows theme's colour, whatever its TextColor says - dark text on the dark ground. So the
+   check box gets no caption of its own, and this TextBox beside it carries it:
+
+       Object oPadded_cb is a CheckBox
+           Set Size to 10 10
+           Set Location to 42 11
+       End_Object
+
+       Object oPadded_tb is a cFTCheckBoxCaption
+           Set Location to 43 22
+           Set Label to "Keep same width padded with spaces"
+           Set phoCheckBox to (oPadded_cb(Self))
+       End_Object
+
+   A click on the caption does what a click on the box does: the box takes the focus, flips and counts as
+   changed (Changed_State) - the way DataFlex's own AutoLabel hands a click on a form's label to the form. */
+Class cFTCheckBoxCaption is a TextBox
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // The check box this is the caption of.
+        { DesignTime=False }
+        Property Handle phoCheckBox 0
+    End_Procedure
+
+    Procedure Mouse_Down
+        Handle hoBox
+        Get phoCheckBox to hoBox
+        If (hoBox = 0 or not(Enabled_State(hoBox))) Begin
+            Forward Send Mouse_Down
+            Procedure_Return
+        End
+        Send Activate of hoBox
+        Set Checked_State of hoBox to (not(Checked_State(hoBox)))
+        Set Changed_State of hoBox to True
+    End_Procedure
+
+    // A caption holds nothing to save. A dialog's Broadcast Recursive Request_Save must stop here rather than
+    // pass up to a data-aware parent - a group or a panel - that would save its DD again.
+    Procedure Request_Save
+    End_Procedure
+
+End_Class
