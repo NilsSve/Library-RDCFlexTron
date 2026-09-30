@@ -1,0 +1,32 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTDbGridHost
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-09-30
+//
+// Description : The data-aware twin of cFTGridHost: a cFTDbLocalWebControlHost laid out on the same grid of
+//               8 px columns, for a dialog whose web fields are bound to a DD (Entry_Item).
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTDbLocalWebControlHost.pkg
+
+/* THE GRID HOST FOR BOUND FIELDS. cFTGridHost.pkg says how the grid works: 8 px columns, a control's span is
+   its width, and one column and one row take the extra space. This is the same grid on the data-aware host,
+   the one a DD-bound cWebForm needs. cFTDbLocalWebControlHost cannot derive from cFTLocalWebControlHost (its
+   header says why), so this cannot derive from cFTGridHost either - hence two classes with the same three
+   defaults. A host whose fields are bound to nothing, or that holds only buttons, is a cFTGridHost. */
+{ OverrideProperty=peLayoutType InitialValue=ltGrid }
+{ OverrideProperty=psDefaultColumnWidth InitialValue="8px" }
+{ OverrideProperty=psDefaultRowHeight InitialValue="minmax(var(--ft-row, 33px), max-content)" }
+Class cFTDbGridHost is a cFTDbLocalWebControlHost
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        Set peLayoutType to ltGrid
+        Set psDefaultColumnWidth to "8px"
+        Set psDefaultRowHeight to "minmax(var(--ft-row, 33px), max-content)"
+    End_Procedure
+End_Class
