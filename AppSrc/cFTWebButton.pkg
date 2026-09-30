@@ -6,7 +6,8 @@
 // Created     : 2026-06-17
 //
 // Description : FlexTron (FT) subclass of cWebButton: the FT look, a glyph and the caption's font as
-//               properties, a main-action variant, and a click whose work runs after the web event
+//               properties, a main-action variant - the glyph, the variant and classes of your own
+//               changeable while the program runs - and a click whose work runs after the web event
 //               has returned. FT twin files are the privacy boundary between the classic and FT
 //               builds - never merge them.
 //
@@ -156,6 +157,27 @@ Class cFTWebButton is a cWebButton
         Function_Return sList
     End_Function
 
+    // Is the button's page up? The host's pbInitWebApp is True until the page's first call home (and again
+    // from a navigation - cFTThemeHost_mixin); a WebSet before then has nowhere to go.
+    Function FTPageIsUp Returns Boolean
+        Handle hoHost
+        Boolean bInit
+        Get Owner to hoHost
+        If (hoHost = 0) ;
+            Function_Return False
+        Get pbInitWebApp of hoHost to bInit
+        Function_Return (not(bInit))
+    End_Function
+
+    // The class list, applied: stored for a page that loads (Set) and pushed to a page that is up (WebSet).
+    Procedure FTApplyClasses
+        String sList
+        Move (FTClassList(Self)) to sList
+        Set psCSSClass to sList
+        If (FTPageIsUp(Self)) ;
+            WebSet psCSSClass to sList
+    End_Procedure
+
     Procedure End_Construct_Object
         String sGlyph sToken sOwn
         String[] asClasses
@@ -196,20 +218,50 @@ Class cFTWebButton is a cWebButton
             Get Create of Desktop (RefClass(cFTClickRelay)) to ghoFTClickRelay
     End_Procedure
 
-    // A new glyph while the program runs - the object body's psGlyph is read only when it is built. A
-    // DashIcon name becomes its ftg- class, an image file goes to the client as markup, "" is none.
+    /* CHANGING THE LOOK WHILE THE PROGRAM RUNS (0.9.8, 2026-09-30). psGlyph and pbPrimary are read when the
+       object is built; UpdateGlyph, UpdatePrimary and UpdateClasses change the glyph, the main action's amber
+       and the object's own classes later - DFRefactor's Test Compile bar moves its amber "next step" from
+       button to button as a compile, an analyze and a fix plan go by, and shows its Analyze Source in a teal
+       class of its own. Each stores what it sets for a page that loads and pushes it to a page that is up
+       (FTApplyClasses), so it can be sent at any time - before the page has called home too. */
+
+    // A new glyph - the object body's psGlyph is read only when it is built. A DashIcon name becomes its ftg-
+    // class, an image file goes to the client as markup, "" is none.
     Procedure UpdateGlyph String sGlyph
+        String sGlyphHtml
         Move (Trim(sGlyph)) to sGlyph
         Set psGlyph to sGlyph
         If (Pos(".", sGlyph) > 0) Begin
             Set psFTGlyphClass to ""
-            WebSet psGlyphHtml to (FTGlyphHtml(sGlyph))
+            Move (FTGlyphHtml(sGlyph)) to sGlyphHtml
         End
         Else Begin
             Set psFTGlyphClass to (If(sGlyph = "", "", "ftg-" + sGlyph))
-            WebSet psGlyphHtml to ""
+            Move "" to sGlyphHtml
         End
-        WebSet psCSSClass to (FTClassList(Self))
+        Set psGlyphHtml to sGlyphHtml
+        If (FTPageIsUp(Self)) ;
+            WebSet psGlyphHtml to sGlyphHtml
+        Send FTApplyClasses
+    End_Procedure
+
+    // The main action's amber on or off. Only a change is applied.
+    Procedure UpdatePrimary Boolean bPrimary
+        If (pbPrimary(Self) = bPrimary) ;
+            Procedure_Return
+        Set pbPrimary to bPrimary
+        Send FTApplyClasses
+    End_Procedure
+
+    // The object's own classes - a variant of the look, say - in place of the ones it has, the ones it was
+    // built with first; "" = none. Its own only: the FT look, the amber and the glyph stay as they are (use
+    // UpdatePrimary and UpdateGlyph for those). Only a change is applied.
+    Procedure UpdateClasses String sClasses
+        Move (Trim(sClasses)) to sClasses
+        If (psFTOwnClasses(Self) = sClasses) ;
+            Procedure_Return
+        Set psFTOwnClasses to sClasses
+        Send FTApplyClasses
     End_Procedure
 
     /* The framework's click, inside the WebView2 event. It only hands the button to the relay, so put
