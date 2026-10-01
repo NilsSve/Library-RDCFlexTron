@@ -1,0 +1,92 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTRadioGroup
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-01
+//
+// Description : A RadioGroup whose caption is readable on an FT panel: the caption is a TextBox laid
+//               over the frame's top line (cFTGroupCaption), where the group box drew its own.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+
+/* WHY. A group box draws its own caption in the Windows theme's colour, whatever its TextColor says -
+   dark text on the dark ground, as a check box's and a radio's captions are (cFTCheckBoxCaption,
+   cFTRadioCaption). A TextBox draws its text in the FT ink, and its background - the FT ground - covers
+   the frame line behind it. So a TextBox where the caption was reads as the caption. */
+
+/* The caption cFTRadioGroup lays over its frame. A plain Group can use it as well: Label "" on the group,
+   and this as a child of it with the caption as its Label. It sits where Windows draws a group box's
+   caption - at the top, a little in from the left end of the line - with a space either side of the text,
+   as Windows leaves a gap between the line and the caption. */
+Class cFTGroupCaption is a TextBox
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set Location to 0 6
+    End_Procedure
+
+    Procedure Set Label String sLabel
+        Forward Set Label to (" " + sLabel + " ")
+    End_Procedure
+
+    // A caption holds nothing to save. A dialog's Broadcast Recursive Request_Save must stop here rather than
+    // pass up to a data-aware parent - a group or a panel - that would save its DD again.
+    Procedure Request_Save
+    End_Procedure
+
+End_Class
+
+/* A RadioGroup whose caption the FT colours reach. Set its Label as on any group, in the object body:
+
+       Object oDirectionGrp is a cFTRadioGroup
+           Set Size to 45 65
+           Set Location to 24 140
+           Set Label to "Direction"
+           ...
+       End_Object
+
+   Once the group is built, the Label moves into a cFTGroupCaption and the group box itself shows none. A
+   Label set later goes to the same caption. Get Label then answers "", since the group box's own label is
+   empty; the runtime may read that one itself, so it is not overridden. */
+Class cFTRadioGroup is a RadioGroup
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // The caption; 0 until End_Construct_Object makes it.
+        { Visibility=Private }
+        Property Handle private.phoFTCaption 0
+    End_Procedure
+
+    Procedure End_Construct_Object
+        String sLabel
+        Handle hoCaption
+        Forward Send End_Construct_Object
+        Get Label to sLabel
+        If (sLabel = "") Begin
+            Procedure_Return
+        End
+        Set Label to ""     // the group box shows none - phoFTCaption is still 0, so Set Label passes it on
+        Object oFTGroupCaption is a cFTGroupCaption
+            Set Label to sLabel
+            Move Self to hoCaption
+        End_Object
+        Set private.phoFTCaption to hoCaption
+    End_Procedure
+
+    // Once the caption is made, a new Label goes to it rather than to the group box.
+    Procedure Set Label String sLabel
+        Handle hoCaption
+        Get private.phoFTCaption to hoCaption
+        If (hoCaption = 0) Begin
+            Forward Set Label to sLabel
+        End
+        Else Begin
+            Set Label of hoCaption to sLabel
+        End
+    End_Procedure
+
+End_Class
