@@ -1,0 +1,75 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTRadioCaption
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-01
+//
+// Description : The caption of a native radio button on an FT panel, as a TextBox beside the radio:
+//               readable in the FT colours, and a click on it selects the radio.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+
+/* WHY A RADIO NEEDS ONE - the check box's reason (cFTCheckBoxCaption.pkg). A Radio draws its own caption
+   in the Windows theme's colour, whatever its TextColor says - dark text on the dark ground. So the radio
+   gets no caption of its own, and this TextBox beside it, in the same group, carries it:
+
+       Object oDirectionGrp is a RadioGroup
+           Set Size to 45 65
+           Set Location to 24 140
+           Set Label to "Direction"
+
+           Object oUpRadio is a Radio
+               Set Size to 10 10
+               Set Location to 14 10
+           End_Object
+
+           Object oUp_tb is a cFTRadioCaption
+               Set Location to 15 21
+               Set Label to "Up"
+               Set phoRadio to (oUpRadio(Self))
+           End_Object
+
+           // oDownRadio and oDown_tb the same way, one row lower
+       End_Object
+
+   A click on the caption does what a click on the radio does: the radio is selected, the one that was on
+   goes off, the radio takes the focus, and the group counts as changed (Changed_State) if the choice
+   moved. A check box's caption cannot do this: it flips its box, and a radio that is on must stay on. */
+Class cFTRadioCaption is a TextBox
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // The radio this is the caption of.
+        { DesignTime=False }
+        Property Handle phoRadio 0
+    End_Procedure
+
+    /* The radio's group is its parent, as DataFlex's Radio class takes it to be. The group's
+       Current_Radio_Object selects the radio, clears the one that was on and sends the group's
+       Notify_Select_State. Then the focus: a radio's Activate passes to its group, which activates its
+       current radio - the one just selected. */
+    Procedure Mouse_Down
+        Handle hoRadio hoGroup
+        Get phoRadio to hoRadio
+        If (hoRadio = 0 or not(Enabled_State(hoRadio))) Begin
+            Forward Send Mouse_Down
+            Procedure_Return
+        End
+        Get Parent of hoRadio to hoGroup
+        If (Current_Radio_Object(hoGroup) <> hoRadio) Begin
+            Set Current_Radio_Object of hoGroup to hoRadio
+            Set Changed_State of hoGroup to True
+        End
+        Send Activate of hoRadio
+    End_Procedure
+
+    // A caption holds nothing to save. A dialog's Broadcast Recursive Request_Save must stop here rather than
+    // pass up to a data-aware parent - a group or a panel - that would save its DD again.
+    Procedure Request_Save
+    End_Procedure
+
+End_Class
