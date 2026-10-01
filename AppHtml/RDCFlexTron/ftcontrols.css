@@ -1,6 +1,6 @@
 /* RDCFlexTron - the FT look for the library's real web controls: cFTWebButton, the form controls
    (FtCompact), cFTWebList, cFTHtmlPage, FTMessageBox's text and the accent label - and cFTGridHost's rows,
-   and the stand-ins the Studio's Designer draws for content built at run time (.ftph and .ftph-*).
+   and the mockups the Studio's Designer draws for content built at run time (.ftph and .ftph-*).
 
    Every FT host page links this sheet, with palette.css for its --dfr-* tokens, after the Web UI
    theme (cFTThemeHost_mixin, OnDefineScriptIncludes) - so the tokens are there even on a host that
@@ -256,7 +256,7 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
     height: 32px;
 }
 
-/* The Designer's stand-in for a page body built at run time (cFTHtmlPage's class default psHtml, an empty
+/* The Designer's mockup of a page body built at run time (cFTHtmlPage's class default psHtml, an empty
    .ftph - the Designer never runs the code that builds the real one). The Lorem ipsum lives here, where no
    meta-tag limits its length: twenty-four paragraphs, a blank line (\A\A) between them - about 900 px of
    text on a page 1900 px wide, more on a narrower one, so it fills even a maximised full-HD page. */
@@ -295,7 +295,7 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
         "Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui.";
 }
 
-/* STAND-INS FOR THE STUDIO'S DESIGNER (0.9.7). The Designer runs none of the program's code, so a box whose content
+/* MOCKUPS FOR THE STUDIO'S DESIGNER (0.9.7). The Designer runs none of the program's code, so a box whose content
    is built when the program runs shows nothing there: it draws the LAST literal psHtml in the object body, and an
    expression leaves the box blank. These rules draw the SHAPE of such content from one short literal instead, the
    way .ftph above draws Lorem ipsum:
@@ -305,7 +305,7 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
    Captions are <b> children; numbers are custom properties in the element's style, "--rows:5". A shape is the
    palette's --dfr-line-strong seen through a mask - an SVG tile of bars and lines, repeated - so it follows the
    theme. The program shows the literal too, until it sets the real content: set that in End_Construct_Object, or
-   when the dialog opens, and the stand-in is only ever seen in the Designer. In a page (cFTHtmlPage) the shapes keep
+   when the dialog opens, and the mockup is only ever seen in the Designer. In a page (cFTHtmlPage) the shapes keep
    the title's inset. */
 .WebControl.WebHtmlBox.ftpage .ftph-grid,
 .WebControl.WebHtmlBox.ftpage .ftph-list,

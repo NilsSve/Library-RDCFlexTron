@@ -15,7 +15,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `cFTLocalWebControlHost.pkg`, `cFTDbLocalWebControlHost.pkg` | FlexTron hosts that take the theme (`cFTThemeHost_mixin.pkg` is their shared part) |
 | `cFTWebCheckbox`, `cFTWebCombo`, `cFTWebForm`, `cFTWebLabel`, `cFTWebHtmlBox` | the web controls. The first four wear the FT look - the class `FtCompact` (`ftcontrols.css`): the FT text size, in the palette's colours - and the Studio's Designer draws them in it too. `cFTWebCombo` is 20 columns wide unless it says otherwise: 160 px on a grid host of 8 px columns. `cFTWebHtmlBox` has `pbServerOnClick` True: a click on an element marked `data-ServerOnClick` reaches its `OnClick`, and a click anywhere else sends nothing |
 | `cFTWebButton.pkg` | the web button, in the FT look: a glyph (a `DashIcon` name, drawn by its `ftg-` class, or an image file), `psFontFamily` / `piFontSize` / `pbBold`, `pbPrimary` for the main action, and `OnButtonClick`, which runs after the web click has returned - so it can open or close a panel. While the program runs, `UpdateGlyph`, `UpdatePrimary` and `UpdateClasses` change its glyph, the main action's amber and classes of your own - at any time, before its page is up too. It is 10 columns wide unless it says otherwise: 80 px on a grid host of 8 px columns. The Studio's Designer draws it, and its glyph when the object names it as a class: `Set psCSSClass to "ftbtn ftg-exit"` (`psGlyph` shows only when the program runs) |
-| `cFTHtmlPage.pkg` | a `cFTWebHtmlBox` that holds a whole page: its title on top is `psLabel`, and the picture beside it `psTitleIcon` - a `DashIcon` glyph name (drawn by its `ftg-` class; default `filetext`) or an image file. The Studio's Designer shows the title and its glyph, and Lorem ipsum for a body built at run time - with nothing to add - or, from one short literal, the shape of a grid, a list, a tree and more ([Stand-ins for the Studio's Designer](#stand-ins-for-the-studios-designer)) |
+| `cFTHtmlPage.pkg` | a `cFTWebHtmlBox` that holds a whole page: its title on top is `psLabel`, and the picture beside it `psTitleIcon` - a `DashIcon` glyph name (drawn by its `ftg-` class; default `filetext`) or an image file. The Studio's Designer shows the title and its glyph, and Lorem ipsum for a body built at run time - with nothing to add - or, from one short literal, the shape of a grid, a list, a tree and more ([Mockups for the Studio's Designer](#mockups-for-the-studios-designer)) |
 | `cFTWebList.pkg` | the web list, in the look of the FT tables: rows from code (`pbDataAware False`, `OnManualLoadData`) that it asks for itself when the page first draws it, `RefreshRows` for new rows while the program runs, and columns that are fixed (`pbFixedWidth`: `piWidth` in pixels) or share the rest - as in a Windows grid. The Studio's Designer draws it with its columns |
 | `cFTApplication.pkg` | the application object of an FT program: it reads the saved theme choice as soon as it is built, and `SwitchTheme` saves a new choice and starts the program again in it. `FTThemeName` names a theme mode in words |
 | `cFTPanel.pkg` | a program's main window: a `Panel` in the theme's colour, which fits one web host to its client area (`phoClientHost`) |
@@ -35,7 +35,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant; `FTGlyphNames` returns all their names, your own glyphs' too, for a combo or a list to choose from |
 | `FTAppGlyphs.pkg` | your application's own glyphs: SVG files in `AppHtml\FTGlyphs`, drawn like the library's by `DashIcon`, `psGlyph` and `psTitleIcon` - see [Your own glyphs](#your-own-glyphs) |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
-| `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls and the Designer's stand-ins, and `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated); installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last three itself |
+| `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls and the Designer's mockups, and `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated); installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last three itself |
 
 ## Using it
 
@@ -88,15 +88,15 @@ a version, so the range above cannot accept it.
   (`"FtCompact ftaccent"`). A `cFTWebList` shows its columns there, in the FT look. A `cFTHtmlPage`
   needs nothing: the Designer shows its title (`psLabel`), its glyph (the class default, or one named in
   `psCSSClass`, `"ftpage ftg-listcheck"`) and Lorem ipsum for a body built at run time - or one of the
-  [stand-ins](#stand-ins-for-the-studios-designer), for a body that is a grid or a list. An image file in
+  [mockups](#mockups-for-the-studios-designer), for a body that is a grid or a list. An image file in
   `psTitleIcon` shows only when the program runs; a picture of your own that the Designer shows too is a
   glyph of your own ([Your own glyphs](#your-own-glyphs)), named in `psCSSClass`: `"ftpage ftg-logo"`.
 - DataFlex 26 only.
 
-## Stand-ins for the Studio's Designer
+## Mockups for the Studio's Designer
 
 The Designer runs none of a program's code, so a page or an HTML box whose content is built when the program runs
-shows nothing there. `ftcontrols.css` draws a stand-in instead - the shape of the content, not the content - from one
+shows nothing there. `ftcontrols.css` draws a mockup instead - the shape of the content, not the content - from one
 short literal in the object's body. Captions are `<b>` elements, and numbers are custom properties in the element's
 `style`:
 
@@ -110,13 +110,13 @@ short literal in the object's body. Captions are `<b>` elements, and numbers are
 | `<div class="ftph-cards"><b>Workspace</b><b>Libraries</b></div>` | a card for each caption |
 | `<div class="ftph"></div>` | paragraphs of Lorem ipsum - a `cFTHtmlPage` shows it without a literal of its own |
 
-For example, `Set psHtml to '<div class="ftph-list" style="--rows:5"></div>'`. In a page the stand-ins keep the
+For example, `Set psHtml to '<div class="ftph-list" style="--rows:5"></div>'`. In a page the mockups keep the
 title's inset, and they are drawn in the palette's colours, so they follow the theme.
 
 The literal is also the box's content when the program starts. Set the real content before the page is shown - in
-`End_Construct_Object`, or when the dialog opens - and the stand-in is only ever seen in the Designer. Keep that code
+`End_Construct_Object`, or when the dialog opens - and the mockup is only ever seen in the Designer. Keep that code
 out of the object's body: the Designer draws the LAST `psHtml` there, and one it cannot read - an expression - leaves
-the box blank. Demo-RDCFlexTron's "Designer stand-ins" dialog shows them all.
+the box blank. Demo-RDCFlexTron's "Designer mockups" button shows them all.
 
 ## Your own glyphs
 

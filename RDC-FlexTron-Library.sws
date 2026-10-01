@@ -27,7 +27,7 @@
         ],
         "license": "MIT",
         "licenseFile": "LICENSE",
-        "version": "0.9.11"
+        "version": "0.9.12"
     },
     "workspaceName": "RDCFlexTron"
 }
