@@ -29,6 +29,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTMessageBox.pkg`, `FTMessageBox.dg` | `FTInfoBox`, `FTStopBox` and `FTYesNoBox`: `Info_Box`, `Stop_Box` and `YesNo_Box` in the FT look, with the same arguments and return values - the caption as the page's title, beside the glyph of its kind. `FTHtmlMessage` shows a message written in HTML - paragraphs, bold, code samples - with your own button captions ("Rename now" / "Not now"), and returns True for the first. Use the dialog anywhere, above the application object too. Before the application object exists they show Windows' own box |
 | `FTInputBox.pkg`, `FTInputBox.dg` | `FTInputBox`: the message box with one field to type in - a message written in HTML, the field's label and starting text, and your own button captions; it returns True for the first button (or Enter in the field) and hands back what was typed. Windows has no box that asks for text, so before the application object exists it answers False |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
+| `cFTCJSelectionGrid.pkg`, `cFTDbCJGrid.pkg` | RDCToolsLib's selection grid (`cRDCCJSelectionGrid`, a checkbox column to tick rows with) and data-aware grid (`cRDCDbCJGrid`) in the FT look: small dots between the rows; the data-aware one in the CodeJock theme's own colours, with a header click that selects the column and a multiple selection. The behaviour is the library's: the row saved the moment its tick changes, `IsSelectableItem` for rows Select All must leave alone, the tooltip from the program's tooltip controller |
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the colours, and where the theme choice is saved; the whole HTML tags the markup builders go with (`CS_DivEnd`, `CS_CodeOpen`, `CS_BulletItemEnd`, `CS_Br` ...), the named characters (`CS_EmDash`, `CS_Nbsp`, `CS_Check` ...) and the links to the library's style sheets (`CS_PaletteCssLink`, `CS_PageFitCssLink`, `CS_PillsCssLink`) |
 | `FTThemeColors.pkg` | native colours that follow the theme, and `FTColorPanel`: those colours on a native panel and everything inside it - a progress panel, say, which paints none of its own. Send it once the panel exists and the theme is read |
@@ -50,7 +51,7 @@ Add the dependency to your workspace:
 }
 ```
 
-It brings in RDCToolsLib 1.0.1 or later (`^1.0.1`, matched against RDCToolsLib's version tags) and
+It brings in RDCToolsLib 1.0.2 or later (`^1.0.2`, matched against RDCToolsLib's version tags) and
 `DataFlex-dev/Web UI FlexTron` 1.0.52 or later (`^1.0.52`); for both, any later 1.x will do. Add a Web UI
 theme package (for example `DataFlex-dev/Web UI Material Theme`) for the web controls themselves.
 
@@ -58,7 +59,7 @@ If your workspace pins its own Web UI FlexTron or RDCToolsLib version, list it B
 df-cli 1.0.0 settles the requirements in list order: whichever comes first installs its version, and a
 later one must accept it. Listed after this package, an older exact pin finds the newest 1.x already
 installed, and the workspace reports "installed version ... does not satisfy" ("Incompatible ref" for
-RDCToolsLib). Pin RDCToolsLib by its version tag, such as `"1.0.1"`, never by a commit: a commit is not
+RDCToolsLib). Pin RDCToolsLib by its version tag, such as `"1.0.2"`, never by a commit: a commit is not
 a version, so the range above cannot accept it.
 
 - **The application object** is a `cFTApplication`: it reads the theme choice as soon as it is built

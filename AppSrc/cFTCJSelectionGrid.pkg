@@ -1,0 +1,31 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTCJSelectionGrid
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-07 (DFRefactor carried a copy of the library class from 2026-06)
+//
+// Description : RDCToolsLib's selection grid - a checkbox column to tick rows with - in the FlexTron
+//               (FT) look: small dots between the rows, and the focused cell in white on grey. A thin
+//               subclass; the behaviour is the library's (cRDCCJSelectionGrid, 1.0.2 or later).
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cRDCCJSelectionGrid.pkg
+
+Class cFTCJSelectionGrid is a cRDCCJSelectionGrid
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peHorizontalGridStyle to xtpGridSmallDots
+    End_Procedure
+
+    // The library's colours, and the focused cell in white on grey.
+    Procedure SetGridLook
+        Forward Send SetGridLook
+        Set piFocusCellForeColor to clWhite
+        Set piFocusCellBackColor to clGrayText
+    End_Procedure
+
+End_Class

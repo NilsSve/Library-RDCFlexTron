@@ -1,0 +1,37 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTDbCJGrid
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-07 (DFRefactor carried a copy of the library class from 2026-06)
+//
+// Description : RDCToolsLib's data-aware grid in the FlexTron (FT) look: small dots between the rows,
+//               the CodeJock theme's own colours and theme (the library paints its light-theme ones), a
+//               header click that selects the column, and a multiple selection. A thin subclass; the
+//               behaviour is the library's (cRDCDbCJGrid, 1.0.2 or later).
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cRDCDbCJGrid.pkg
+
+Class cFTDbCJGrid is a cRDCDbCJGrid
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peHorizontalGridStyle to xtpGridSmallDots
+        Set pbHeaderSelectsColumn to True
+        Set pbMultipleSelection   to True
+    End_Procedure
+
+    // The CodeJock theme's own colours and theme: only the alternate rows are turned on.
+    Procedure SetGridLook
+        Set pbUseAlternateRowBackgroundColor to True
+    End_Procedure
+
+    // A program's Clear may broadcast Request_Clear to every control in a client area; this grid has nothing
+    // to clear by it, as the other cFT controls answer.
+    Procedure Request_Clear
+    End_Procedure
+
+End_Class
