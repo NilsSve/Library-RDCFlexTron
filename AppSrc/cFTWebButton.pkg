@@ -6,10 +6,10 @@
 // Created     : 2026-06-17
 //
 // Description : FlexTron (FT) subclass of cWebButton: the FT look, a glyph and the caption's font as
-//               properties, a main-action variant - the glyph, the variant and classes of your own
-//               changeable while the program runs - and a click whose work runs after the web event
-//               has returned. FT twin files are the privacy boundary between the classic and FT
-//               builds - never merge them.
+//               properties, a main-action variant - the glyph, the variant, classes of your own, the
+//               caption, the enabled and shown states and the tooltip changeable while the program
+//               runs - and a click whose work runs after the web event has returned. FT twin files are
+//               the privacy boundary between the classic and FT builds - never merge them.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -262,6 +262,50 @@ Class cFTWebButton is a cWebButton
             Procedure_Return
         Set psFTOwnClasses to sClasses
         Send FTApplyClasses
+    End_Procedure
+
+    /* THE STATE TOO (0.9.13, 2026-10-07): the caption, whether the button can be pressed (pbEnabled), whether it is
+       shown at all (pbRender) and its tooltip, the same way - stored for a page that loads and pushed to a page that
+       is up, and only when the value is new, so a refresh that runs on every tick of an idle handler or a timer
+       pushes nothing while nothing changed. Until then every FT dialog of DFRefactor's had a setter of its own for
+       these. A change made outside a web event reaches the page on the host's next idle tick; Send CheckUpdateWebUI
+       of the host sends it now. */
+
+    // The caption.
+    Procedure UpdateCaption String sCaption
+        If (psCaption(Self) = sCaption) ;
+            Procedure_Return
+        Set psCaption to sCaption
+        If (FTPageIsUp(Self)) ;
+            WebSet psCaption to sCaption
+    End_Procedure
+
+    // Whether the button can be pressed. A shut button says why in its tooltip (UpdateToolTip).
+    Procedure UpdateEnabled Boolean bEnabled
+        If (pbEnabled(Self) = bEnabled) ;
+            Procedure_Return
+        Set pbEnabled to bEnabled
+        If (FTPageIsUp(Self)) ;
+            WebSet pbEnabled to bEnabled
+    End_Procedure
+
+    // Whether the button is shown at all. A hidden one leaves its columns empty, so the buttons that come and go
+    // sit last in their row.
+    Procedure UpdateRender Boolean bRender
+        If (pbRender(Self) = bRender) ;
+            Procedure_Return
+        Set pbRender to bRender
+        If (FTPageIsUp(Self)) ;
+            WebSet pbRender to bRender
+    End_Procedure
+
+    // The tooltip; "" is none.
+    Procedure UpdateToolTip String sToolTip
+        If (psToolTip(Self) = sToolTip) ;
+            Procedure_Return
+        Set psToolTip to sToolTip
+        If (FTPageIsUp(Self)) ;
+            WebSet psToolTip to sToolTip
     End_Procedure
 
     /* The framework's click, inside the WebView2 event. It only hands the button to the relay, so put

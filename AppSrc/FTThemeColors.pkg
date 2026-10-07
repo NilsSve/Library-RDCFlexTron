@@ -165,3 +165,20 @@ Procedure FTThemeLateObjects Global
         Send ApplyFTTheme of ahoLate[i]
     Loop
 End_Procedure
+
+/* A NATIVE PANEL IN THE THEME'S COLOURS - a progress or status panel, say, which paints no colours of its own and
+   so comes up in Windows' pale defaults among the FT windows. The view grey (FTViewBg) on the panel and on
+   everything inside it, with the ink: "Broadcast Recursive Set Color" reaches the DESCENDANTS only, and the
+   panel's own surface shows between its controls, so the panel gets a Set of its own as well. A Form inside - an
+   edit control defaults to clWindow, white, and ignores its parent - takes the colour from the broadcast. Native
+   buttons and progress bars draw themselves and ignore it. Send it once the panel exists and the theme has been
+   read - from OnStartup, where every object exists. Safe to send more than once; 0 does nothing. Until 0.9.13
+   DFRefactor coloured its status panel this way from a package of its own. */
+Procedure FTColorPanel Global Handle hoPanel
+    If (hoPanel = 0) ;
+        Procedure_Return
+    Set Color     of hoPanel to (FTViewBg())
+    Set TextColor of hoPanel to (FTThemeInk())
+    Broadcast Recursive Set Color     of hoPanel to (FTViewBg())
+    Broadcast Recursive Set TextColor of hoPanel to (FTThemeInk())
+End_Procedure
