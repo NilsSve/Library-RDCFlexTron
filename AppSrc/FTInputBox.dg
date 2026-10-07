@@ -140,8 +140,7 @@ Object oFTInputBox is a cFTModalPanel
 
     // Enter in the field: the first button's answer, after the web event has returned - the click relay.
     Procedure FTEnter
-        If (ghoFTClickRelay <> 0) ;
-            Send Relay of ghoFTClickRelay (oIbYesBtn(oIbHost(Self)))
+        Send Relay of (FTClickRelay()) (oIbYesBtn(oIbHost(Self)))
     End_Procedure
 
     /* What this showing says - stored, so a page that loads shows it, and pushed to a page that is up already:

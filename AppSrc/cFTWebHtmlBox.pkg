@@ -6,13 +6,15 @@
 // Created     : 2026-07-02
 //
 // Description : FlexTron (FT) subclass of cWebHtmlBox: theme-aware behaviour for the FT
-//               build. The HtmlBox renders in the FRAMEWORK DOM - style accordingly.
+//               build, and a click whose work runs after the web event has returned
+//               (OnHtmlClick). The HtmlBox renders in the FRAMEWORK DOM - style accordingly.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use cWebHtmlBox.pkg
 Use seq_chnl.pkg               // Seq_New_Channel - the design-time dump below
+Use cFTClickRelay.pkg          // the click relay - OnHtmlClick runs after the web event has returned
 
 // Drop-in for cWebHtmlBox that is marked NOT data-aware. The "Clear" toolbar button does
 // `Broadcast Recursive Send Request_Clear of (Client_Id(ghoCommandBars))` (DFRefactorFT.src), which reaches
@@ -79,6 +81,24 @@ Class cFTWebHtmlBox is a cWebHtmlBox
     End_Function
 
     Procedure Request_Clear
+    End_Procedure
+
+    /* THE CLICK'S WORK AFTER THE CLICK HAS ENDED (0.9.14). The framework's OnClick runs inside the WebView2
+       event, and a modal panel, a Close_Panel, a view activation or a file dialog from there faults (4410).
+       So OnClick hands the click to the relay (cFTClickRelay.pkg), and one tick later - after the event has
+       returned - OnHtmlClick runs with the same sId and sParam. An object that overrides OnClick itself runs
+       its code inside the click, as before: Forward it, or OnHtmlClick never runs. What must happen inside the
+       click - a grid read, which faults after it - stays in the override, before the Forward; the rest goes
+       in OnHtmlClick. Every FT dialog of DFRefactor's had a timer of its own for this until then. */
+    Procedure OnClick String sId String sParam
+        Forward Send OnClick sId sParam
+        Send RelayHtmlClick of (FTClickRelay()) Self sId sParam
+    End_Procedure
+
+    // The click's work, after the web event has returned: sId is the element's data-ServerOnClick value, sParam
+    // its data-OnClickParam.
+    { MethodType=Event }
+    Procedure OnHtmlClick String sId String sParam
     End_Procedure
 
     // The live push, gated on the host page actually being ALIVE. UpdateHtml is a ClientAction

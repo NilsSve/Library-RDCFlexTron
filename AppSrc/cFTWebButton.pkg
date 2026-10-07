@@ -14,8 +14,8 @@
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
-Use cTimer.pkg
 Use cWebButton.pkg
+Use cFTClickRelay.pkg            // the click relay - OnButtonClick runs after the web event has returned
 Use FTDashIcons.pkg              // DashIcon and the CS_Glyph* names
 Use FTMarkupBuilders.pkg         // ImgHtml
 
@@ -45,36 +45,8 @@ Use FTMarkupBuilders.pkg         // ImgHtml
    Set psCSSClass to "ftbtn ftg-exit" (ftglyphs.css, which application.css imports). When the program
    runs, a psGlyph NAME becomes that same class, so both spellings draw alike. */
 
-/* THE CLICK'S WORK WAITS FOR THE CLICK TO END. A web click is handled inside the WebView2 event, and
-   a modal panel, a Close_Panel or an Exit_Application sent from there faults (4410). So OnClick only
-   hands the button to this relay, and one tick of its timer later - after the event has returned -
-   the button's OnButtonClick runs. One relay serves every cFTWebButton and holds one pending click,
-   the way the FT dialogs' own timers always have. The first button creates it, under Desktop. */
-Class cFTClickRelay is a cTimer
-    Procedure Construct_Object
-        Forward Send Construct_Object
-        Property Handle phoPending 0
-        Set piTimeout to 1
-        Set pbEnabled to False
-    End_Procedure
-
-    Procedure Relay Handle hoButton
-        Set phoPending to hoButton
-        Set pbEnabled to True
-    End_Procedure
-
-    Procedure OnTimer
-        Handle hoButton
-        Set pbEnabled to False
-        Get phoPending to hoButton
-        Set phoPending to 0
-        If (hoButton <> 0) ;
-            Send OnButtonClick of hoButton
-    End_Procedure
-End_Class
-
-Global_Variable Handle ghoFTClickRelay
-Move 0 to ghoFTClickRelay
+/* THE CLICK'S WORK WAITS FOR THE CLICK TO END - cFTClickRelay.pkg: OnClick only hands the button to the
+   relay, and one tick later, after the web event has returned, OnButtonClick runs. */
 
 // The glyph's markup: an image file when the value has a "." (a path under AppHtml), otherwise a
 // DashIcon name - the same rule as cFTHtmlPage's psTitleIcon. "" = no glyph.
@@ -214,8 +186,6 @@ Class cFTWebButton is a cWebButton
                 Set psFTGlyphClass to ("ftg-" + sGlyph)
         End
         Set psCSSClass to (FTClassList(Self))
-        If (ghoFTClickRelay = 0) ;
-            Get Create of Desktop (RefClass(cFTClickRelay)) to ghoFTClickRelay
     End_Procedure
 
     /* CHANGING THE LOOK WHILE THE PROGRAM RUNS (0.9.8, 2026-09-30). psGlyph and pbPrimary are read when the
@@ -313,8 +283,7 @@ Class cFTWebButton is a cWebButton
        the click, as before this class had one - Forward it, or OnButtonClick never runs. */
     Procedure OnClick
         Forward Send OnClick
-        If (ghoFTClickRelay <> 0) ;
-            Send Relay of ghoFTClickRelay Self
+        Send Relay of (FTClickRelay()) Self
     End_Procedure
 
     // The button's work, after the web event has returned: a panel can open or close here.

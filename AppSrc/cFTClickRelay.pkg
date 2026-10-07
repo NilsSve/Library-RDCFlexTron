@@ -1,0 +1,82 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTClickRelay
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-07
+//
+// Description : The one relay behind cFTWebButton's OnButtonClick and cFTWebHtmlBox's OnHtmlClick: a
+//               click is handed to it inside the web event, and the click's work runs one tick later,
+//               after the event has returned. It lived in cFTWebButton.pkg until 0.9.13.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cTimer.pkg
+
+/* THE CLICK'S WORK WAITS FOR THE CLICK TO END. A web click is handled inside the WebView2 event, and
+   a modal panel, a Close_Panel, a view activation, a file dialog or an Exit_Application from there
+   faults (4410). So a button's OnClick, or an HTML box's, only hands the click to this relay, and one
+   tick of its timer later - after the event has returned - the button's OnButtonClick or the box's
+   OnHtmlClick runs. One relay serves every button and box and holds one pending click, the way the FT
+   dialogs' own timers always had. It is created under Desktop the first time a click needs it
+   (FTClickRelay, below). */
+Class cFTClickRelay is a cTimer
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Property Handle  phoPending 0
+        // The pending click is an HTML box's: OnHtmlClick with the id and the parameter, not OnButtonClick.
+        Property Boolean pbPendingHtml False
+        Property String  psPendingId ""
+        Property String  psPendingParam ""
+        Set piTimeout to 1
+        Set pbEnabled to False
+    End_Procedure
+
+    // A button's click: its OnButtonClick runs on the tick.
+    Procedure Relay Handle hoButton
+        Set phoPending to hoButton
+        Set pbPendingHtml to False
+        Set psPendingId to ""
+        Set psPendingParam to ""
+        Set pbEnabled to True
+    End_Procedure
+
+    // An HTML box's click: its OnHtmlClick sId sParam runs on the tick.
+    Procedure RelayHtmlClick Handle hoBox String sId String sParam
+        Set phoPending to hoBox
+        Set pbPendingHtml to True
+        Set psPendingId to sId
+        Set psPendingParam to sParam
+        Set pbEnabled to True
+    End_Procedure
+
+    // The tick. The relay is clear before the work runs, so the work may hand it a click of its own.
+    Procedure OnTimer
+        Handle hoObject
+        Boolean bHtml
+        String sId sParam
+        Set pbEnabled to False
+        Get phoPending to hoObject
+        Get pbPendingHtml to bHtml
+        Get psPendingId to sId
+        Get psPendingParam to sParam
+        Set phoPending to 0
+        If (hoObject = 0) ;
+            Procedure_Return
+        If (bHtml) ;
+            Send OnHtmlClick of hoObject sId sParam
+        Else ;
+            Send OnButtonClick of hoObject
+    End_Procedure
+End_Class
+
+Global_Variable Handle ghoFTClickRelay
+Move 0 to ghoFTClickRelay
+
+// The one relay, created under Desktop the first time a click needs it.
+Function FTClickRelay Global Returns Handle
+    If (ghoFTClickRelay = 0) ;
+        Get Create of Desktop (RefClass(cFTClickRelay)) to ghoFTClickRelay
+    Function_Return ghoFTClickRelay
+End_Function
