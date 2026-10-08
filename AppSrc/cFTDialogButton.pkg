@@ -1,0 +1,34 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTDialogButton
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-08
+//
+// Description : A button of a dialog built by its class - cFTAboutDialog, cFTSystemInfoDialog - whose host
+//               is the dialog's child: its click reaches the dialog's OnDialogButton with piDialogAction,
+//               after the web click has returned, where a panel can open or close. A child object a class
+//               builds in Construct_Object carries no methods of its own (the compiler's rule), so the
+//               click's meaning is a property, not code.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTLocalWebControlHost.pkg      // a web control needs a host Used before it
+Use cFTWebButton.pkg
+
+Class cFTDialogButton is a cFTWebButton
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // What the dialog's OnDialogButton receives when this button is clicked; the dialog defines the values.
+        { Category=Behavior }
+        Property Integer piDialogAction 0
+    End_Procedure
+
+    // The dialog is the host's parent: Send it the action, after the web click has returned.
+    Procedure OnButtonClick
+        Send OnDialogButton of (Parent(Parent(Self))) (piDialogAction(Self))
+    End_Procedure
+
+End_Class

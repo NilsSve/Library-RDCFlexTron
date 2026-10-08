@@ -1,0 +1,40 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTShell
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-08
+//
+// Description : What an FT page hands to Windows: an address to the browser (FTOpenUrl) and text to the
+//               clipboard (FTSetClipboardText). The About and System information dialogs use both.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Seq_chnl.pkg                // Seq_New_Channel - the clipboard is written as a sequential channel
+
+// The browser opens the address, through the shell's handler for http and https; any other address is
+// refused, so a link a page carries can lead to a browser and nowhere else. A page's link is an element with
+// data-ServerOnClick="url" and the address in data-OnClickParam, handed on from the box's OnHtmlClick.
+Procedure FTOpenUrl Global String sUrl
+    String sLow
+
+    Move (Lowercase(Trim(sUrl))) to sLow
+    If ((Left(sLow, 8) <> "https://") and (Left(sLow, 7) <> "http://")) ;
+        Procedure_Return
+    Runprogram Shell Background (Trim(sUrl))
+End_Procedure
+
+// The text onto the Windows clipboard, as it is. DataFlex writes the clipboard as an output device, so this
+// takes a channel for a moment; when none is free nothing is copied, and nothing is said.
+Procedure FTSetClipboardText Global String sText
+    Integer iCh
+
+    Move (Seq_New_Channel()) to iCh
+    If (iCh < 0) ;
+        Procedure_Return
+    Direct_Output channel iCh "Clipboard:"
+    Write channel iCh sText
+    Close_Output channel iCh
+    Send Seq_Release_Channel iCh
+End_Procedure

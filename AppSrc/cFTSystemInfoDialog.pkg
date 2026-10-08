@@ -1,0 +1,182 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTSystemInfoDialog
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-08 (DFRefactor's SystemInfoFT.dg of 2026-10-06, as a class)
+//
+// Description : The System information dialog of an FT program, as a page: the facts the DFAbout library
+//               gathers (cAboutInfo.SysInfoLines - the licence, the database drivers, the runtime and the
+//               package versions, the workspace, the user and the machine, the memory), one row per line,
+//               with Copy and Close. cFTAboutDialog opens one behind its System information button; a
+//               program can declare one of its own as well.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTModalPanel.pkg
+Use cFTLocalWebControlHost.pkg      // a web control needs a host Used before it
+Use cFTGridHost.pkg                 // the host as a grid: the page over a row of buttons
+Use cFTHtmlPage.pkg                 // the page: its title and the glyph beside it, BodyHtml and RefreshBody
+Use cFTDialogButton.pkg             // the buttons: a click reaches OnDialogButton below
+Use FTMarkupBuilders.pkg            // StyleSheetLink, DivOpen, SpanOpen, FTHtmlEscape
+Use FTMessageBox.pkg                // FTInfoBox - Copy says it did
+Use FTShell.pkg                     // FTSetClipboardText
+Use DfAbout.pkg                     // cAboutInfo - SysInfoLines (RDC-DFAbout-Library 1.0.3 or later)
+
+// The buttons' actions, as OnDialogButton receives them.
+Define CI_FTSysInfoCopy  for 1
+Define CI_FTSysInfoClose for 2
+
+/* THE LINES AS ROWS: "label: value" is split at the FIRST colon-space into two columns, so a value that
+   carries one of its own (a path, "Version: 26.0" inside a driver line) stays whole; a line without one
+   spans both; an empty line is a gap between groups. Copy puts the lines on the clipboard as they are, for
+   a support mail. The look is ftabout.css (.si-*), installed with the library's sheets.
+
+   THE CHILDREN ARE THE CLASS'S, built in Construct_Object - the host, the page and the buttons - so an
+   object of this class sets nothing but its Label and Icon, and the Studio's Designer draws the panel
+   alone. A child object built there carries no methods of its own (the compiler's rule), so the page's
+   body is a class, cFTSysInfoPage below, and the buttons are cFTDialogButtons, whose click reaches
+   OnDialogButton here. DfAbout.pkg, Used above for cAboutInfo, wants the program's About text bound as
+   res_AboutFile before this Use: cFTAboutDialog.pkg says how. */
+
+// The page: one row per line, from the dialog's pasLines - the dialog is the host's parent.
+Class cFTSysInfoPage is a cFTHtmlPage
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psLabel to "System information"
+        Set psCSSClass to "ftpage ftg-cpu"
+        Set pbFillHeight to True
+    End_Procedure
+
+    // One line as a row. "label: value" is split at the FIRST colon-space, so a value that carries one of its
+    // own (a path, "Version: 26.0" inside a driver line) stays whole.
+    Function LineHtml String sLine Returns String
+        Integer iPos
+
+        If (Trim(sLine) = "") ;
+            Function_Return ((DivOpen("si-gap")) + CS_DivEnd)
+        Move (Pos(": ", sLine)) to iPos
+        If (iPos > 1) Begin
+            Function_Return ((DivOpen("si-row")) ;
+                + (SpanOpen("si-k")) + (FTHtmlEscape(Left(sLine, iPos))) + CS_SpanEnd ;
+                + (SpanOpen("si-v")) + (FTHtmlEscape(Mid(sLine, (Length(sLine)), (iPos + 2)))) + CS_SpanEnd ;
+                + CS_DivEnd)
+        End
+        Function_Return ((DivOpen("si-row si-one")) + (SpanOpen("si-v")) + (FTHtmlEscape(sLine)) + CS_SpanEnd + CS_DivEnd)
+    End_Function
+
+    // The page's body: the sheet, then every line as a row.
+    Function BodyHtml Returns String
+        String[] asLines
+        String sHtml
+        Integer i iMax
+
+        Get pasLines of (Parent(Parent(Self))) to asLines
+        Move ((StyleSheetLink("RDCFlexTron/ftabout.css?v=" + CS_FTLibraryVersion)) + (DivOpen("si"))) to sHtml
+        Move (SizeOfArray(asLines) - 1) to iMax
+        For i from 0 to iMax
+            Move (sHtml + (LineHtml(Self, asLines[i]))) to sHtml
+        Loop
+        Function_Return (sHtml + CS_DivEnd)
+    End_Function
+
+End_Class
+
+{ DDOHost=False }
+{ DataAware=False }
+{ DesignerClass=cDTModalPanel }
+Class cFTSystemInfoDialog is a cFTModalPanel
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set Label to "System information"
+        Set Size to 250 480
+        Set Location to 2 6
+        Set piMinSize to 150 320
+
+        // The lines shown, as the library gave them - Copy writes these, not the page.
+        Property String[] pasLines
+
+        Object oWebHost is a cFTGridHost
+            Set Location to 4 4
+            Set Size to 226 472
+            Set peAnchors to anNone         // placed by cFTModalPanel (phoClientHost)
+            // Row 0, the page, takes the extra height; row 1 is 8 px of air above the buttons in row 2. Column 0
+            // takes the extra width, so the buttons keep to the right edge: Copy's 10 columns, one of air, Close's 11.
+            Set piColumnCount to 23
+            Set psColumnWidths to "0/1fr"
+            Set psRowHeights to "0/1fr 1/8px"
+
+            // Row 0: the facts, rendered when the dialog opens (Activating, RefreshBody).
+            Object oSysInfoPage is a cFTSysInfoPage
+                Set piRowIndex to 0
+                Set piColumnSpan to 23
+            End_Object
+
+            // Row 2: COPY - the lines to the clipboard - and CLOSE.
+            Object oCopyBtn is a cFTDialogButton
+                Set piRowIndex to 2
+                Set piColumnIndex to 1
+                Set piColumnSpan to 10
+                Set psCaption to "Copy"
+                Set psCSSClass to "ftbtn ftg-copy"
+                Set psToolTip to "Copy every line to the clipboard, for a support mail."
+                Set piDialogAction to CI_FTSysInfoCopy
+            End_Object
+
+            Object oCloseBtn is a cFTDialogButton
+                Set piRowIndex to 2
+                Set piColumnIndex to 12
+                Set piColumnSpan to 11
+                Set psCaption to "Close"
+                Set psCSSClass to "ftbtn ftg-close"
+                Set psToolTip to "Close this dialog."
+                Set piDialogAction to CI_FTSysInfoClose
+            End_Object
+        End_Object
+
+        // cFTModalPanel fits the host to the panel, when it is shown and on every resize.
+        Set phoClientHost to (oWebHost(Self))
+    End_Procedure
+
+    // A button's click, after the web click has returned, where the panel can close.
+    Procedure OnDialogButton Integer iAction
+        If (iAction = CI_FTSysInfoCopy) ;
+            Send CopyLines
+        Else If (iAction = CI_FTSysInfoClose) ;
+            Send Close_Panel
+    End_Procedure
+
+    // The lines, gathered afresh on every open - the memory figures and the date change; the page then draws
+    // itself from them.
+    Procedure Activating
+        Handle hoInfo
+        String[] asLines
+
+        Forward Send Activating
+        Get Create (RefClass(cAboutInfo)) to hoInfo
+        Get SysInfoLines of hoInfo to asLines
+        Send Destroy of hoInfo
+        Set pasLines to asLines
+        Send RefreshBody of (oSysInfoPage(oWebHost(Self)))
+    End_Procedure
+
+    // Copy: every line, as the library gave it, onto the clipboard.
+    Procedure CopyLines
+        String[] asLines
+        String sText
+        Integer i iMax
+
+        Get pasLines to asLines
+        Move "" to sText
+        Move (SizeOfArray(asLines) - 1) to iMax
+        For i from 0 to iMax
+            Move (sText + asLines[i] + C_NewLine) to sText
+        Loop
+        Send FTSetClipboardText sText
+        Send FTInfoBox "The system information was copied to the clipboard. Press Ctrl+V to paste it." (Label(Self))
+    End_Procedure
+
+End_Class

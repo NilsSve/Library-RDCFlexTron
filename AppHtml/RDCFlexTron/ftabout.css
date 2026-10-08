@@ -1,0 +1,34 @@
+/* ftabout.css - the About dialog (cFTAboutDialog) and the System information dialog (cFTSystemInfoDialog)
+
+   Both are a cFTHtmlPage over a row of framework buttons. The palette's var(--dfr-*) tokens do the
+   theming, so nothing here names a colour of its own. Every rule is scoped to the body's .ab or .si;
+   edits take effect without a recompile.
+
+   THE ABOUT PAGE: a masthead - the program's mark, its name, and the build facts (version, compile
+   date, certificate) - over the About text (the program's res_AboutFile resource, HTML) and the
+   Powered by DataFlex mark, which opens www.dataaccess.com. The body scrolls as one; the credits are
+   longer than the dialog.
+
+   THE SYSTEM INFORMATION PAGE: one row per line the DFAbout library gathers, "label: value" split at
+   the first colon into two columns; a line without one spans both; an empty line is a gap. */
+
+.ab{box-sizing:border-box;height:100%;overflow:auto;padding:0 18px 14px;font:12.5px "Segoe UI",sans-serif;line-height:1.45;color:var(--dfr-ink, #eceae1);}
+.ab-head{display:flex;align-items:center;gap:18px;margin:2px 0 14px;}
+.ab-mark{flex:none;width:72px;height:72px;}
+.ab-name{font-size:22px;font-weight:600;letter-spacing:.2px;line-height:1.2;}
+.ab-fact{margin-top:3px;font-size:12px;color:var(--dfr-ink-3, #c9c7bd);}
+.ab-text p{margin:0 0 5px;}
+.ab-text h3{margin:13px 0 4px;font-size:12.5px;font-weight:600;color:var(--dfr-ink, #eceae1);}
+.ab-text ul{margin:0;padding-left:18px;}
+.ab-text li{margin:1px 0;}
+.ab-text b{font-weight:600;color:var(--dfr-ink-3, #c9c7bd);}
+.ab-link{color:var(--dfr-mint, #5fd3a6);text-decoration:underline;cursor:pointer;}
+.ab-pow{display:inline-block;margin-top:16px;cursor:pointer;}
+.ab-pow img{display:block;height:36px;}
+
+.si{box-sizing:border-box;height:100%;overflow:auto;padding:0 18px 14px;font:12px "Segoe UI",sans-serif;line-height:1.45;color:var(--dfr-ink, #eceae1);}
+.si-row{display:grid;grid-template-columns:minmax(200px,max-content) 1fr;column-gap:14px;padding:1px 0;}
+.si-k{color:var(--dfr-ink-4, #a8a69b);white-space:nowrap;}
+.si-v{white-space:pre-wrap;overflow-wrap:anywhere;}
+.si-one{grid-template-columns:1fr;}
+.si-gap{height:10px;}

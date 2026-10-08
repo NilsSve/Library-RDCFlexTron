@@ -1,0 +1,267 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTAboutDialog
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-08 (DFRefactor's AboutFT.dg of 2026-10-06, as a class)
+//
+// Description : The About dialog of an FT program, as a page: the program's mark and name, the build facts
+//               the DFAbout library gathers (cAboutInfo - the version, the compile date and time, the
+//               certificate when signtool can vouch for one), the About text from its resource, and the
+//               Powered by DataFlex mark; System information, Copy and Close at the bottom right.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTModalPanel.pkg
+Use cFTLocalWebControlHost.pkg      // a web control needs a host Used before it
+Use cFTGridHost.pkg                 // the host as a grid: the page over a row of buttons
+Use cFTHtmlPage.pkg                 // the page: its title and the glyph beside it, BodyHtml and RefreshBody
+Use cFTDialogButton.pkg             // the buttons: a click reaches OnDialogButton below
+Use FTMarkupBuilders.pkg            // StyleSheetLink, DivOpen, DivOpenClick, ImgHtml, FTHtmlEscape, FTPlainText
+Use FTMessageBox.pkg                // FTInfoBox - Copy says it did
+Use FTShell.pkg                     // FTOpenUrl, FTSetClipboardText
+Use Seq_chnl.pkg                    // Seq_New_Channel - the About text is read from its resource
+Use DfAbout.pkg                     // cAboutInfo - the facts (RDC-DFAbout-Library 1.0.3 or later)
+Use cFTSystemInfoDialog.pkg         // the System information dialog, behind the button
+
+// The buttons' actions, as OnDialogButton receives them.
+Define CI_FTAboutSysInfo for 1
+Define CI_FTAboutCopy    for 2
+Define CI_FTAboutClose   for 3
+
+/* THE PAGE: a masthead - the program's mark (psMarkImage), its name (psProgramName) and the build facts -
+   over the About text and the Powered by DataFlex mark, which opens www.dataaccess.com. The body scrolls as
+   one; credits are longer than a dialog. The look is ftabout.css (.ab-*), installed with the library's sheets.
+
+   THE ABOUT TEXT is HTML - paragraphs, headings, lists, bold - compiled into the program as a resource and
+   read from it when the dialog opens (AboutHtml). The resource's name is the DFAbout library's, res_AboutFile:
+   DfAbout.pkg, Used above for the facts, binds ..\Help\About.rtf under that name unless the program says it
+   binds its own, and reads the name as it compiles - so the program defines UseCustomAboutResource and binds
+   its text BEFORE the Use that brings this package in (error 4328 otherwise):
+
+       Define UseCustomAboutResource for 1
+       Include_Resource ..\Help\About.html as res_AboutFile type DF_RESOURCE_TYPE_BINARY
+       Use cFTAboutDialog.pkg
+
+   The file may be empty, but it must exist. A link in the text opens in the browser: a span with
+   data-ServerOnClick="url" and the address in data-OnClickParam (class ab-link for the look). A program that
+   keeps its text elsewhere - a file, a string it builds - overrides AboutHtml.
+
+   THE OBJECT sets what is the program's own - Label, Icon, psProgramName, psMarkImage - and the class has the
+   rest: the host, the page, the buttons and the System information dialog are built in Construct_Object, so
+   the Studio's Designer draws the panel alone. A child object built there carries no methods of its own (the
+   compiler's rule), so the page is a class, cFTAboutPage below, and the buttons are cFTDialogButtons, whose
+   click reaches OnDialogButton here. Copy puts the name, the facts and the text, as plain lines, on the
+   clipboard. */
+
+// The page: the masthead, the text and the mark, from the dialog - the host's parent.
+Class cFTAboutPage is a cFTHtmlPage
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psLabel to "About"
+        Set psCSSClass to "ftpage ftg-info"
+        Set pbFillHeight to True
+    End_Procedure
+
+    // The page's body: the sheet, the masthead, the text, the Powered by mark.
+    Function BodyHtml Returns String
+        Handle hoDlg
+        String[] asFacts
+        String sHtml sMark sName sText
+        Integer i iMax
+
+        Move (Parent(Parent(Self))) to hoDlg
+        Get pasFacts of hoDlg to asFacts
+        Get psMarkImage of hoDlg to sMark
+        Get psProgramName of hoDlg to sName
+        Get AboutHtml of hoDlg to sText
+        Move ((StyleSheetLink("RDCFlexTron/ftabout.css?v=" + CS_FTLibraryVersion)) + (DivOpen("ab"))) to sHtml
+        Move (sHtml + (DivOpen("ab-head"))) to sHtml
+        If (sMark <> "") ;
+            Move (sHtml + (ImgHtml(sMark, "ab-mark", "", ""))) to sHtml
+        Move (sHtml + (DivOpen("ab-id"))) to sHtml
+        Move (sHtml + (DivOpen("ab-name")) + (FTHtmlEscape(sName)) + CS_DivEnd) to sHtml
+        Move (SizeOfArray(asFacts) - 1) to iMax
+        For i from 0 to iMax
+            Move (sHtml + (DivOpen("ab-fact")) + (FTHtmlEscape(asFacts[i])) + CS_DivEnd) to sHtml
+        Loop
+        Move (sHtml + CS_DivEnd + CS_DivEnd) to sHtml                       // ab-id, ab-head
+        Move (sHtml + (DivOpen("ab-text")) + sText + CS_DivEnd) to sHtml
+        Move (sHtml + (DivOpenClick("ab-pow", "url", "https://www.dataaccess.com/", "www.dataaccess.com")) ;
+            + (ImgHtml("RDCFlexTron/PoweredByDataFlex.png", "", "", "")) + CS_DivEnd) to sHtml
+        Function_Return (sHtml + CS_DivEnd)
+    End_Function
+
+    // A link in the text, or the Powered by mark: the browser opens it, after the web click has returned.
+    // FTOpenUrl refuses anything that is not http or https.
+    Procedure OnHtmlClick String sId String sParam
+        If (sId = "url") ;
+            Send FTOpenUrl sParam
+    End_Procedure
+
+End_Class
+
+{ DDOHost=False }
+{ DataAware=False }
+{ DesignerClass=cDTModalPanel }
+Class cFTAboutDialog is a cFTModalPanel
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set Label to "About"
+        Set Size to 262 440
+        Set Location to 2 6
+        Set piMinSize to 160 320
+
+        // The program's name, on the masthead and in Copy; "" = the application object's psProduct.
+        { Category=Appearance }
+        Property String psProgramName ""
+        // The program's mark beside the name: an image file relative to AppHtml ("Images/Mark.png"); "" = none.
+        { Category=Appearance }
+        Property String psMarkImage ""
+        // The build facts as shown, kept for Copy: "Version: ...", "Compiled: ...", the certificate sentence.
+        Property String[] pasFacts
+
+        Object oWebHost is a cFTGridHost
+            Set Location to 4 4
+            Set Size to 238 432
+            Set peAnchors to anNone         // placed by cFTModalPanel (phoClientHost)
+            // Row 0, the page, takes the extra height; row 1 is 8 px of air above the buttons in row 2. Column 0
+            // takes the extra width, so the buttons keep to the right edge: System information's 21 columns, one of
+            // air, Copy's 10, one of air, Close's 11.
+            Set piColumnCount to 45
+            Set psColumnWidths to "0/1fr"
+            Set psRowHeights to "0/1fr 1/8px"
+
+            // Row 0: the page, rendered when the dialog opens (Activating, RefreshBody).
+            Object oAboutPage is a cFTAboutPage
+                Set piRowIndex to 0
+                Set piColumnSpan to 45
+            End_Object
+
+            // Row 2: SYSTEM INFORMATION, COPY and CLOSE.
+            Object oSysInfoBtn is a cFTDialogButton
+                Set piRowIndex to 2
+                Set piColumnIndex to 1
+                Set piColumnSpan to 21
+                Set psCaption to "System information"
+                Set psCSSClass to "ftbtn ftg-cpu"
+                Set psToolTip to "The runtime, the database drivers, the workspace and the machine this program runs on."
+                Set piDialogAction to CI_FTAboutSysInfo
+            End_Object
+
+            Object oCopyBtn is a cFTDialogButton
+                Set piRowIndex to 2
+                Set piColumnIndex to 23
+                Set piColumnSpan to 10
+                Set psCaption to "Copy"
+                Set psCSSClass to "ftbtn ftg-copy"
+                Set psToolTip to "Copy the version and the About text to the clipboard."
+                Set piDialogAction to CI_FTAboutCopy
+            End_Object
+
+            Object oCloseBtn is a cFTDialogButton
+                Set piRowIndex to 2
+                Set piColumnIndex to 34
+                Set piColumnSpan to 11
+                Set psCaption to "Close"
+                Set psCSSClass to "ftbtn ftg-close"
+                Set psToolTip to "Close this dialog."
+                Set piDialogAction to CI_FTAboutClose
+            End_Object
+        End_Object
+
+        // cFTModalPanel fits the host to the panel, when it is shown and on every resize.
+        Set phoClientHost to (oWebHost(Self))
+
+        // The System information dialog, behind its button. It takes this dialog's icon when it opens.
+        Object oSystemInfo is a cFTSystemInfoDialog
+        End_Object
+    End_Procedure
+
+    // A button's click, after the web click has returned, where a modal can open and this one close.
+    Procedure OnDialogButton Integer iAction
+        If (iAction = CI_FTAboutSysInfo) ;
+            Send ShowSystemInfo
+        Else If (iAction = CI_FTAboutCopy) ;
+            Send CopyAbout
+        Else If (iAction = CI_FTAboutClose) ;
+            Send Close_Panel
+    End_Procedure
+
+    // The About text, from its resource; "" when there is none. Override it for text that comes from elsewhere.
+    Function AboutHtml Returns String
+        UChar[] uData
+        Integer iCh iType
+
+        Get_Resource_Type res_AboutFile to iType
+        If (iType = DF_RESOURCE_TYPE_ERROR) ;
+            Function_Return ""
+        Move (Seq_New_Channel()) to iCh
+        If (iCh < 0) ;
+            Function_Return ""
+        Direct_Input channel iCh "resource: res_AboutFile"
+        Read_Block channel iCh uData -1
+        Close_Input channel iCh
+        Send Seq_Release_Channel iCh
+        Function_Return (UCharArrayToString(uData))
+    End_Function
+
+    // The build facts, gathered on every open: the version line, the compile date, and the certificate when
+    // signtool.exe is in the Programs folder and vouches for one ("" unsigned, "-1" no signtool - neither shown).
+    // The name and the title, when the object set none; then the page draws itself.
+    Procedure Activating
+        Handle hoInfo
+        String[] asFacts
+        String sVersion sCompiled sSigned
+
+        Forward Send Activating
+        If ((psProgramName(Self) = "") and (ghoApplication <> 0)) ;
+            Set psProgramName to (psProduct(ghoApplication))
+        If (Label(Self) = "About") ;
+            Set Label to ("About" * psProgramName(Self))
+        Get Create (RefClass(cAboutInfo)) to hoInfo
+        Get VersionText of hoInfo to sVersion
+        Get CompileDateAndTime of hoInfo to sCompiled
+        Get IsProgramDigitallySigned of hoInfo to sSigned
+        Send Destroy of hoInfo
+        If (sVersion <> "") ;
+            Move sVersion to asFacts[-1]
+        If (sCompiled <> "") ;
+            Move ("Compiled:" * sCompiled) to asFacts[-1]
+        If ((sSigned <> "") and (sSigned <> "-1")) ;
+            Move sSigned to asFacts[-1]
+        Set pasFacts to asFacts
+        Send RefreshBody of (oAboutPage(oWebHost(Self)))
+    End_Procedure
+
+    // System information, in a dialog of its own, with this dialog's icon.
+    Procedure ShowSystemInfo
+        Handle hoInfo
+
+        Move (oSystemInfo(Self)) to hoInfo
+        Set Icon of hoInfo to (Icon(Self))
+        Send Popup of hoInfo
+    End_Procedure
+
+    // Copy: the name, the facts and the About text as plain lines, onto the clipboard.
+    Procedure CopyAbout
+        String[] asFacts
+        String sText sAbout
+        Integer i iMax
+
+        Get pasFacts to asFacts
+        Get AboutHtml to sAbout
+        Move (psProgramName(Self) + C_NewLine) to sText
+        Move (SizeOfArray(asFacts) - 1) to iMax
+        For i from 0 to iMax
+            Move (sText + asFacts[i] + C_NewLine) to sText
+        Loop
+        Move (sText + C_NewLine + (FTPlainText(sAbout))) to sText
+        Send FTSetClipboardText sText
+        Send FTInfoBox "The version and the About text were copied to the clipboard. Press Ctrl+V to paste them." (Label(Self))
+    End_Procedure
+
+End_Class

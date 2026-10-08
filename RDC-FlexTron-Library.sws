@@ -5,6 +5,11 @@
             "source": "https://github.com/NilsSve/Library-RDCToolsLib.git",
             "sws": "RDC-Windows-Sub-Classes-Library.sws",
             "version": "^1.0.2"
+        },
+        {
+            "source": "https://github.com/NilsSve/Library-DFAbout.git",
+            "sws": "RDC-DFAbout-Library.sws",
+            "version": "^1.0.3"
         }
     ],
     "description": "RDC Tools' FlexTron toolkit: themed FlexTron hosts, web controls and modal panels, HTML markup builders and inline SVG icons for DataFlex Windows applications.",
@@ -23,11 +28,13 @@
             "${AppHtml}/RDCFlexTron/pills.css",
             "${AppHtml}/RDCFlexTron/ftcontrols.css",
             "${AppHtml}/RDCFlexTron/ftcontrols.js",
-            "${AppHtml}/RDCFlexTron/ftglyphs.css"
+            "${AppHtml}/RDCFlexTron/ftglyphs.css",
+            "${AppHtml}/RDCFlexTron/ftabout.css",
+            "${AppHtml}/RDCFlexTron/PoweredByDataFlex.png"
         ],
         "license": "MIT",
         "licenseFile": "LICENSE",
-        "version": "0.9.16"
+        "version": "0.9.17"
     },
     "workspaceName": "RDCFlexTron"
 }

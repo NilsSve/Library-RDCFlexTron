@@ -6,7 +6,8 @@
 // Created     : 2026-08-22
 //
 // Description : Global HTML markup helpers for the FlexTron surface: escaping, chips and the
-//               shared fragments the FT views compose their pages from.
+//               shared fragments the FT views compose their pages from - and FTPlainText, the text
+//               of HTML without its tags, for the clipboard.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -50,6 +51,53 @@ Function FTHtmlEscape Global String sText Returns String
     Move (Replaces("<", s, "&lt;")) to s
     Move (Replaces('"', s, "&quot;")) to s
     Function_Return s
+End_Function
+
+/* Global Function: FTPlainText
+
+ The text of HTML without its tags, for the clipboard: a paragraph, a heading, a list item or a list ends
+ a line, a list item starts with a dash, every other tag goes, the file's own line breaks and indents are
+ layout and go too, and the named characters a text uses - &amp; &lt; &gt; &quot; &nbsp; - are put back.
+ The About dialog's Copy uses it (cFTAboutDialog.pkg).
+*/
+Function FTPlainText Global String sHtml Returns String
+    String sText
+    Integer iLt iGt
+
+    Move sHtml to sText
+    // the file's own line breaks and indents are layout, not text - out before the real breaks go in
+    Move (Replaces((Character(13)), sText, "")) to sText
+    Move (Replaces((Character(10)), sText, " ")) to sText
+    Move (Replaces("<li>", sText, "- ")) to sText
+    Move (Replaces("</p>", sText, C_NewLine)) to sText
+    Move (Replaces("</li>", sText, C_NewLine)) to sText
+    Move (Replaces("</h3>", sText, C_NewLine)) to sText
+    Move (Replaces("</ul>", sText, C_NewLine)) to sText
+    Move (Pos("<", sText)) to iLt
+    While (iLt > 0)
+        Move (Pos(">", sText)) to iGt
+        If (iGt < iLt) ;
+            Move 0 to iGt
+        If (iGt = 0) Begin
+            Move (Left(sText, (iLt - 1))) to sText
+            Move 0 to iLt
+        End
+        Else Begin
+            Move (Left(sText, (iLt - 1)) + Mid(sText, (Length(sText)), (iGt + 1))) to sText
+            Move (Pos("<", sText)) to iLt
+        End
+    Loop
+    Move (Replaces("&amp;", sText, "&")) to sText
+    Move (Replaces("&lt;", sText, "<")) to sText
+    Move (Replaces("&gt;", sText, ">")) to sText
+    Move (Replaces("&quot;", sText, '"')) to sText
+    Move (Replaces("&nbsp;", sText, " ")) to sText
+    // the runs of spaces the indents left, and a space at the start of a line
+    While (Pos("  ", sText) > 0)
+        Move (Replaces("  ", sText, " ")) to sText
+    Loop
+    Move (Replaces((C_NewLine + " "), sText, C_NewLine)) to sText
+    Function_Return (Trim(sText))
 End_Function
 
 /* Global Functions: StyleSheetLink, ScriptLink

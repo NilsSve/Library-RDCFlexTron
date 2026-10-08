@@ -28,16 +28,20 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `cFTDbGridHost.pkg` | the same grid on the data-aware host (a `cFTDbLocalWebControlHost`), for a dialog whose web fields are bound to a DD (`Entry_Item`); a host with no bound field is a `cFTGridHost` |
 | `FTMessageBox.pkg`, `FTMessageBox.dg` | `FTInfoBox`, `FTStopBox` and `FTYesNoBox`: `Info_Box`, `Stop_Box` and `YesNo_Box` in the FT look, with the same arguments and return values - the caption as the page's title, beside the glyph of its kind. `FTHtmlMessage` shows a message written in HTML - paragraphs, bold, code samples - with your own button captions ("Rename now" / "Not now"), and returns True for the first. Use the dialog anywhere, above the application object too. Before the application object exists they show Windows' own box |
 | `FTInputBox.pkg`, `FTInputBox.dg` | `FTInputBox`: the message box with one field to type in - a message written in HTML, the field's label and starting text, and your own button captions; it returns True for the first button (or Enter in the field) and hands back what was typed. Windows has no box that asks for text, so before the application object exists it answers False |
+| `cFTAboutDialog.pkg` | the About dialog of a program, as a page: its mark (`psMarkImage`), its name (`psProgramName`; the application's `psProduct` unless set) and the build facts the DFAbout library gathers - the version, the compile date and time, the certificate when `signtool` can vouch for one - then the About text, HTML compiled into the program as the resource `res_AboutFile` ([The About dialog](#the-about-dialog)), then the Powered by DataFlex mark, which opens www.dataaccess.com. System information, Copy and Close at the bottom right; Copy puts the name, the facts and the text, as plain lines, on the clipboard. Set `Label` and `Icon` as on any dialog |
+| `cFTSystemInfoDialog.pkg` | the System information dialog, as a page: the facts the DFAbout library gathers - the licence, the database drivers, the runtime and the package versions, the workspace, the user and the machine, the memory - one row per line, `label: value` in two columns; Copy puts them on the clipboard as they are, for a support mail. `cFTAboutDialog` opens one behind its button; a program can declare one of its own |
+| `FTShell.pkg` | what a page hands to Windows: `FTOpenUrl` opens an address in the browser - http and https only - and `FTSetClipboardText` puts text on the clipboard |
+| `cFTDialogButton.pkg` | a button of a dialog built by its class, as the two above are: its click reaches the dialog's `OnDialogButton` with the button's `piDialogAction`, after the web click has returned - a child object a class builds carries no code of its own |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
 | `cFTCJSelectionGrid.pkg`, `cFTDbCJGrid.pkg` | RDCToolsLib's selection grid (`cRDCCJSelectionGrid`, a checkbox column to tick rows with) and data-aware grid (`cRDCDbCJGrid`) in the FT look: small dots between the rows; the data-aware one in the CodeJock theme's own colours, with a header click that selects the column and a multiple selection. The behaviour is the library's: the row saved the moment its tick changes, `IsSelectableItem` for rows Select All must leave alone, the tooltip from the program's tooltip controller |
 | `cFTDockArea.pkg` | a `Container3d` that the Studio's Designer models on its own |
 | `FTConstants.h.pkg` | the theme values, `giFTThemeMode`, the colours, and where the theme choice is saved; the whole HTML tags the markup builders go with (`CS_DivEnd`, `CS_CodeOpen`, `CS_BulletItemEnd`, `CS_Br` ...), the named characters (`CS_EmDash`, `CS_Nbsp`, `CS_Check` ...) and the links to the library's style sheets (`CS_PaletteCssLink`, `CS_PageFitCssLink`, `CS_PillsCssLink`) |
 | `FTThemeColors.pkg` | native colours that follow the theme, and `FTColorPanel`: those colours on a native panel and everything inside it - a progress panel, say, which paints none of its own. Send it once the panel exists and the theme is read |
-| `FTMarkupBuilders.pkg` | HTML builders - buttons and their faces (`IconLabel`: a glyph and its words), chips, divs, tables, style sheet and script links - `FTHtmlEscape`, and `MarkedText`: prose whose names are marked with backticks, as in a README |
+| `FTMarkupBuilders.pkg` | HTML builders - buttons and their faces (`IconLabel`: a glyph and its words), chips, divs, tables, style sheet and script links - `FTHtmlEscape`, `MarkedText`: prose whose names are marked with backticks, as in a README - and `FTPlainText`, the text of HTML without its tags, a paragraph or a list item a line, for the clipboard |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant; `FTGlyphNames` returns all their names, your own glyphs' too, for a combo or a list to choose from |
 | `FTAppGlyphs.pkg` | your application's own glyphs: SVG files in `AppHtml\FTGlyphs`, drawn like the library's by `DashIcon`, `psGlyph` and `psTitleIcon` - see [Your own glyphs](#your-own-glyphs) |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
-| `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls and the Designer's mockups, and `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated); installed into your `AppHtml\RDCFlexTron`. Every FT host page loads the last three itself |
+| `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls and the Designer's mockups, `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated), and `ftabout.css` with `PoweredByDataFlex.png`, the About and System information pages' look and mark; installed into your `AppHtml\RDCFlexTron`. Every FT host page loads `ftcontrols.css`, `ftglyphs.css` and `ftcontrols.js` itself |
 
 ## Using it
 
@@ -51,16 +55,17 @@ Add the dependency to your workspace:
 }
 ```
 
-It brings in RDCToolsLib 1.0.2 or later (`^1.0.2`, matched against RDCToolsLib's version tags) and
-`DataFlex-dev/Web UI FlexTron` 1.0.52 or later (`^1.0.52`); for both, any later 1.x will do. Add a Web UI
-theme package (for example `DataFlex-dev/Web UI Material Theme`) for the web controls themselves.
+It brings in RDCToolsLib 1.0.2 or later (`^1.0.2`, matched against RDCToolsLib's version tags),
+`DataFlex-dev/Web UI FlexTron` 1.0.52 or later (`^1.0.52`) and the RDC-DFAbout-Library 1.0.3 or later
+(`^1.0.3`, the About dialog's facts); for all three, any later 1.x will do. Add a Web UI theme package
+(for example `DataFlex-dev/Web UI Material Theme`) for the web controls themselves.
 
-If your workspace pins its own Web UI FlexTron or RDCToolsLib version, list it BEFORE this package.
+If your workspace pins its own Web UI FlexTron, RDCToolsLib or DFAbout version, list it BEFORE this package.
 df-cli 1.0.0 settles the requirements in list order: whichever comes first installs its version, and a
 later one must accept it. Listed after this package, an older exact pin finds the newest 1.x already
 installed, and the workspace reports "installed version ... does not satisfy" ("Incompatible ref" for
-RDCToolsLib). Pin RDCToolsLib by its version tag, such as `"1.0.2"`, never by a commit: a commit is not
-a version, so the range above cannot accept it.
+RDCToolsLib). Pin RDCToolsLib and DFAbout by their version tags, such as `"1.0.2"`, never by a commit: a
+commit is not a version, so the ranges above cannot accept it.
 
 - **The application object** is a `cFTApplication`: it reads the theme choice as soon as it is built
   (`SeedFTTheme`). An application object of a class of your own reads it the same way: `ReadInteger` of
@@ -94,6 +99,33 @@ a version, so the range above cannot accept it.
   `psTitleIcon` shows only when the program runs; a picture of your own that the Designer shows too is a
   glyph of your own ([Your own glyphs](#your-own-glyphs)), named in `psCSSClass`: `"ftpage ftg-logo"`.
 - DataFlex 26 only.
+
+## The About dialog
+
+`cFTAboutDialog` shows the program's About page, and `cFTSystemInfoDialog`, behind its System information
+button, the facts the DFAbout library gathers. The object sets what is the program's own; the class has
+the rest - the host, the page, the buttons, the second dialog - so the Studio's Designer draws the panel alone:
+
+```
+Define UseCustomAboutResource for 1
+Include_Resource ..\Help\About.html as res_AboutFile type DF_RESOURCE_TYPE_BINARY
+Use cFTAboutDialog.pkg
+
+Object oAbout_dg is a cFTAboutDialog
+    Set Label to "About MyProgram"
+    Set Icon to "MyProgram.ico"
+    Set psProgramName to "MyProgram"
+    Set psMarkImage to "Images/MyMark.png"
+End_Object
+```
+
+The About text is HTML - paragraphs, headings, lists, bold - compiled into the program as the resource
+`res_AboutFile`; the two lines above the Use bind it. The name is the DFAbout library's: its `DfAbout.pkg`
+binds `..\Help\About.rtf` under it unless the program says it binds its own (`UseCustomAboutResource`), and
+reads the name as it compiles, so the define and the binding come BEFORE the Use that brings `DfAbout.pkg`
+in (error 4328 otherwise). The file may be empty, but it must exist. A link in the text opens in the browser:
+`<span class="ab-link" data-ServerOnClick="url" data-OnClickParam="https://www.rdctools.com/">www.rdctools.com</span>`.
+A program that keeps its text elsewhere overrides `AboutHtml`.
 
 ## Mockups for the Studio's Designer
 
