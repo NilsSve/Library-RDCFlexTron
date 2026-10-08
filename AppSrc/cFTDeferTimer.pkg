@@ -1,0 +1,78 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTDeferTimer
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-08 (the one-shot timers of DFRefactor's FT dialogs and views, as a class)
+//
+// Description : A one-shot timer for work that must wait for the caller to finish: ArmAction parks an
+//               action code - and a parameter, when there is one - and arms the timer; one tick later,
+//               the caller's stack unwound, the tick clears what was parked and sends OnDeferredAction,
+//               where the object runs the work. Arm arms the timer with what is parked, for an object
+//               whose work needs no code; DeferHold puts the tick off while the object says so. The
+//               click relay (cFTClickRelay) does this for web clicks; this is the same for everything
+//               else.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cTimer.pkg
+
+/* WORK THAT MUST WAIT FOR THE CALLER TO FINISH. A modal panel, a Close_Panel, a view activation or a
+   repaint asked for from inside a web event faults (4410); asked for from inside a Broadcast, it may run
+   before a sibling handler it depends on; asked for by a DD's Update, it runs once per row of a Select All
+   where once would do. So the caller parks the work here, and one tick later - its stack unwound, the
+   broadcast settled, the burst over - the object's OnDeferredAction runs it. One slot: an ArmAction before
+   the tick replaces what was parked, and Arm keeps it. piTimeout is 1 ms; an object may set another. */
+Class cFTDeferTimer is a cTimer
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // What is parked: the action code and its parameter, handed to OnDeferredAction and cleared on the tick.
+        Property Integer piPendingAction 0
+        Property String  psPendingParam ""
+        Set piTimeout to 1
+        Set pbEnabled to False
+    End_Procedure
+
+    // Parks the action - and the parameter, when one is given - and arms the tick.
+    Procedure ArmAction Integer iAction String sParam
+        Set piPendingAction to iAction
+        If (num_arguments > 1) ;
+            Set psPendingParam to sParam
+        Else ;
+            Set psPendingParam to ""
+        Set pbEnabled to True
+    End_Procedure
+
+    // Arms the tick with what is parked - nothing, for an object whose work needs no code.
+    Procedure Arm
+        Set pbEnabled to True
+    End_Procedure
+
+    // True puts the tick off: the parked work waits, and the next tick asks again. An object overrides
+    // it for work that may not run while, say, a page is still rendering on a pump of its own.
+    Function DeferHold Returns Boolean
+        Function_Return False
+    End_Function
+
+    // The work, on the tick, with what was parked. The object defines it.
+    Procedure OnDeferredAction Integer iAction String sParam
+    End_Procedure
+
+    // The tick: off and cleared first, then the work - so the work may park and arm a next one.
+    Procedure OnTimer
+        Integer iAction
+        String sParam
+        Boolean bHold
+
+        Get DeferHold to bHold
+        If (bHold) ;
+            Procedure_Return
+        Set pbEnabled to False
+        Get piPendingAction to iAction
+        Get psPendingParam to sParam
+        Set piPendingAction to 0
+        Set psPendingParam to ""
+        Send OnDeferredAction iAction sParam
+    End_Procedure
+End_Class
