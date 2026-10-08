@@ -6,8 +6,9 @@
 // Created     : 2026-07-02
 //
 // Description : FlexTron (FT) subclass of cWebHtmlBox: theme-aware behaviour for the FT
-//               build, and a click whose work runs after the web event has returned
-//               (OnHtmlClick). The HtmlBox renders in the FRAMEWORK DOM - style accordingly.
+//               build, a click whose work runs after the web event has returned (OnHtmlClick),
+//               and an UpdateHtml that keeps what it pushes, for the page's next mount. The
+//               HtmlBox renders in the FRAMEWORK DOM - style accordingly.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -101,31 +102,36 @@ Class cFTWebHtmlBox is a cWebHtmlBox
     Procedure OnHtmlClick String sId String sParam
     End_Procedure
 
-    // The live push, gated on the host page actually being ALIVE. UpdateHtml is a ClientAction
-    // ("updateHtml") - delivered before the page's df.LocalApp has built its controls it breaks
-    // the page, and the whole host renders the framework's "Unhandled Program Error on the
-    // Client" banner (SelectFunctionsFT's Run-button bar, root-caused 2026-07-19: that view
-    // mounts BEHIND the Folders view and WebView2 THROTTLES hidden windows, so the page can
-    // still be initializing long after IsComObjectCreated turns True; a flaky cold-start
-    // sighting on 2026-07-16 was the same race). pbInitWebApp of the owning
-    // cLocalWebControlHost is the readiness truth - the framework flips it False on the page's
-    // FIRST server call (FinishWebObjectInitialize). Until then, fold the push into Set psHtml:
-    // the stored property is exactly what the page's init sync serves at mount, so nothing is
-    // lost. ONE canonical home for the gate - the ~20 push sites need no per-site guards (the
-    // gate at SelectFunctionsFT's oRunBtnDeferTimer stays: it also skips its CheckUpdateWebUI).
-    // AppendHtml/UpdateHtmlArray share the ClientAction risk but have no callers - gate them
-    // here too if they ever gain one.
+    /* THE PUSH KEEPS WHAT IT PUSHES (0.9.16), and is gated on the host page actually being ALIVE.
+
+       A page is served two ways: the stored psHtml when it mounts - at its first show, and after a
+       navigation - and UpdateHtml, a ClientAction ("updateHtml"), while it is up. The framework's
+       UpdateHtml only pushes, so a box pushed but never stored came back with its old markup when its
+       dialog opened again, and every push site wrote the pair - Set psHtml, then Send UpdateHtml. This
+       one stores first, always: the property is what the next mount serves, the push is what the live
+       page shows, and one call is the whole of it.
+
+       THE GATE: delivered before the page's df.LocalApp has built its controls, the ClientAction breaks
+       the page, and the whole host renders the framework's "Unhandled Program Error on the Client"
+       banner (SelectFunctionsFT's Run-button bar, root-caused 2026-07-19: that view mounts BEHIND the
+       Folders view and WebView2 THROTTLES hidden windows, so the page can still be initializing long
+       after IsComObjectCreated turns True; a flaky cold-start sighting on 2026-07-16 was the same race).
+       pbInitWebApp of the owning cLocalWebControlHost is the readiness truth - the framework flips it
+       False on the page's FIRST server call (FinishWebObjectInitialize), and cFTThemeHost_mixin sets it
+       True again when a navigation starts. Until the page calls home the stored property is all there
+       is, and it is exactly what the mount serves, so nothing is lost. ONE canonical home for the gate -
+       the push sites need no per-site guards. AppendHtml/UpdateHtmlArray share the ClientAction risk
+       but have no callers - gate them here too if they ever gain one. */
     Procedure UpdateHtml String sHtml
         Handle  hoHost
         Boolean bInitializing
+        Set psHtml to sHtml
         Get Owner to hoHost
         Move False to bInitializing
         If (hoHost <> 0) ;
             Get pbInitWebApp of hoHost to bInitializing
-        If (bInitializing = True) Begin
-            Set psHtml to sHtml
+        If (bInitializing = True) ;
             Procedure_Return
-        End
         Forward Send UpdateHtml sHtml
     End_Procedure
 

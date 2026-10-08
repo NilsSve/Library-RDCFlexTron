@@ -6,8 +6,9 @@
 // Created     : 2026-09-24
 //
 // Description : A cFTWebHtmlBox that holds a whole page, as opposed to a button band or a tile: its title on
-//               top (psLabel) with the picture beside it (psTitleIcon), and a body of HTML. The Studio's
-//               Designer shows the title and its glyph, and Lorem ipsum for a body built at run time.
+//               top (psLabel) with the picture beside it (psTitleIcon), and a body of HTML - the page's own
+//               BodyHtml, which RefreshBody shows. The Studio's Designer shows the title and its glyph, and
+//               Lorem ipsum for a body built at run time.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -117,6 +118,23 @@ Class cFTHtmlPage is a cFTWebHtmlBox
         // No title, no header: the label would stand empty over the page.
         If (Trim(psLabel(Self)) = "") ;
             Set pbShowLabel to False
+    End_Procedure
+
+    /* THE BODY THE PAGE BUILDS ITSELF (0.9.16). A page whose body comes from the program's state defines
+       BodyHtml - the markup, from whatever it reads - and sends RefreshBody whenever that state has
+       changed: when its dialog opens (Activating), after a poll's tick, after a Reset. RefreshBody stores
+       the body for a page still to mount and pushes it to one that is up (UpdateHtml does both). A page
+       built once can send RefreshBody from its own End_Construct_Object, in place of Set psHtml. The
+       default body is "", shown as an empty page - the Designer's Lorem ipsum is a class default the
+       running program never sees. Reading the state is the object's: a dialog's property, a global. */
+    Function BodyHtml Returns String
+        Function_Return ""
+    End_Function
+
+    Procedure RefreshBody
+        String sHtml
+        Get BodyHtml to sHtml
+        Send UpdateHtml sHtml
     End_Procedure
 
 End_Class
