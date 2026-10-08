@@ -13,14 +13,15 @@
 //****************************************************************************
 Use Seq_chnl.pkg                // Seq_New_Channel - the clipboard is written as a sequential channel
 
-// The browser opens the address, through the shell's handler for http and https; any other address is
-// refused, so a link a page carries can lead to a browser and nowhere else. A page's link is an element with
-// data-ServerOnClick="url" and the address in data-OnClickParam, handed on from the box's OnHtmlClick.
+// The browser opens the address, through the shell's handler for http and https - or the mail program, for a
+// mailto address; any other address is refused, so a link a page carries can lead there and nowhere else. A page's
+// link is an element with data-ServerOnClick="url" and the address in data-OnClickParam, handed on from the box's
+// OnHtmlClick.
 Procedure FTOpenUrl Global String sUrl
     String sLow
 
     Move (Lowercase(Trim(sUrl))) to sLow
-    If ((Left(sLow, 8) <> "https://") and (Left(sLow, 7) <> "http://")) ;
+    If ((Left(sLow, 8) <> "https://") and (Left(sLow, 7) <> "http://") and (Left(sLow, 7) <> "mailto:")) ;
         Procedure_Return
     Runprogram Shell Background (Trim(sUrl))
 End_Procedure

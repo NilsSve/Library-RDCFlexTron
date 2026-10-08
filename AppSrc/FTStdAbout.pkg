@@ -1,0 +1,139 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTStdAbout
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-08
+//
+// Description : StdAbout.pkg's twin for an FT program: Activate_About, the one message a program's client
+//               area answers - its menu's About item sends it - and DoAbout, which shows the About dialog
+//               (cFTAboutDialog) with the strings it is given, as DataFlex's StdAbout.pkg and the DFAbout
+//               library's do, with the same arguments. A program moves over by Using this package where it
+//               Used StdAbout.pkg - in its client area, where its own Activate_About follows. Its About file,
+//               Help\About.html, is compiled in here, as DfAbout.pkg compiles in Help\About.rtf - unless the
+//               program binds a file of its own first, or says it has none.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+/* THE ABOUT FILE, as DfAbout.pkg has it: ..\Help\About.html, compiled into the program as the DFAbout library's
+   resource res_AboutFile - the file every program that Uses this package ships, as every program that Uses
+   DfAbout.pkg ships Help\About.rtf. Two programs say otherwise BEFORE this Use: one with a file of its own binds
+   it under that name, saying UseCustomAboutResource first, as DfAbout.pkg has it; one with no About file at all
+   says FTNoAboutFile, and the library's own, empty, FTAboutDefault.html stands in (cFTAboutDialog.pkg) - it
+   compiles, and the dialog shows no file. */
+#IFNDEF UseCustomAboutResource
+    #IFNDEF FTNoAboutFile
+        Define UseCustomAboutResource for 1
+        Include_Resource ..\Help\About.html as res_AboutFile type DF_RESOURCE_TYPE_BINARY
+    #ENDIF
+#ENDIF
+Use cFTAboutDialog.pkg
+
+// The one dialog, built here and shown by DoAbout - a child of whatever object this package is Used in, as
+// StdAbout.pkg's is. A program that wants more declares an object of cFTAboutDialog itself.
+Global_Variable Handle ghoFTAboutDialog
+
+Object oFTAboutDialog is a cFTAboutDialog
+    Procedure End_Construct_Object
+        Forward Send End_Construct_Object
+        Move Self to ghoFTAboutDialog
+    End_Procedure
+End_Object
+
+// The default, for a program with no Activate_About of its own: everything from the application object and the
+// program. A program's own, in the object this package is Used in, takes its place - and may decide about the
+// About file first (shown when the program bound one, unless it says otherwise):
+//     Procedure Activate_About
+//         Set pbShowAboutFile of oFTAboutDialog to False
+//         Send DoAbout "" "" "" "" "MyMark.bmp"
+//     End_Procedure
+Procedure Activate_About
+    Send DoAbout "" "" "" "" "" "" "" "" "" ""
+End_Procedure
+
+/* DoAbout, with StdAbout.pkg's arguments and the DFAbout library's five more - any may be left out from the right:
+       Send DoAbout sTitle sVersion sCopyright sAuthor sBitmap sLine6 sLine7 sLine8 sLine9 sLine10
+   - sTitle: the name; "" = the application object's psProduct;
+   - sVersion: the version line; "" = the program's version resource ("Version: 1.2.3.4");
+   - sCopyright: the copyright line; "" = "Copyright: <year> <psCompany>" when any of the first four is given, the
+     year being the version's major number when it is one (2026.10.8.0), else today's - and none at all when all
+     four are blank, as the DFAbout library's does;
+   - sAuthor: the author line, or "";
+   - sBitmap: the mark - an image under AppHtml ("Images/Mark.png"), or a bitmap on the DataFlex path ("Mark.bmp"
+     in Bitmaps), as AboutDialog takes it; "" = none;
+   - sLine6 .. sLine10: lines of their own, one paragraph each; an http, https or mailto address in one is a link.
+   The About file - Help\About.html, compiled in above as the resource res_AboutFile - shows after the lines unless
+   the program said FTNoAboutFile: pbShowAboutFile of the dialog, which Activate_About may set first. */
+Procedure DoAbout String sTitle String sVersion String sCopyRight String sAuthor String sBitmap ;
+        String sLine6 String sLine7 String sLine8 String sLine9 String sLine10
+    Handle hoDlg hoVersion
+    Integer iYear iArgs
+    Boolean bIncluded
+    String sTitleIn sVersionIn sCopyIn sAuthorIn sBitmapIn sCompany
+
+    /* ANY ARGUMENT MAY BE LEFT OUT FROM THE RIGHT, as StdAbout.pkg allows. One that was not passed raises error 57
+       "Required message argument missing" the moment it is READ, whatever the procedure knows about num_arguments,
+       so each is read only when num_arguments says it came - into a local, blank otherwise. */
+    Move num_arguments to iArgs
+    If (iArgs > 0) ;
+        Move sTitle to sTitleIn
+    If (iArgs > 1) ;
+        Move sVersion to sVersionIn
+    If (iArgs > 2) ;
+        Move sCopyRight to sCopyIn
+    If (iArgs > 3) ;
+        Move sAuthor to sAuthorIn
+    If (iArgs > 4) ;
+        Move sBitmap to sBitmapIn
+    Move ghoFTAboutDialog to hoDlg
+    If (hoDlg = 0) ;
+        Procedure_Return
+    Send ClearContent of hoDlg
+    Set ProductName of hoDlg to sTitleIn
+    Set Version of hoDlg to sVersionIn
+    // The copyright: the DFAbout library's default when any of the first four is given and it is blank; none when
+    // all four are blank - the About file says it then.
+    If ((sTitleIn <> "") or (sVersionIn <> "") or (sCopyIn <> "") or (sAuthorIn <> "")) Begin
+        If (sCopyIn = "") Begin
+            Move 0 to iYear
+            Move "" to sCompany
+            If (ghoApplication <> 0) Begin
+                Get psCompany of ghoApplication to sCompany
+                Get phoVersionInfo of ghoApplication to hoVersion
+                If (hoVersion <> 0) Begin
+                    Get pbIncluded of hoVersion to bIncluded
+                    If (bIncluded) ;
+                        Get piVersionMajor of hoVersion to iYear
+                End
+            End
+            If (iYear < 1990) ;
+                Move (DateGetYear(CurrentDateTime())) to iYear
+            Move ("Copyright:" * String(iYear) * sCompany) to sCopyIn
+        End
+        Set Copyright of hoDlg to sCopyIn
+    End
+    Set Author of hoDlg to sAuthorIn
+    Set Logo of hoDlg to sBitmapIn
+    If (iArgs > 5) Begin
+        If (sLine6 <> "") ;
+            Send Add_LineLn of hoDlg sLine6
+    End
+    If (iArgs > 6) Begin
+        If (sLine7 <> "") ;
+            Send Add_LineLn of hoDlg sLine7
+    End
+    If (iArgs > 7) Begin
+        If (sLine8 <> "") ;
+            Send Add_LineLn of hoDlg sLine8
+    End
+    If (iArgs > 8) Begin
+        If (sLine9 <> "") ;
+            Send Add_LineLn of hoDlg sLine9
+    End
+    If (iArgs > 9) Begin
+        If (sLine10 <> "") ;
+            Send Add_LineLn of hoDlg sLine10
+    End
+    Send Popup of hoDlg
+End_Procedure

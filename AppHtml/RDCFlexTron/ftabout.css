@@ -5,7 +5,8 @@
    edits take effect without a recompile.
 
    THE ABOUT PAGE: a masthead - the program's mark, its name, and the build facts (version, compile
-   date, certificate) - over the About text (the program's res_AboutFile resource, HTML) and the
+   date, certificate) - over the lines the program gives (copyright, author, more; an address in one
+   is a link), the About file when it says so (the program's res_AboutFile resource, HTML) and the
    Powered by DataFlex mark, which opens www.dataaccess.com. The body scrolls as one; the credits are
    longer than the dialog.
 
@@ -18,6 +19,7 @@
 .ab-name{font-size:22px;font-weight:600;letter-spacing:.2px;line-height:1.2;}
 .ab-fact{margin-top:3px;font-size:12px;color:var(--dfr-ink-3, #c9c7bd);}
 .ab-text p{margin:0 0 5px;}
+.ab-text p.ab-gap{height:8px;margin:0;}
 .ab-text h3{margin:13px 0 4px;font-size:12.5px;font-weight:600;color:var(--dfr-ink, #eceae1);}
 .ab-text ul{margin:0;padding-left:18px;}
 .ab-text li{margin:1px 0;}

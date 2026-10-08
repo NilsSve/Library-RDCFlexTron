@@ -28,9 +28,9 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `cFTDbGridHost.pkg` | the same grid on the data-aware host (a `cFTDbLocalWebControlHost`), for a dialog whose web fields are bound to a DD (`Entry_Item`); a host with no bound field is a `cFTGridHost` |
 | `FTMessageBox.pkg`, `FTMessageBox.dg` | `FTInfoBox`, `FTStopBox` and `FTYesNoBox`: `Info_Box`, `Stop_Box` and `YesNo_Box` in the FT look, with the same arguments and return values - the caption as the page's title, beside the glyph of its kind. `FTHtmlMessage` shows a message written in HTML - paragraphs, bold, code samples - with your own button captions ("Rename now" / "Not now"), and returns True for the first. Use the dialog anywhere, above the application object too. Before the application object exists they show Windows' own box |
 | `FTInputBox.pkg`, `FTInputBox.dg` | `FTInputBox`: the message box with one field to type in - a message written in HTML, the field's label and starting text, and your own button captions; it returns True for the first button (or Enter in the field) and hands back what was typed. Windows has no box that asks for text, so before the application object exists it answers False |
-| `cFTAboutDialog.pkg` | the About dialog of a program, as a page: its mark (`psMarkImage`), its name (`psProgramName`; the application's `psProduct` unless set) and the build facts the DFAbout library gathers - the version, the compile date and time, the certificate when `signtool` can vouch for one - then the About text, HTML compiled into the program as the resource `res_AboutFile` ([The About dialog](#the-about-dialog)), then the Powered by DataFlex mark, which opens www.dataaccess.com. System information, Copy and Close at the bottom right; Copy puts the name, the facts and the text, as plain lines, on the clipboard. Set `Label` and `Icon` as on any dialog |
+| `cFTAboutDialog.pkg`, `FTStdAbout.pkg` | the About dialog of a program, as a page - a drop-in for the `AboutDialog` of DataFlex's `DfAbout.pkg` and the DFAbout library's, with the same messages: `ProductName`, `Version`, `Copyright`, `Author`, `Logo`, `LogoDF`, `pbShowRTFFile`, `Add_LineLn` and `Add_Line`. It shows the program's mark and name, the build facts the DFAbout library gathers - the version, the compile date and time, the certificate when `signtool` can vouch for one - the lines it is given (an address in one is a link), the About file when it says so, and the Powered by DataFlex mark; System information, Copy and Close at the bottom right. Everything it is not given comes from the application object. `FTStdAbout.pkg` is `StdAbout.pkg`'s twin: `Activate_About`, the one message a client area answers, and `DoAbout` with the same arguments ([The About dialog](#the-about-dialog)) |
 | `cFTSystemInfoDialog.pkg` | the System information dialog, as a page: the facts the DFAbout library gathers - the licence, the database drivers, the runtime and the package versions, the workspace, the user and the machine, the memory - one row per line, `label: value` in two columns; Copy puts them on the clipboard as they are, for a support mail. `cFTAboutDialog` opens one behind its button; a program can declare one of its own |
-| `FTShell.pkg` | what a page hands to Windows: `FTOpenUrl` opens an address in the browser - http and https only - and `FTSetClipboardText` puts text on the clipboard |
+| `FTShell.pkg` | what a page hands to Windows: `FTOpenUrl` opens an address in the browser - http, https and mailto only - and `FTSetClipboardText` puts text on the clipboard |
 | `cFTDialogButton.pkg` | a button of a dialog built by its class, as the two above are: its click reaches the dialog's `OnDialogButton` with the button's `piDialogAction`, after the web click has returned - a child object a class builds carries no code of its own |
 | `cFTComboForm.pkg` | RDCToolsLib's `cRDCComboForm` for FlexTron programs |
 | `cFTCJSelectionGrid.pkg`, `cFTDbCJGrid.pkg` | RDCToolsLib's selection grid (`cRDCCJSelectionGrid`, a checkbox column to tick rows with) and data-aware grid (`cRDCDbCJGrid`) in the FT look: small dots between the rows; the data-aware one in the CodeJock theme's own colours, with a header click that selects the column and a multiple selection. The behaviour is the library's: the row saved the moment its tick changes, `IsSelectableItem` for rows Select All must leave alone, the tooltip from the program's tooltip controller |
@@ -102,28 +102,51 @@ commit is not a version, so the ranges above cannot accept it.
 
 ## The About dialog
 
-`cFTAboutDialog` shows the program's About page, and `cFTSystemInfoDialog`, behind its System information
-button, the facts the DFAbout library gathers. The object sets what is the program's own; the class has
-the rest - the host, the page, the buttons, the second dialog - so the Studio's Designer draws the panel alone:
+An FT program shows its About dialog the way a DataFlex program does with `StdAbout.pkg`: `FTStdAbout.pkg`
+is Used in the client area, where its menu's About item sends `Activate_About`, and the program's own
+`Activate_About` sends `DoAbout` with plain strings - the same arguments as DataFlex's `StdAbout.pkg` and
+the DFAbout library's. Everything left blank comes from the application object and the program: the name
+is `psProduct`, the version the program's version resource, the copyright `psCompany` with the year.
+
+```
+Use FTStdAbout.pkg
+
+Procedure Activate_About
+    Send DoAbout "" "" "" "" "MyMark.bmp"
+End_Procedure
+```
+
+The ten arguments: the name, the version line, the copyright line, the author, the mark, and five lines
+of their own, one paragraph each; an http, https or mailto address in a line is a link the browser opens.
+The mark is an image under `AppHtml` (`"Images/Mark.png"`) or a bitmap on the DataFlex path (`"Mark.bmp"`
+in `Bitmaps`), as `AboutDialog` takes it. No HTML anywhere.
+
+A program that wants the dialog as an object of its own declares one, with `AboutDialog`'s messages or the
+class's own names - `psProgramName`, `psVersionText`, `psCopyright`, `psAuthor`, `psMarkImage`,
+`psPoweredByImage`, `pbShowAboutFile`, `Add_LineLn` - and opens it with `Popup`. The class builds the host,
+the page, the buttons and the System information dialog itself, so the Studio's Designer draws the panel
+alone.
+
+The About file is `Help\About.html`, HTML, which `FTStdAbout.pkg` compiles into the program as the DFAbout
+library's resource `res_AboutFile` - as `DfAbout.pkg` compiles in `Help\About.rtf` - and the dialog shows
+after the lines while `pbShowAboutFile` (`pbShowRTFFile` is the same) is True, which it is when a file was
+bound; the program sets it first to decide otherwise - `Set pbShowAboutFile of oFTAboutDialog to False` in
+its `Activate_About`. A program with a file of its own binds it BEFORE the Use, saying so first, and one
+with no About file at all says so - it compiles, and the dialog shows none:
 
 ```
 Define UseCustomAboutResource for 1
-Include_Resource ..\Help\About.html as res_AboutFile type DF_RESOURCE_TYPE_BINARY
-Use cFTAboutDialog.pkg
-
-Object oAbout_dg is a cFTAboutDialog
-    Set Label to "About MyProgram"
-    Set Icon to "MyProgram.ico"
-    Set psProgramName to "MyProgram"
-    Set psMarkImage to "Images/MyMark.png"
-End_Object
+Include_Resource ..\Help\AboutFT.html as res_AboutFile type DF_RESOURCE_TYPE_BINARY
+Use FTStdAbout.pkg
 ```
 
-The About text is HTML - paragraphs, headings, lists, bold - compiled into the program as the resource
-`res_AboutFile`; the two lines above the Use bind it. The name is the DFAbout library's: its `DfAbout.pkg`
-binds `..\Help\About.rtf` under it unless the program says it binds its own (`UseCustomAboutResource`), and
-reads the name as it compiles, so the define and the binding come BEFORE the Use that brings `DfAbout.pkg`
-in (error 4328 otherwise). The file may be empty, but it must exist. A link in the text opens in the browser:
+```
+Define FTNoAboutFile for 1
+Use FTStdAbout.pkg
+```
+
+(The library's own, empty, `FTAboutDefault.html` stands in under the name then, since `DfAbout.pkg` reads it
+as it compiles.) A link in the file is
 `<span class="ab-link" data-ServerOnClick="url" data-OnClickParam="https://www.rdctools.com/">www.rdctools.com</span>`.
 A program that keeps its text elsewhere overrides `AboutHtml`.
 
