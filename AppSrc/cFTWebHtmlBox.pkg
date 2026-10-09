@@ -135,6 +135,24 @@ Class cFTWebHtmlBox is a cWebHtmlBox
         Forward Send UpdateHtml sHtml
     End_Procedure
 
+    /* THE PUSH SHOWN AT ONCE. UpdateHtml queues the new HTML as a client action, and the host's idle tick sends it a
+       moment later - fine, unless the program is about to be busy: a pump, a modal, a compile about to start, where the
+       page would show the old content until the busy work ends. PushHtml is UpdateHtml and then the host's own flush
+       (CheckUpdateWebUI), when the page is up; before that, nothing was queued and there is nothing to flush. A flush
+       is a round trip, so several boxes in a row take UpdateHtml each and PushHtml for the last. */
+    Procedure PushHtml String sHtml
+        Handle  hoHost
+        Boolean bInitializing
+
+        Send UpdateHtml sHtml
+        Get Owner to hoHost
+        If (hoHost = 0) ;
+            Procedure_Return
+        Get pbInitWebApp of hoHost to bInitializing
+        If (bInitializing = False) ;
+            Send CheckUpdateWebUI of hoHost
+    End_Procedure
+
 End_Class
 
 // The design-time dump (see gbFTDesignDump above): '<full object name>|<psHtml>' for every box, each with the markup
