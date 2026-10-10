@@ -40,16 +40,24 @@ Use cFTLocalWebControlHost.pkg
    only each control's own margins, 2 px above and below, which leave 4 px: right between two rows of
    buttons, too little under a page.
 
+   THE HOST'S OWN HEIGHT is its rows and 8 px more: the Web UI theme pads a host's content by 4 px above and
+   below. A bar of one row of buttons needs 41 px - about 26 dialog units at 100 % - and one of two rows 74 px,
+   about 48. A host shorter than its content scrolls, and shows a scroll bar at its right edge: the
+   framework's page is a scroller. (A program can hide that bar in its own application.css instead, as
+   DFRefactor does; the few pixels are then cut off.)
+
    The grid trap: piColumnSpan 0 means ONE column here, not "the rest of the row" as in the flow layout - a
    control that spans the width says how many columns. A caption longer than its span is cut off, as in a
    Windows dialog: size the control to its caption. The FT button's 76 px minimum steps aside on a grid host
    (ftcontrols.css), where the span is the width.
 
    The OverrideProperty tags tell the Studio these are the class's own defaults, so its Designer and property
-   panel show them; the Sets make them so at run time. */
+   panel show them; the Sets make them so at run time. The last one, psCSSClass, is the host's own FtHost
+   (cFTLocalWebControlHost.pkg), stated again as the two tags above it are. */
 { OverrideProperty=peLayoutType InitialValue=ltGrid }
 { OverrideProperty=psDefaultColumnWidth InitialValue="8px" }
 { OverrideProperty=psDefaultRowHeight InitialValue="minmax(var(--ft-row, 33px), max-content)" }
+{ OverrideProperty=psCSSClass InitialValue="FtHost" }
 Class cFTGridHost is a cFTLocalWebControlHost
     Procedure Construct_Object
         Forward Send Construct_Object

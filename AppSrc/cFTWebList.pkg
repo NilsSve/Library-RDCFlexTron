@@ -6,7 +6,7 @@
 // Created     : 2026-09-28
 //
 // Description : FlexTron (FT) subclass of cWebList: the web list in the look of the FT tables, which asks
-//               for its rows itself when they come from code (OnManualLoadData).
+//               for its rows itself - rows from code (OnManualLoadData), or from a data dictionary.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -23,8 +23,14 @@ Use cWebList.pkg
    unique sRowId and one tWebCell per column, left to right; set sCurrentRowID to select one. The framework
    sends rows only when asked (GridRefresh), so the list asks for them itself the first time the page draws
    it: its client class, rdcft.FTWebList (ftcontrols.js), calls FTLoadRows. A page the host builds again
-   asks again. New rows while the program runs: RefreshRows, which waits for the page. A list bound to a
-   data dictionary (Server, pbDataAware True) fills itself as a cWebList does.
+   asks again. New rows while the program runs: RefreshRows, which waits for the page.
+
+   ROWS FROM A DATA DICTIONARY (0.9.21): Set Server and bind the columns with Entry_Item - pbDataAware is True
+   by default - in a data-aware host (cFTDbGridHost). The framework reads the rows from the DD, and reads them
+   again when the DD's record or its constraint changes. The FIRST rows the list asks for itself, as it does
+   for rows from code: when the page comes up, a FlexTron host refreshes the controls of its own data
+   dictionary (cDbLocalWebControlHost), and a list bound to another one - a child's rows, under the host's DD -
+   is not among them. For a list on the host's own DD it is one read more.
 
    COLUMNS, the Windows way: a column with pbFixedWidth True is piWidth pixels wide; the columns without it
    share what is left, by their piWidth. So fixed columns and one that stretches, as in a Windows grid.
@@ -38,8 +44,8 @@ Class cFTWebList is a cWebList
     Procedure Construct_Object
         Forward Send Construct_Object
 
-        // True: the list asks for its rows when the page draws it - a list filled by code. Set when the
-        // object is built, from pbDataAware; never set directly.
+        // True: the list asks for its rows when the page draws it. Set when the object is built; never set
+        // directly.
         { WebProperty=Client }
         { Visibility=Private }
         Property Boolean pbFTLoadOnShow False
@@ -56,20 +62,21 @@ Class cFTWebList is a cWebList
         Move (Trim(psCSSClass(Self))) to sClasses
         If (Pos(" ftlist ", (" " + sClasses + " ")) = 0) ;
             Set psCSSClass to (Trim("ftlist " + sClasses))
-        // cWebList's own test (LoadData): these rows come from OnManualLoadData.
-        Set pbFTLoadOnShow to ((not(pbDataAware(Self))) or (peDbGridType(Self) = gtManual))
+        // Rows from code and a bound list's alike: the list asks for them the first time the page draws it.
+        Set pbFTLoadOnShow to True
         WebPublishProcedure FTLoadRows
     End_Procedure
 
     // Sent by the client (rdcft.FTWebList) the first time the page draws the list: its rows, from
-    // OnManualLoadData.
+    // OnManualLoadData or from its data dictionary - GridRefresh is the framework's own read of either.
     Procedure FTLoadRows
         Send GridRefresh
     End_Procedure
 
-    // New rows from OnManualLoadData while the program runs. Before the page is ready it does nothing - the
-    // list asks for its rows itself when the page draws it - because a GridRefresh that reaches a page which
-    // has not built its controls yet breaks the page (cFTWebHtmlBox's UpdateHtml waits the same way).
+    // New rows while the program runs - from OnManualLoadData, or read again from the data dictionary. Before
+    // the page is ready it does nothing - the list asks for its rows itself when the page draws it - because a
+    // GridRefresh that reaches a page which has not built its controls yet breaks the page (cFTWebHtmlBox's
+    // UpdateHtml waits the same way).
     Procedure RefreshRows
         Handle hoHost
         Boolean bInitializing

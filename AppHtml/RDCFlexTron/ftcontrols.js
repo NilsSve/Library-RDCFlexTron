@@ -131,10 +131,10 @@
         }
     };
 
-    /* The framework's list. A list whose rows come from code (a cFTWebList with pbDataAware False) stays empty
-       until the server sends its rows, and the framework sends them only when asked - so the first time the
-       page draws the list, it asks: FTLoadRows, which sends GridRefresh. A page the host builds again asks
-       again. */
+    /* The framework's list. A list stays empty until the server sends its rows, and the framework sends them
+       only when asked - rows from code always, a bound list's whenever its data dictionary is not the host's
+       own. So the first time the page draws the list, it asks: FTLoadRows, which sends GridRefresh. A page the
+       host builds again asks again. */
     rdcft.FTWebList = class extends df.WebList {
         constructor(sName, oParent) {
             super(sName, oParent);

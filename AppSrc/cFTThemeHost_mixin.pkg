@@ -114,6 +114,24 @@ Class cFTThemeHost_mixin is a Mixin
         Send ApplyWebView2DefaultBackground
     End_Procedure
 
+    /* THE HOST SAYS WHAT IT IS: FtHost (0.9.21). The page of an FT host carries the class FtHost in two places.
+       The host's own element has it - psCSSClass, set here, and named by the host classes' tag for the Studio's
+       Designer, which runs none of this code - and so has the page's body (VirtualHtml below): the framework
+       hangs a date picker's panel and its balloons on the body, outside the host's element.
+
+       ftcontrols.css keys the FT look of the framework's OWN controls on it. A cWebForm, a cWebEdit or a
+       cWebCombo inside an FT host reads like its cFT twin with no class of its own, so a control needs a cFT
+       class for what it does, not for how it looks.
+
+       psCSSClass REPLACES the class list: a host that sets its own keeps FtHost in front of it. Sent by each
+       host's End_Construct_Object, after the object's body. */
+    Procedure ApplyFTHostClass
+        String sClasses
+        Move (Trim(psCSSClass(Self))) to sClasses
+        If (Pos(" FtHost ", (" " + sClasses + " ")) = 0) ;
+            Set psCSSClass to (Trim("FtHost " + sClasses))
+    End_Procedure
+
     /* THE PAGE BODY IS THE WHITE (2026-08-15, probe 2). With the wrapper control dark (probe 1
        turned it red - piBackColor works) and the compositor painted RED by the env var, the resize
        stripes and the first-activation flash stayed WHITE - so the white sits IN FRONT of the
@@ -178,6 +196,10 @@ Class cFTThemeHost_mixin is a Mixin
         Move (Character(33) + "important") to sImportant
         Move (Replaces("html, body{", sHtml, "html, body{ background: " + sBg + " " + sImportant + ";")) to sHtml
         Move (Replaces(CS_StyleEnd, sHtml, "#viewport, .WebApp.WebContainer, .WebCon_ContentWrp { background: var(--dfr-bg-page, " + sBg + ") " + sImportant + "; } " + CS_StyleEnd)) to sHtml
+        // The page says it is an FT host's (ApplyFTHostClass above): the body carries FtHost too. The target is
+        // the template's own "<body>" - reworded by a DataFlex update, the body goes without, and the host's own
+        // element still carries the class.
+        Move (Replaces("<body>", sHtml, '<body class="FtHost">')) to sHtml
         Function_Return sHtml
     End_Function
 

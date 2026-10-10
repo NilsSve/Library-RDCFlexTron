@@ -25,8 +25,12 @@ Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc
 /* Both tags are inherited from cLocalWebControlHost (Studio help: "the DesignerClass meta-tag is
    inherited"), and are stated here so the Windows Designer's view of this class does not depend on
    the pooled package having been parsed first. */
+// The host's own class, for the Studio: its Designer runs none of this code, so the third tag tells it that an FT
+// host's element carries FtHost - what ftcontrols.css keys the framework controls' FT look on (ApplyFTHostClass
+// in cFTThemeHost_mixin.pkg).
 { DesignerClass=cDTWebControlHost }
 { DesignerJSClass=df.WebApp }
+{ OverrideProperty=psCSSClass InitialValue="FtHost" }
 Class cFTLocalWebControlHost is a cLocalWebControlHost
 
     /* ONE COLUMN unless the host says otherwise. 25 of the 33 hosts set piColumnCount to 1;
@@ -48,6 +52,7 @@ Class cFTLocalWebControlHost is a cLocalWebControlHost
         // Forward first: the base sends End_Construct_cWebHostAPI_mixin, which is what brings
         // peThemePreference into existence on this object.
         Forward Send End_Construct_Object
+        Send ApplyFTHostClass       // FtHost on the host's element - after the object's body, which may set classes
         Send ApplyFTTheme
     End_Procedure
 

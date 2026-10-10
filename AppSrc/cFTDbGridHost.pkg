@@ -21,6 +21,7 @@ Use cFTDbLocalWebControlHost.pkg
 { OverrideProperty=peLayoutType InitialValue=ltGrid }
 { OverrideProperty=psDefaultColumnWidth InitialValue="8px" }
 { OverrideProperty=psDefaultRowHeight InitialValue="minmax(var(--ft-row, 33px), max-content)" }
+{ OverrideProperty=psCSSClass InitialValue="FtHost" }
 Class cFTDbGridHost is a cFTDbLocalWebControlHost
     Procedure Construct_Object
         Forward Send Construct_Object

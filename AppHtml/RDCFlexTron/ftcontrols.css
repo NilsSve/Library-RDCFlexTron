@@ -1,6 +1,7 @@
 /* RDCFlexTron - the FT look for the library's real web controls: cFTWebButton, the form controls
-   (FtCompact), cFTWebList, cFTHtmlPage, FTMessageBox's text and the accent label - and cFTGridHost's rows,
-   and the mockups the Studio's Designer draws for content built at run time (.ftph and .ftph-*).
+   (FtCompact) and the framework's own on an FT host's page (FtHost), cFTWebList, cFTHtmlPage, FTMessageBox's
+   text and the accent label - and cFTGridHost's rows, and the mockups the Studio's Designer draws for content
+   built at run time (.ftph and .ftph-*).
 
    Every FT host page links this sheet, with palette.css for its --dfr-* tokens, after the Web UI
    theme (cFTThemeHost_mixin, OnDefineScriptIncludes) - so the tokens are there even on a host that
@@ -148,6 +149,58 @@
     background: transparent;
 }
 .WebControl.WebCombo.FtCompact select option {
+    background-color: var(--dfr-bg-card-hi, #31302e);
+    color: var(--dfr-ink, #eceae1);
+}
+
+/* FtHost: THE SAME LOOK FOR THE FRAMEWORK'S OWN CONTROLS (0.9.21). An FT host marks its page - the class FtHost on
+   the host's own element and on the page's body (cFTThemeHost_mixin) - and these rules give every framework
+   control inside it what FtCompact gives the four cFT form classes, rule for rule and no stronger: a cWebForm, a
+   cWebEdit, a cWebCombo or a cWebDateForm's field reads like its cFT twin with no class of its own. So a control
+   needs a cFT class for what it does, not for how it looks. FtCompact stays for a host that is not an FT host.
+
+   WHAT IS LEFT ALONE: a cWebHtmlBox. Its content is the program's own markup, under a sheet of its own, so the
+   box keeps the page's text size - inside a group or a tab page too, which take the 12 px - and neither its
+   label nor a field in its markup is touched: the label rule names the control the label belongs to, and the
+   field rules reach an input through .WebFrm_Wrapper, which only the framework writes. A cFTWebButton and a
+   cFTWebList have rules of their own, above and below.
+
+   :where() keeps the two size rules as weak as one class, so a sheet of the program's own that sizes a control or
+   an HTML box still wins; in the label's rule it keeps the strength at FtCompact's. */
+:where(.FtHost) .WebControl {
+    font-size: 12px;
+}
+:where(.FtHost) .WebHtmlBox {
+    font-size: var(--df-TxtSize, 14px);
+}
+.FtHost .WebControl:where(:not(.WebHtmlBox)) > :where(.WebCon_Inner) > label {
+    color: var(--dfr-ink, #eceae1);
+}
+/* A LABEL ON THE LEFT IS RIGHT-JUSTIFIED on an FT host, as cFTWebForm and cFTWebCombo have theirs (Nils 2026-10-10:
+   "we should always use right-justification"). The framework writes an alignment into the label's own style only
+   when the object names one (peLabelAlign), so this is the alignment of every control that names none - and an
+   object that names one keeps it. A label on top of its control stays as the framework has it. */
+.FtHost .WebControl:where(:not(.WebHtmlBox)) > :where(.WebCon_Inner.WebCon_LeftLabel) > label {
+    text-align: right;
+}
+.FtHost .WebControl .WebFrm_Wrapper {
+    color: var(--dfr-ink, #eceae1);
+    background: var(--dfr-bg-card-hi, #31302e);
+    font-size: 12px;
+}
+.FtHost .WebFrm_Wrapper input,
+.FtHost .WebFrm_Wrapper textarea,
+.FtHost .WebFrm_Wrapper select {
+    color: var(--dfr-ink, #eceae1);
+    font-size: 12px;
+}
+.FtHost .WebControl.WebCombo .WebFrm_Wrapper {
+    border-color: var(--dfr-line-input, #5a5853);
+}
+.FtHost .WebControl.WebCombo select {
+    background: transparent;
+}
+.FtHost .WebControl.WebCombo select option {
     background-color: var(--dfr-bg-card-hi, #31302e);
     color: var(--dfr-ink, #eceae1);
 }
