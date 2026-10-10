@@ -140,6 +140,16 @@
     color: var(--dfr-ink, #eceae1);
     font-size: 12px;
 }
+/* A CHECK BOX'S CAPTION (0.9.22). The theme gives the caption beside the box a size of its own - its "data" size,
+   14.4 px - so the control's 12 px never reached it: it is named here. The colour it has from the label rule
+   above. The line keeps the height the theme's size gave it, 19 px, so the caption stays where it was - centred
+   on the box - and no row changes its height. A radio's caption the same, for a cWebRadio that carries the class.
+   No stronger than the theme's own rule: it wins by coming later. */
+.FtCompact .WebCheckbox_Caption,
+.FtCompact .WebRadio_Caption {
+    font-size: 12px;
+    line-height: 19px;
+}
 /* A combo: the field's edge, and its drop-down list - WebView2 draws the list itself, with the options'
    colours; only the list's frame stays the system's. */
 .WebControl.WebCombo.FtCompact .WebFrm_Wrapper {
@@ -203,6 +213,18 @@
 .FtHost .WebControl.WebCombo select option {
     background-color: var(--dfr-bg-card-hi, #31302e);
     color: var(--dfr-ink, #eceae1);
+}
+/* A CHECK BOX'S AND A RADIO'S CAPTION (0.9.22): the FT text size and ink on an FT host, as a cFTWebCheckbox has
+   them. The theme writes both on the caption itself, so neither the control's 12 px nor the label rule - the
+   caption is not the control's own label - reaches it. The rule names the control the caption belongs to, as the
+   theme's does, so a label in a cWebHtmlBox's markup is not touched; and it is no stronger than the theme's rule,
+   winning by coming later, so a rule of the program's own that names one class more still decides. The line
+   keeps the theme's 19 px: the caption stays where it was beside the box, and no row changes its height. */
+:where(.FtHost) .WebCheckbox .WebCheckbox_Caption,
+:where(.FtHost) .WebRadio .WebRadio_Caption {
+    color: var(--dfr-ink, #eceae1);
+    font-size: 12px;
+    line-height: 19px;
 }
 
 /* cFTWebList: the framework's list in the look of the FT tables (DFRefactor's Libraries dialog) - the
