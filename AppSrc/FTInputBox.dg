@@ -166,8 +166,11 @@ Object oFTInputBox is a cFTModalPanel
         Set psCaption of hoYes to (psFTYesLabel(Self))
         Set psCaption of hoNo to sNo
         Set pbRender of hoNo to (sNo <> "")
+        // A live push needs a host that is active and a page that has called home: a Popup comes here with the
+        // panel closed and the page still to be built again, and it loads with what was stored above. The whole
+        // story is in FTMessageBox.dg's Activating.
         Get pbInitWebApp of hoHost to bInitializing
-        If (not(bInitializing)) Begin
+        If (Active_State(hoHost) and not(bInitializing)) Begin
             WebSet psLabel of hoPage to (psFTTitle(Self))
             Send UpdateHtml of hoPage (psFTBodyHtml(Self))
             WebSet psLabel of hoForm to (psFTInputLabel(Self))

@@ -227,6 +227,138 @@
     line-height: 19px;
 }
 
+/* THE BOX OF A CHECK BOX AND THE RING OF A RADIO (0.9.23): the colours of the FT markup's own check box (.cbbox) -
+   a dim edge on the sunken ground, and the palette's "ok" green when ticked or chosen, with a bright tick or dot.
+   Colours only: the theme's sizes and places stay, so a list's check box column and the tablet sizes keep
+   working. A check box drawn as a switch (FlipSwitch) is left to the theme. On or off never rests on the colour
+   alone - the tick and the dot are there or not. */
+:where(.FtHost) .WebCheckbox:not(.FlipSwitch) .WebCB_Fake::before,
+:where(.FtHost) .WebRadio .WebR_Fake::before {
+    border-color: var(--dfr-ink-dim-2, #6a6864);
+    background-color: var(--dfr-bg-sunken, #211f1e);
+}
+:where(.FtHost) .WebCheckbox:not(.FlipSwitch) input:checked + .WebCB_Fake::before,
+:where(.FtHost) .WebRadio input:checked + .WebR_Fake::before {
+    border-color: var(--dfr-ok-line, #4f8a4f);
+    background-color: var(--dfr-ok-bg, #3d6a3d);
+}
+:where(.FtHost) .WebCheckbox:not(.FlipSwitch) input:checked + .WebCB_Fake::after {
+    border-color: var(--dfr-ok-ink, #eaf5ea);
+}
+:where(.FtHost) .WebRadio input:checked + .WebR_Fake::after {
+    border-color: var(--dfr-ok-bg, #3d6a3d);
+    background: var(--dfr-ok-ink, #eaf5ea);
+}
+/* With the focus: a soft ring around the box. The theme fills a focused radio with its main colour, chosen or not -
+   here only a chosen one has its dot. */
+:where(.FtHost) .WebCheckbox.WebCon_Focus:not(.FlipSwitch) .WebCB_Fake::before,
+:where(.FtHost) .WebRadio.WebCon_Focus .WebR_Fake::before {
+    box-shadow: 0 0 0 2px var(--dfr-line-strong, #4a4945);
+}
+:where(.FtHost) .WebRadio.Web_Enabled.WebCon_Focus .WebR_Fake::after {
+    background: transparent;
+}
+:where(.FtHost) .WebRadio.Web_Enabled.WebCon_Focus input:checked + .WebR_Fake::after {
+    background: var(--dfr-ok-ink, #eaf5ea);
+}
+/* Switched off: an empty, faint box, a dim tick or dot - and a dim caption, which the theme leaves bright. */
+:where(.FtHost) .WebCheckbox.Web_Disabled:not(.FlipSwitch) .WebCB_Fake::before,
+:where(.FtHost) .WebCheckbox.Web_Disabled:not(.FlipSwitch) input:checked + .WebCB_Fake::before,
+:where(.FtHost) .WebRadio.Web_Disabled .WebR_Fake::before,
+:where(.FtHost) .WebRadio.Web_Disabled input:checked + .WebR_Fake::before {
+    border-color: var(--dfr-line-mid, #42413d);
+    background-color: transparent;
+}
+:where(.FtHost) .WebCheckbox.Web_Disabled:not(.FlipSwitch) input:checked + .WebCB_Fake::after {
+    border-color: var(--dfr-ink-dim, #6f6d64);
+}
+:where(.FtHost) .WebRadio.Web_Disabled input:checked + .WebR_Fake::after {
+    border-color: transparent;
+    background-color: var(--dfr-ink-dim, #6f6d64);
+    background-clip: padding-box;
+}
+:where(.FtHost) .WebCheckbox.Web_Disabled .WebCheckbox_Caption,
+:where(.FtHost) .WebRadio.Web_Disabled .WebRadio_Caption {
+    color: var(--dfr-ink-dim, #6f6d64);
+}
+
+/* A GROUP WITH A BORDER (0.9.23): an FT card - the card ground with a card's edge, where the theme lays a cool grey
+   plate with a shadow - and its caption at the FT text size. The edge is drawn inside the plate, so the group is no
+   pixel larger. A group with neither border nor caption has no plate and is not touched. */
+:where(.FtHost) .WebGroup.WebGrp_HasBorder > .WebCon_Inner > div > .WebContainer {
+    background-color: var(--dfr-bg-card, #2c2b29);
+    box-shadow: inset 0 0 0 1px var(--dfr-line-card, #403f3a);
+    border-radius: 4px;
+}
+:where(.FtHost) .WebGroup.WebGrp_HasCaption > .WebCon_Inner > div > .WebGrp_Caption {
+    color: var(--dfr-ink, #eceae1);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* A TAB CONTAINER (0.9.23): the same card, and tabs like the output dock's - a quiet caption as written (the theme
+   prints it in capitals), the ink and a lifted ground for the tab that is open, with the amber line under it. */
+:where(.FtHost) .WebTabContainer.WebControl > .WebCon_Inner {
+    box-shadow: 0 0 0 1px var(--dfr-line-card, #403f3a);
+}
+:where(.FtHost) .WebTabContainer .WebTbc_Head,
+:where(.FtHost) .WebTabContainer .WebTbc_Body {
+    background: var(--dfr-bg-card, #2c2b29);
+}
+:where(.FtHost) .WebTabContainer .WebTbc_Head {
+    box-shadow: inset 0 -1px 0 var(--dfr-line-card, #403f3a);
+}
+:where(.FtHost) .WebTabContainer .WebTab_Btn span label {
+    color: var(--dfr-ink-4, #a8a69b);
+    font-size: 12px;
+    text-transform: none;
+}
+:where(.FtHost) .WebTabContainer .WebTab_Btn.Web_Enabled:hover {
+    background-color: var(--dfr-btn-off-bg, #2e2d2b);
+}
+:where(.FtHost) .WebTabContainer .WebTab_Btn.Web_Enabled:hover span label {
+    color: var(--dfr-ink, #eceae1);
+}
+:where(.FtHost) .WebTabContainer .WebTab_Btn.WebTab_Current,
+:where(.FtHost) .WebTabContainer .WebTab_Btn.WebTab_Current:hover {
+    border-bottom-color: var(--dfr-amber, #e6a571);
+    background-color: var(--dfr-bg-card-hi, #31302e);
+}
+:where(.FtHost) .WebTabContainer .WebTab_Btn.WebTab_Current span label {
+    color: var(--dfr-ink, #eceae1);
+    font-weight: 600;
+}
+
+/* A DATE PICKER (0.9.23) - the panel a cWebDateForm opens, and a cWebDatePicker on the page. The theme paints it
+   from a handful of its own colour variables, so they are pointed at the palette here, for the picker and nothing
+   else: the ground and the ink, the quiet inks of the week numbers and of the neighbouring months' days, and the
+   amber for the chosen day, the month and year that are showing, and the line under the day the mouse is on.
+   The days are 12 px: the theme sets them to 80 % of the control's text, which is 9.6 px on an FT host. */
+:where(.FtHost) .WebDP {
+    --df-Grayscale8: var(--dfr-bg-card-hi, #31302e);
+    --df-Grayscale1: var(--dfr-ink, #eceae1);
+    --df-Grayscale4: var(--dfr-ink-muted, #84827a);
+    --df-Grayscale5: var(--dfr-ink-dim, #6f6d64);
+    --df-Grayscale7: var(--dfr-bg-track, #3a3936);
+    --df-MainLight: var(--dfr-amber, #e6a571);
+    --df-MainDark: var(--dfr-bg-track, #3a3936);
+    box-shadow: 0 0 0 1px var(--dfr-line-card, #403f3a);
+}
+:where(.FtHost) .WebDP .WebDP_Body {
+    font-size: 12px;
+}
+:where(.FtHost) .WebDP .WebDP_Body th {
+    color: var(--dfr-ink-muted, #84827a);
+    font-size: 12px;
+    font-weight: 600;
+}
+/* Today, when it is not the chosen day: a ring, where the theme lays a grey disc. */
+:where(.FtHost) .WebDP .WebDP_Body .WebDP_Today:not(.WebDP_Selected) {
+    background: transparent;
+    color: var(--dfr-ink, #eceae1);
+    box-shadow: inset 0 0 0 1px var(--dfr-ink-muted, #84827a);
+}
+
 /* cFTWebList: the framework's list in the look of the FT tables (DFRefactor's Libraries dialog) - the
    header on the lifted card ground, a soft line under each row, the row under the mouse on the card
    ground, the selected one in --dfr-row-sel-bg with an amber bar at its left edge, all at 12 px - in a

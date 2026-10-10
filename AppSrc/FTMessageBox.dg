@@ -133,8 +133,17 @@ Object oFTMessageBox is a cFTModalPanel
         Set psCaption of hoYes to (psFTYesLabel(Self))
         Set psCaption of hoNo to sNo
         Set pbRender of hoNo to (sNo <> "")
+        /* A PAGE IS UP ONLY WHILE ITS HOST IS ACTIVE. A Popup comes here with the panel closed: the host's
+           control went - and its page with it - when the box last closed, and is built again as this showing
+           activates it, so the page loads with what was stored above. The framework's pbInitWebApp cannot say
+           so by itself: it turned False when the FIRST showing's page called home and stays False until the
+           next page starts to load, which is after this. A push made on its word alone was queued for the
+           objects of a page that no longer exists, and could reach the new page before it had built its own:
+           "Could not find object 'oMbPage'" (999) in a box shown straight after another - a question, then
+           the answer in the next box (Nils 2026-10-10). So a live push needs both: a host that is active, and
+           a page that has called home. */
         Get pbInitWebApp of hoHost to bInitializing
-        If (not(bInitializing)) Begin
+        If (Active_State(hoHost) and not(bInitializing)) Begin
             WebSet psLabel of hoPage to (psFTTitle(Self))
             WebSet psCSSClass of hoPage to sClass
             Send UpdateHtml of hoPage (psFTBodyHtml(Self))
