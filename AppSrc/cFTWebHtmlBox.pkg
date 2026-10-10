@@ -16,6 +16,7 @@
 Use cWebHtmlBox.pkg
 Use seq_chnl.pkg               // Seq_New_Channel - the design-time dump below
 Use cFTClickRelay.pkg          // the click relay - OnHtmlClick runs after the web event has returned
+Use FTPageIsUp.pkg             // FTHostPageIsUp - can the host's page take a live push now?
 
 // Drop-in for cWebHtmlBox that is marked NOT data-aware. The "Clear" toolbar button does
 // `Broadcast Recursive Send Request_Clear of (Client_Id(ghoCommandBars))` (DFRefactorFT.src), which reaches
@@ -116,21 +117,20 @@ Class cFTWebHtmlBox is a cWebHtmlBox
        banner (SelectFunctionsFT's Run-button bar, root-caused 2026-07-19: that view mounts BEHIND the
        Folders view and WebView2 THROTTLES hidden windows, so the page can still be initializing long
        after IsComObjectCreated turns True; a flaky cold-start sighting on 2026-07-16 was the same race).
-       pbInitWebApp of the owning cLocalWebControlHost is the readiness truth - the framework flips it
-       False on the page's FIRST server call (FinishWebObjectInitialize), and cFTThemeHost_mixin sets it
-       True again when a navigation starts. Until the page calls home the stored property is all there
-       is, and it is exactly what the mount serves, so nothing is lost. ONE canonical home for the gate -
-       the push sites need no per-site guards. AppendHtml/UpdateHtmlArray share the ClientAction risk
-       but have no callers - gate them here too if they ever gain one. */
+       FTHostPageIsUp (FTPageIsUp.pkg) is the readiness truth, for this push and every other in the
+       library: the owning host is active, and its page has called home - the framework's pbInitWebApp
+       turns False at a page's FIRST server call (FinishWebObjectInitialize), and cFTThemeHost_mixin
+       sets it True again when the host's control is created and when a navigation starts. Until 0.9.23
+       the flag alone was asked, and it kept saying "ready" for a dialog that was closed. Until the
+       page is up the stored property is all there is, and it is exactly what the mount serves, so
+       nothing is lost. ONE canonical home for the gate - the push sites need no per-site guards.
+       AppendHtml/UpdateHtmlArray share the ClientAction risk but have no callers - gate them here too
+       if they ever gain one. */
     Procedure UpdateHtml String sHtml
         Handle  hoHost
-        Boolean bInitializing
         Set psHtml to sHtml
         Get Owner to hoHost
-        Move False to bInitializing
-        If (hoHost <> 0) ;
-            Get pbInitWebApp of hoHost to bInitializing
-        If (bInitializing = True) ;
+        If (not(FTHostPageIsUp(hoHost))) ;
             Procedure_Return
         Forward Send UpdateHtml sHtml
     End_Procedure
@@ -142,14 +142,10 @@ Class cFTWebHtmlBox is a cWebHtmlBox
        is a round trip, so several boxes in a row take UpdateHtml each and PushHtml for the last. */
     Procedure PushHtml String sHtml
         Handle  hoHost
-        Boolean bInitializing
 
         Send UpdateHtml sHtml
         Get Owner to hoHost
-        If (hoHost = 0) ;
-            Procedure_Return
-        Get pbInitWebApp of hoHost to bInitializing
-        If (bInitializing = False) ;
+        If (FTHostPageIsUp(hoHost)) ;
             Send CheckUpdateWebUI of hoHost
     End_Procedure
 

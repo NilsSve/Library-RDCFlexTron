@@ -224,8 +224,9 @@ Class cFTThemeHost_mixin is a Mixin
 
     /*  A NAVIGATION MAKES THE PAGE UNREADY AGAIN, and the framework's own flag does not say so.
 
-        pbInitWebApp is the readiness truth every live push is gated on (cFTWebHtmlBox.UpdateHtml folds
-        the push into Set psHtml while it is True). But the framework starts it True, sets it False ONCE
+        pbInitWebApp is half of the readiness truth every live push is gated on (FTHostPageIsUp, in
+        FTPageIsUp.pkg: the host is active, and this flag is False - cFTWebHtmlBox.UpdateHtml folds the
+        push into Set psHtml otherwise). But the framework starts it True, sets it False ONCE
         in FinishWebObjectInitialize, and NEVER restores it. So it really means "has this host ever
         initialised", not "is the page ready now".
 
@@ -251,6 +252,18 @@ Class cFTThemeHost_mixin is a Mixin
                                    Boolean bIsUserInitiated Boolean ByRef bCancelnavigation
         Set pbInitWebApp to True
         Forward Send OnNavigationStarting iNavigationId sUrl bIsRedirected bIsUserInitiated (&bCancelnavigation)
+    End_Procedure
+
+    /*  ...AND SO DOES A NEW CONTROL (0.9.24). A host is a control underneath, created each time its dialog
+        or view is activated, and it navigates as it is created (the framework's OnCreate). The navigation's
+        own event, above, comes a moment later through the message queue; code that runs straight after an
+        activation - before that event - would still read the flag the page before left behind. So the flag
+        is set here already, at the moment the new page is asked for, as it is on the very first showing.
+        With the host's Active_State it makes FTHostPageIsUp true to its name: a page is up while its host
+        is active and the page has called home, and at no other time. */
+    Procedure OnCreate
+        Set pbInitWebApp to True
+        Forward Send OnCreate
     End_Procedure
 
 End_Class

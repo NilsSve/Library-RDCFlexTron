@@ -12,6 +12,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use cWebList.pkg
+Use FTPageIsUp.pkg              // FTHostPageIsUp - can the host's page take a live push now?
 
 /* THE LIST IN THE FT LOOK (Nils 2026-09-28: "build cFTWebList with a demo list"). The framework's own list -
    header, rows, selection, sorting, column resizing - in the look of the FT tables (ftcontrols.css, .ftlist):
@@ -73,18 +74,14 @@ Class cFTWebList is a cWebList
         Send GridRefresh
     End_Procedure
 
-    // New rows while the program runs - from OnManualLoadData, or read again from the data dictionary. Before
-    // the page is ready it does nothing - the list asks for its rows itself when the page draws it - because a
-    // GridRefresh that reaches a page which has not built its controls yet breaks the page (cFTWebHtmlBox's
-    // UpdateHtml waits the same way).
+    // New rows while the program runs - from OnManualLoadData, or read again from the data dictionary. Unless
+    // the page is up (FTHostPageIsUp: the host active, the page called home) it does nothing - the list asks
+    // for its rows itself when the page draws it - because a GridRefresh that reaches a page which has not
+    // built its controls yet breaks the page (cFTWebHtmlBox's UpdateHtml waits the same way).
     Procedure RefreshRows
         Handle hoHost
-        Boolean bInitializing
         Get Owner to hoHost
-        Move False to bInitializing
-        If (hoHost <> 0) ;
-            Get pbInitWebApp of hoHost to bInitializing
-        If (not(bInitializing)) ;
+        If (FTHostPageIsUp(hoHost)) ;
             Send GridRefresh
     End_Procedure
 

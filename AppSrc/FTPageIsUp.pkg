@@ -1,0 +1,51 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTPageIsUp
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-10
+//
+// Description : FTHostPageIsUp - the one test of whether a FlexTron host's page can take a live push now.
+//               Every push the library makes asks it: cFTWebHtmlBox's UpdateHtml and PushHtml, cFTWebButton's
+//               setters, cFTWebList's RefreshRows, and the message and input boxes.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+
+// The framework's own flag of a web host (cWebObjectHost_mixin) - named here, so this package can be Used
+// before the host classes are.
+Register_Function pbInitWebApp Returns Boolean
+
+/* IS THE PAGE UP? A change to a web control has two carriers. The stored property (Set) is what a page is
+   served as it loads. A live push (WebSet, a ClientAction such as UpdateHtml's) reaches a page that is there
+   already. A push made when no page is there is not lost - that would be harmless: it WAITS on the host, and
+   whatever the host sends next carries it, into the next page, where the object it names may not have been
+   built yet: "Could not find object ..." (999), or the framework's error banner where the page should be.
+
+   A page is up when BOTH hold:
+
+   - ITS HOST IS ACTIVE. A host is a control underneath: it is created when its dialog or view is activated -
+     and it navigates then, every time - and it is gone when they close. The framework itself sends nothing to
+     a host that is not active (cLocalWebControlHost.UpdateWebUI returns at once), so a push made then can
+     only wait for the next page.
+   - THE PAGE HAS CALLED HOME. The framework's pbInitWebApp is True until a page's first message and False
+     after it; cFTThemeHost_mixin sets it True again when the host's control is created and when a navigation
+     starts, so it does not keep saying "ready" for the page before.
+
+   Until 0.9.23 the flag alone was the test, and it stayed False from a dialog's first showing to the moment
+   its next page began to load - through the whole of a second Popup's Activating, and for as long as the dialog
+   was closed. The message box met it first: a question, then the answer in the next box (Nils 2026-10-10).
+
+   So: store with Set always, and push only when this says True. A page that loads later is served what was
+   stored, and nothing is lost. (No host - 0 - is no page.) */
+Function FTHostPageIsUp Global Handle hoHost Returns Boolean
+    Boolean bLoading
+    If (hoHost = 0) ;
+        Function_Return False
+    If (not(Active_State(hoHost))) ;
+        Function_Return False
+    Get pbInitWebApp of hoHost to bLoading
+    Function_Return (not(bLoading))
+End_Function

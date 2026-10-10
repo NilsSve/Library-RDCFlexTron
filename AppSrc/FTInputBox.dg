@@ -19,6 +19,7 @@ Use FTAllWebControlClasses.pkg      // cFTWebButton, cFTWebForm
 Use cFTHtmlPage.pkg                 // the message's page: its title (psLabel) and the glyph beside it
 Use Winkern.pkg                     // GetTickCount
 Use FTInputBox.pkg                  // ghoFTInputBox, and FTMessageBox.pkg's FTMessageBoxText
+Use FTPageIsUp.pkg                  // FTHostPageIsUp - can the host's page take a live push now?
 
 /* THE INPUT BOX - one message, ONE field and a fixed row of buttons, nothing else: FTMessageBox.dg with a field
    under the message. A dialog of its own rather than a field the message box can show (Nils 2026-08-15: a
@@ -147,7 +148,6 @@ Object oFTInputBox is a cFTModalPanel
        the two ways an FT dialog's content reaches its page. The label column fits the label. */
     Procedure Activating
         Handle hoHost hoPage hoForm hoNo hoYes
-        Boolean bInitializing
         Integer iOffset
         String sNo
         Forward Send Activating
@@ -166,11 +166,10 @@ Object oFTInputBox is a cFTModalPanel
         Set psCaption of hoYes to (psFTYesLabel(Self))
         Set psCaption of hoNo to sNo
         Set pbRender of hoNo to (sNo <> "")
-        // A live push needs a host that is active and a page that has called home: a Popup comes here with the
-        // panel closed and the page still to be built again, and it loads with what was stored above. The whole
-        // story is in FTMessageBox.dg's Activating.
-        Get pbInitWebApp of hoHost to bInitializing
-        If (Active_State(hoHost) and not(bInitializing)) Begin
+        // A live push only for a page that is up (FTHostPageIsUp): a Popup comes here with the panel closed and
+        // the page still to be built again, and it loads with what was stored above. The whole story is in
+        // FTMessageBox.dg's Activating.
+        If (FTHostPageIsUp(hoHost)) Begin
             WebSet psLabel of hoPage to (psFTTitle(Self))
             Send UpdateHtml of hoPage (psFTBodyHtml(Self))
             WebSet psLabel of hoForm to (psFTInputLabel(Self))

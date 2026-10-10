@@ -18,6 +18,7 @@ Use cWebButton.pkg
 Use cFTClickRelay.pkg            // the click relay - OnButtonClick runs after the web event has returned
 Use FTDashIcons.pkg              // DashIcon and the CS_Glyph* names
 Use FTMarkupBuilders.pkg         // ImgHtml
+Use FTPageIsUp.pkg               // FTHostPageIsUp - can the host's page take a live push now?
 
 /* A REAL WEB BUTTON, NOT MARKUP (Nils 2026-09-26: "Easier to set properties for a button object;
    like font and glyph", and "easier to render the button object in the Studio designer").
@@ -129,16 +130,12 @@ Class cFTWebButton is a cWebButton
         Function_Return sList
     End_Function
 
-    // Is the button's page up? The host's pbInitWebApp is True until the page's first call home (and again
-    // from a navigation - cFTThemeHost_mixin); a WebSet before then has nowhere to go.
+    // Is the button's page up? The library's one test (FTHostPageIsUp, FTPageIsUp.pkg): the host is active and
+    // its page has called home. A WebSet at any other time has nowhere to go, and waits for the wrong page.
     Function FTPageIsUp Returns Boolean
         Handle hoHost
-        Boolean bInit
         Get Owner to hoHost
-        If (hoHost = 0) ;
-            Function_Return False
-        Get pbInitWebApp of hoHost to bInit
-        Function_Return (not(bInit))
+        Function_Return (FTHostPageIsUp(hoHost))
     End_Function
 
     // The class list, applied: stored for a page that loads (Set) and pushed to a page that is up (WebSet).
