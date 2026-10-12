@@ -12,6 +12,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use cWebCombo.pkg
+Use FTPageIsUp.pkg      // FTHostPageIsUp - can the host's page take a live push now?
 
 // Inherited from cWebCombo; stated so the Designer models this class without the pooled package. The
 // psCSSClass, peLabelAlign and piColumnSpan tags are for the Studio: its Designer runs none of this code,
@@ -25,6 +26,10 @@ Class cFTWebCombo is a cWebCombo
 
     Procedure Construct_Object
         Forward Send Construct_Object
+
+        // True while the framework fills the list for a page it is building (PreSerializeObject).
+        { Visibility=Private }
+        Property Boolean pbFTFillForPage False
 
         Set pbServerOnChange to True
         Set peLabelAlign to alignRight
@@ -46,5 +51,34 @@ Class cFTWebCombo is a cWebCombo
     End_Procedure
 
     Procedure Request_Clear
+    End_Procedure
+
+    /* A REFILL GOES TO A PAGE THAT IS UP, OR TO NONE (0.9.25). The framework's Refill asks nothing: it fills
+       the list (FillFromDDO, OnFill) and queues a "fill" for the client, every time. Sent while the host's
+       page is not up - a view that is not on screen is told that the data changed - the message waits on the
+       host and goes out with the host's next page, where the combo may not have been built yet: "Could not
+       find object '<the combo>'", error 999. DFRefactor's Program picker met it (Nils 2026-10-12): a
+       workspace opened in one view, then the view with the picker shown. A race, so it shows only
+       sometimes. The library's own pushes have asked FTHostPageIsUp since 0.9.24; this one is the
+       framework's, so it had no test.
+
+       Nothing is lost by leaving it out. The framework fills every combo itself as it builds a page -
+       PreSerializeObject sends Refill - with the data of that moment, and that fill is part of the page's
+       own load: it always goes through (pbFTFillForPage). A refill for a page that is up goes through as
+       before. */
+    Procedure Refill
+        Handle hoHost
+        If (not(pbFTFillForPage(Self))) Begin
+            Get Owner to hoHost
+            If (not(FTHostPageIsUp(hoHost))) ;
+                Procedure_Return
+        End
+        Forward Send Refill
+    End_Procedure
+
+    Procedure PreSerializeObject
+        Set pbFTFillForPage to True
+        Forward Send PreSerializeObject
+        Set pbFTFillForPage to False
     End_Procedure
 End_Class
