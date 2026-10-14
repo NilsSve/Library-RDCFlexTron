@@ -51,6 +51,11 @@ Class cFTWebList is a cWebList
         { Visibility=Private }
         Property Boolean pbFTLoadOnShow False
 
+        // True once the host's current page has drawn the list and asked for its rows (FTLoadRows); False from the
+        // moment a page is built, until then. A data dictionary's refresh waits for it (Refresh, below).
+        { Visibility=Private }
+        Property Boolean pbFTDrawn False
+
         // The FT look - .ftlist in ftcontrols.css.
         Set psCSSClass to "ftlist"
         Set psJSClass to "rdcft.FTWebList"
@@ -71,7 +76,27 @@ Class cFTWebList is a cWebList
     // Sent by the client (rdcft.FTWebList) the first time the page draws the list: its rows, from
     // OnManualLoadData or from its data dictionary - GridRefresh is the framework's own read of either.
     Procedure FTLoadRows
+        Set pbFTDrawn to True
         Send GridRefresh
+    End_Procedure
+
+    // A page is being built: the list it holds has not been drawn yet.
+    Procedure PreSerializeObject
+        Set pbFTDrawn to False
+        Forward Send PreSerializeObject
+    End_Procedure
+
+    /* A data dictionary's change: the framework's list reads its rows again and sends them (GridRefresh) - here
+       only to a page that is up and has drawn the list. A page that has not, has no list to take them: the client
+       stops with error 999 "Could not find object" (Nils 2026-10-14: a dialog with two data-aware hosts, shown a
+       second time - the second host's first call read its data dictionary again, and its parent's, while the
+       first host's page was still building this list). Such a page asks for its rows itself when it draws the
+       list (FTLoadRows), so nothing is missed. */
+    Procedure Refresh Integer eMode
+        Handle hoHost
+        Get Owner to hoHost
+        If (pbFTDrawn(Self) and FTHostPageIsUp(hoHost)) ;
+            Forward Send Refresh eMode
     End_Procedure
 
     // New rows while the program runs - from OnManualLoadData, or read again from the data dictionary. Unless

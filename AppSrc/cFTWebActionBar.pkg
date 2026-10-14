@@ -1,0 +1,37 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebActionBar
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-14
+//
+// Description : FlexTron (FT) subclass of cWebActionBar: the bar of a dialog's action menu - the host's whole
+//               width, right-aligned, captions shown - which the dialog declares in its cFTActionBarHost, so
+//               the Studio's Designer draws it and the menu's items as the running program does.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebActionBar.pkg
+
+/* THE BAR OF A DIALOG'S ACTION MENU (Nils 2026-10-14: show the menu's buttons in the Designer too). It shows the
+   items of the cWebMenuGroup beside it in the host - psGroupName "MainActions" on both, the framework's default.
+   The dialog declares it: the Studio's Designer draws what the source declares and runs none of a class's code,
+   so a bar built by a class would leave it an empty host. Its defaults are the FT ones, as tags as well, so the
+   Designer applies them too: the host's whole width, right-aligned, captions shown (an action bar hides them by
+   default). The look is ftcontrols.css's (.WebActionBar on an FT host), the glyphs ftglyphs.css's - both in
+   application.css, which the Designer loads. */
+{ DesignerJSClass=df.WebActionBar }
+{ OverrideProperty=piColumnSpan InitialValue=0 }
+{ OverrideProperty=peAlign InitialValue=alignRight }
+{ OverrideProperty=pbShowCaption InitialValue=True }
+Class cFTWebActionBar is a cWebActionBar
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set piColumnSpan to 0               // the host's whole width
+        Set peAlign to alignRight
+        Set pbShowCaption to True
+    End_Procedure
+
+End_Class

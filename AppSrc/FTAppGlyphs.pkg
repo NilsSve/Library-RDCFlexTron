@@ -344,12 +344,13 @@ Function FTSvgDataUrl Global String sSvg Returns String
     Function_Return ('url("data:image/svg+xml,' + sSvg + '")')
 End_Function
 
-// A glyph's class as ftglyphs.css draws the library's: in front of a web button's caption and of a cFTHtmlPage's
-// title. It sets everything itself, so it can replace a library glyph of either kind - a one-colour glyph is a
+// A glyph's class as ftglyphs.css draws the library's: in front of a web button's caption, of a cFTHtmlPage's
+// title and of a menu item's caption. It sets everything itself, so it can replace a library glyph of either kind - a one-colour glyph is a
 // mask painted in the text colour, a coloured one a picture.
 Function FTAppGlyphRule Global String sName String sSvg Boolean bOneColour Returns String
     String sSelector sUrl
     Move (".WebControl.WebButton.ftg-" + sName + " button::before, .WebControl.WebHtmlBox.ftg-" + sName + " > .WebCon_Inner > label::before") to sSelector
+    Move (sSelector + ", .WebMenuItem.ftg-" + sName + " > div > span.WebItm_Icon::before") to sSelector
     If (bOneColour) Begin
         Move (FTSvgDataUrl(Replaces("currentColor", sSvg, "black"))) to sUrl
         Function_Return (sSelector + " { background: currentColor; -webkit-mask: " + sUrl + " center / contain no-repeat; mask: " + sUrl + " center / contain no-repeat; }")

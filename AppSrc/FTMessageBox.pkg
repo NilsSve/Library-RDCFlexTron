@@ -14,6 +14,7 @@
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //****************************************************************************
 Use Msgbox.pkg              // Message_Box, the MB_ and MBR_ values, and C_$Information / C_$Stop / C_$Question
+Use LanguageText.pkg        // C_$DeleteThisRecord, C_$DeleteThisLine, C_$Confirm
 Use FTMarkupBuilders.pkg    // FTHtmlEscape, DivOpen, ParaHtml - and, from FTConstants.h.pkg, CS_Br and CS_DivEnd
 Use FTDashIcons.pkg         // CS_GlyphInfo, CS_GlyphStop, CS_GlyphHelp
 
@@ -165,6 +166,26 @@ Function FTYesNoBox Global String sMessage String sTitle Integer DfltBtn Returns
     If (bYes) ;
         Function_Return MBR_Yes
     Function_Return MBR_No
+End_Function
+
+/* DataFlex's Delete_Confirmation and Line_Delete_Confirmation (Dfconfrm.pkg) in the FT look - the question a
+   grid, a field or a data-aware FT host asks before it deletes, named in its Verify_Delete_Msg:
+
+       Set Verify_Delete_Msg to (RefFunc(FTDelete_Confirmation))           // a field, a data-aware host
+       Set Verify_Delete_Msg to (RefFunc(FTLine_Delete_Confirmation))      // a grid's row
+
+   As Dfconfrm.pkg's, they return non-zero - do not delete - unless the user answers Yes. FTYesNoBox shows the
+   dialog of FTMessageBox.dg, which the program Uses. */
+Function FTDelete_Confirmation for cUIObject Returns Integer
+    Integer iAnswer
+    Get FTYesNoBox C_$DeleteThisRecord C_$Confirm to iAnswer
+    Function_Return (iAnswer <> MBR_Yes)
+End_Function
+
+Function FTLine_Delete_Confirmation for cUIObject Returns Integer
+    Integer iAnswer
+    Get FTYesNoBox C_$DeleteThisLine C_$Confirm to iAnswer
+    Function_Return (iAnswer <> MBR_Yes)
 End_Function
 
 /* A MESSAGE WRITTEN IN HTML, with the caller's own button captions - what the three above cannot say: a body in

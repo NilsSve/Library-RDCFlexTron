@@ -1,0 +1,59 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebMenuNew
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-14
+//
+// Description : New in a dialog's action menu (cFTActionBarHost): a new row in the grid that had the focus
+//               before the menu, or an empty record in the field or data-aware host that had it.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTWebMenuItem.pkg
+
+Register_Procedure Request_AppendRow    // a CodeJock grid's (cCJGrid.pkg) - named here, so no grid package is needed
+Register_Function phoDataSource Returns Handle
+
+/* NEW, ON THE OBJECT THE FOCUS CAME FROM (cFTActionBarHost, ActionTarget). A CodeJock grid gets a new row
+   (Request_AppendRow, which keeps to the grid's pbAllowAppendRow) - its Request_Clear only undoes the changes of
+   the row it is on. A field or a data-aware FT host clears its data dictionary for a new record (Request_Clear),
+   as DataFlex's cCJClearMenuItem does. The focus goes back there first. */
+{ DesignerJSClass=df.WebMenuItem }
+{ OverrideProperty=psCaption InitialValue="New" }
+{ OverrideProperty=psCSSClass InitialValue="ftg-add" }
+Class cFTWebMenuNew is a cFTWebMenuItem
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psCaption to "New"
+        Set psCSSClass to "ftg-add"
+        Set psToolTip to "A new row, or a new record, where you are"
+    End_Procedure
+
+    /* A CodeJock grid has a data source (phoDataSource). Asked with delegation off, so another object answers 0
+       rather than handing the question to its panel - the way DataFlex's Is_Function asks (Dfpanel.pkg). */
+    Function IsGrid Handle hoTarget Returns Boolean
+        Handle hoSource
+        Integer iMode
+        Get Delegation_Mode of hoTarget to iMode
+        Set Delegation_Mode of hoTarget to No_Delegate_Or_Error
+        Get phoDataSource of hoTarget to hoSource
+        Set Delegation_Mode of hoTarget to iMode
+        Function_Return (hoSource <> 0)
+    End_Function
+
+    Procedure OnItemClick
+        Handle hoTarget
+        Get ActionTarget to hoTarget        // the menu's host (cFTActionBarHost) answers
+        If (hoTarget = 0) ;
+            Procedure_Return
+        Send Activate of hoTarget
+        If (IsGrid(Self, hoTarget)) ;
+            Send Request_AppendRow of hoTarget
+        Else ;
+            Send Request_Clear of hoTarget
+    End_Procedure
+
+End_Class

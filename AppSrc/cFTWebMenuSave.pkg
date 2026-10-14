@@ -1,0 +1,42 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebMenuSave
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-14
+//
+// Description : Save in a dialog's action menu (cFTActionBarHost): saves through the grid, field or data-aware
+//               host that had the focus before the menu - DataFlex's cCJSaveMenuItem, as an FT menu item.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTWebMenuItem.pkg
+
+/* SAVE, THE WAY A WINDOWS PROGRAM'S TOOLBAR SAVES (Nils 2026-10-14: the menu works for both grids, "usually
+   achieved with the Focus function"). DataFlex's cCJSaveMenuItem sends Request_Save to the object with the focus
+   (DEOFocus); a click on a web menu takes the focus itself, so the menu's host remembers where it came from
+   (cFTActionBarHost, ActionTarget) and the item sends the request there: a CodeJock grid saves its row, a field
+   its record, a data-aware FT host the record of its own data dictionary. The focus goes back there first. */
+{ DesignerJSClass=df.WebMenuItem }
+{ OverrideProperty=psCaption InitialValue="Save" }
+{ OverrideProperty=psCSSClass InitialValue="ftg-save" }
+Class cFTWebMenuSave is a cFTWebMenuItem
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set psCaption to "Save"
+        Set psCSSClass to "ftg-save"
+        Set psToolTip to "Save the row or the record you are in"
+    End_Procedure
+
+    Procedure OnItemClick
+        Handle hoTarget
+        Get ActionTarget to hoTarget        // the menu's host (cFTActionBarHost) answers
+        If (hoTarget = 0) ;
+            Procedure_Return
+        Send Activate of hoTarget
+        Send Request_Save of hoTarget
+    End_Procedure
+
+End_Class

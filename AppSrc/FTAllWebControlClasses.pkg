@@ -49,6 +49,10 @@ Use cWebMenuBar.pkg
 Use cWebMenuButton.pkg
 Use cWebMenuGroup.pkg
 Use cWebMenuItem.pkg
+Use cFTWebMenuItem.pkg     // FT: an action-menu item whose work runs after the web click has returned (OnItemClick)
+Use cFTWebMenuNew.pkg      // FT: the action menu's New, Save and Delete, on the object the focus came from
+Use cFTWebMenuSave.pkg
+Use cFTWebMenuDelete.pkg
 Use cWebMenuItemCheckbox.pkg
 Use cWebMenuItemLoadView.pkg
 Use cWebMenuClear.pkg
@@ -76,6 +80,7 @@ Use cWebTabPage.pkg
 Use cWebTimer.pkg
 Use cWebToolbar.pkg
 Use cWebActionBar.pkg
+Use cFTWebActionBar.pkg    // FT: the action menu's bar, with the FT defaults
 Use cWebTreeView.pkg
 Use cWebView.pkg
 Use cWebWindow.pkg

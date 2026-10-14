@@ -1,0 +1,119 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTActionBarHost
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-14
+//
+// Description : A dialog's action menu: a small FT host, at the dialog's top right, holding a cFTWebActionBar
+//               and a cWebMenuGroup of menu items - as a web program's header holds its action bar and a web
+//               view declares its oActionGroup; the items act on the grid, field or host the focus came from.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTLocalWebControlHost.pkg
+Use cDbLocalWebControlHost.pkg     // to tell a data-aware host from a plain one (ActionTarget)
+Use cWebActionBar.pkg
+Use cFTWebActionBar.pkg     // the bar the dialog declares in the host
+Use cWebMenuGroup.pkg
+Use cFTWebMenuItem.pkg
+Use cFTWebMenuNew.pkg       // New, Save and Delete on the object the focus came from
+Use cFTWebMenuSave.pkg
+Use cFTWebMenuDelete.pkg
+
+/* A DIALOG'S ACTION MENU (Nils 2026-10-14) - the FT way of a web view's actions. A web view declares them in a
+   cWebMenuGroup (DataFlex's FlexTron sample ZoomInventory.wo: oActionGroup with Save and Edit), and the web
+   program's action bar - a cWebActionBar in its header - shows them. Here this host is the header, and the
+   dialog declares both in it - the bar (cFTWebActionBar, with the FT defaults) and the group:
+
+       Object oActions is a cFTActionBarHost
+           Set Location to 2 250
+           Set Size to 26 170
+           Set peAnchors to anTopRight
+
+           Object oActionBar is a cFTWebActionBar
+           End_Object
+
+           Object oActionGroup is a cWebMenuGroup
+               Object oNew_itm is a cFTWebMenuNew
+               End_Object
+
+               Object oSave_itm is a cFTWebMenuSave
+               End_Object
+
+               Object oDelete_itm is a cFTWebMenuDelete
+               End_Object
+           End_Object
+       End_Object
+
+   The group and the bar find each other by name - psGroupName "MainActions", the framework's default on both -
+   on the host's own page. Each host is a page of its own, so the group is declared in this host; a dialog has
+   one of them. Whether an item shows and whether it can be clicked is the framework's: pbRender and pbEnabled of
+   the item, with WebSet once the page is up (FTHostPageIsUp). An item of the dialog's own is a cFTWebMenuItem
+   with its work in OnItemClick.
+
+   THE ITEMS ACT WHERE THE USER IS (Nils 2026-10-14: "usually achieved with the Focus function"). DataFlex's own
+   toolbar items send Request_Save, Request_Clear and Request_Delete to the object with the focus (DEOFocus) - a
+   CodeJock toolbar never takes the focus. A click on this bar does: the WebView2 control takes it, through
+   DataFlex's own focus change (Mouse_Change_Focus, then Entering). So Entering, below, remembers the object the
+   focus comes from, before it moves, and ActionTarget hands it to the items: a CodeJock grid, a Windows field, or
+   a data-aware FT host - which carries a request out on its own data dictionary (cDbLocalWebControlHost is a
+   data-entry client). An object without a data dictionary - a button bar - is no target: an item does nothing
+   then.
+
+   THE BAR (cFTWebActionBar): right-aligned, with captions (an action bar hides them by default), the items in
+   the FT buttons' look (ftcontrols.css) with their glyph classes (ftglyphs.css). The dialog declares it - this
+   class builds nothing - so the Studio's Designer draws the bar with the group's items, as the program does. ITS HEIGHT: a row of FT buttons is 33 px with
+   its margins, and a host pads its content by 4 px above and below - 26 units hold it at 100 % and above, as
+   the FT dialogs' button bars. Its width: the buttons' (76 px at least, 6 px apart) and 4 px; an item that does
+   not fit is cut off, not moved to a More list. */
+{ DesignerClass=cDTWebControlHost }
+{ DesignerJSClass=df.WebApp }
+{ OverrideProperty=psCSSClass InitialValue="FtHost" }
+Class cFTActionBarHost is a cFTLocalWebControlHost
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+
+        // The object the focus came from when it entered this host - the one the items act on (ActionTarget).
+        { Visibility=Private }
+        Property Handle phoActionFocus 0
+    End_Procedure
+
+    // The focus comes here - by a click on the bar, or by Tab. Before it moves, Focus is the object it comes from.
+    { Visibility=Private }
+    Procedure Entering Returns Integer
+        Handle hoFocus
+        Integer iRetVal
+
+        Move (Focus(Desktop)) to hoFocus
+        Forward Get msg_Entering to iRetVal
+        If ((iRetVal = 0) and (hoFocus > Desktop) and (hoFocus <> Self)) ;
+            Set phoActionFocus to hoFocus
+        Procedure_Return iRetVal
+    End_Procedure
+
+    /* The object the menu's items act on: the one the focus came from, when it is a data-entry object - a grid, a
+       field, a data-aware host; 0 when it is not. A web host that is not data-aware - a button bar - holds no
+       record. Any other object is a data-entry object when it has a data dictionary (Server), asked with
+       delegation off, so an object without one answers 0 rather than handing the question to its panel - the
+       way DataFlex's Is_Function asks (Dfpanel.pkg). */
+    Function ActionTarget Returns Handle
+        Handle hoTarget hoServer
+        Integer iMode
+        Get phoActionFocus to hoTarget
+        If (hoTarget = 0) ;
+            Function_Return 0
+        If (IsObjectOfClass(hoTarget, RefClass(cLocalWebControlHost)) and not(IsObjectOfClass(hoTarget, RefClass(cDbLocalWebControlHost)))) ;
+            Function_Return 0
+        Get Delegation_Mode of hoTarget to iMode
+        Set Delegation_Mode of hoTarget to No_Delegate_Or_Error
+        Get Server of hoTarget to hoServer
+        Set Delegation_Mode of hoTarget to iMode
+        If (hoServer = 0) ;
+            Function_Return 0
+        Function_Return hoTarget
+    End_Function
+
+End_Class

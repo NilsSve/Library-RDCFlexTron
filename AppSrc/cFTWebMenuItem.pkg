@@ -1,0 +1,65 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebMenuItem
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-14
+//
+// Description : FlexTron (FT) subclass of cWebMenuItem: an item of a dialog's action menu (cFTActionBarHost),
+//               whose work runs after the web click has returned (OnItemClick), as a cFTWebButton's does.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebMenuItem.pkg
+Use cFTClickRelay.pkg           // the click relay - OnItemClick runs after the web event has returned
+
+/* AN ITEM OF A DIALOG'S ACTION MENU (Nils 2026-10-14: a dialog's actions in a menu at its top right, as a web view
+   has them - the oActionGroup of DataFlex's FlexTron sample ZoomInventory.wo). A dialog puts a cWebMenuGroup in
+   its cFTActionBarHost and its items in the group; the host's action bar shows them as FT buttons.
+
+   THE CLICK'S WORK WAITS FOR THE CLICK TO END (cFTClickRelay.pkg): a Yes/No box, a data dictionary's error
+   box or a Close_Panel from inside the web event faults (4410). So OnClick only hands the item to the relay, and
+   one tick later OnItemClick runs - put an item's work there.
+
+   IN THE BAR ONLY: peActionDisplay is adActionBar. An item that is in the menu too (adBoth, the framework's
+   default) or only there (adMenu) puts a More button on the bar, whose list opens below it - and a host only as
+   tall as the bar cuts that list off.
+
+   ITS GLYPH is a class in psCSSClass, as a cFTWebButton's is: "ftg-save" (ftglyphs.css draws it in front of
+   the caption). An item without one shows its caption only. */
+{ DesignerJSClass=df.WebMenuItem }
+{ OverrideProperty=peActionDisplay InitialValue=adActionBar }
+Class cFTWebMenuItem is a cWebMenuItem
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set peActionDisplay to adActionBar
+    End_Procedure
+
+    /* The framework's click, inside the WebView2 event. It only hands the item to the relay, so put an item's
+       work in OnItemClick. An object that overrides OnClick itself runs its code inside the click - Forward
+       it, or OnItemClick never runs. */
+    Procedure OnClick
+        Send Relay of (FTClickRelay()) Self
+    End_Procedure
+
+    // The relay's tick, after the web event has returned - the relay sends a button's message.
+    Procedure OnButtonClick
+        Send OnItemClick
+    End_Procedure
+
+    // The item's work: a request to a host, a box, Close_Panel.
+    { MethodType=Event }
+    Procedure OnItemClick
+    End_Procedure
+
+    // The object the item acts on: the grid, field or data-aware host the focus came from before the menu. The
+    // menu's host (cFTActionBarHost) remembers it; the group between them passes the question on.
+    Function ActionTarget Returns Handle
+        Handle hoTarget
+        Delegate Get ActionTarget to hoTarget
+        Function_Return hoTarget
+    End_Function
+
+End_Class

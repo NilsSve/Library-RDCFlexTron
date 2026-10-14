@@ -104,6 +104,107 @@
     min-width: 76px;
 }
 
+/* THE ACTION BAR (cFTActionBarHost, 0.9.26): a dialog's action menu - the framework's cWebActionBar, whose items
+   (cFTWebMenuItem) look like FT buttons. The theme draws an action bar for a web program's header: 46 px tall
+   when it stands alone, an item a cell with a font icon, the caption hidden. On an FT host it is one row of FT
+   buttons at the right: 27 px tall, 76 px at least, 6 px apart, each with its caption and the glyph its class
+   names (ftglyphs.css). The framework writes ul.WebBarRoot > li.WebMenuItem{.<the item's psCSSClass>} > div >
+   span.WebItm_Icon + a; the More item (li.WebTlb_SubItems) stays hidden, since a cFTWebMenuItem is never in it. */
+.FtHost .WebControl.WebToolBar.WebActionBar {
+    display: block;
+    width: 100%;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar,
+.FtHost .WebControl.WebToolBar.WebActionBar > .WebCon_Inner > div,
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li {
+    height: auto;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    min-height: 33px;
+    margin: 0;
+    padding: 0 2px;
+    list-style: none;
+    white-space: nowrap;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem {
+    float: none;
+    display: block;
+    margin: 0;
+    padding: 0;
+    color: var(--dfr-btn-ink, #d8d8d8);
+    background: none;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem > div {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-sizing: border-box;
+    min-width: 76px;
+    height: 27px;
+    padding: 0 10px;
+    color: var(--dfr-btn-ink, #d8d8d8);
+    background: var(--dfr-btn-bg, #3a3937);
+    border: 1px solid var(--dfr-btn-line, #4a4948);
+    border-radius: 4px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem.Web_Enabled:hover > div {
+    background: var(--dfr-btn-bg-hover, #454341);
+    border-color: var(--dfr-btn-line-hover, #5d5b58);
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem.Web_Enabled:active {
+    background: none;                   /* the theme darkens a pressed toolbar cell */
+}
+/* Shut: dimmed in place, and hover does not light it up - as a shut FT button. */
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem.Web_Disabled > div {
+    opacity: 0.45;
+    cursor: default;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem > div > a {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
+    text-shadow: none;
+    vertical-align: baseline;
+}
+/* The picture: the item's glyph class, 15 px; an item without one shows its caption only. */
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem > div > span.WebItm_Icon {
+    display: none;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem[class*="ftg-"] > div > span.WebItm_Icon {
+    display: inline-flex;
+    flex: none;
+    width: 15px;
+    height: 15px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 0;
+    line-height: 0;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebMenuItem > div > span.WebItm_Icon::before {
+    color: inherit;                     /* the theme recolours a toolbar icon on hover */
+}
+/* pbBeginGroup: more air in front of the item, not the theme's divider line. */
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebItm_BgnGroup {
+    margin-left: 8px;
+    padding-left: 0;
+}
+.FtHost .WebControl.WebToolBar.WebActionBar ul.WebBarRoot > li.WebItm_BgnGroup::before {
+    display: none;
+}
+
 /* A label in the accent colour - a band's caption, like the demo's "Theme". The framework writes the
    text into .WebLabel_content, inside the element psCSSClass lands on. */
 .WebControl.WebLabel.ftaccent .WebLabel_content {

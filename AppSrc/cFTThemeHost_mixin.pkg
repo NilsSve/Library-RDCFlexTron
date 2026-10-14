@@ -251,6 +251,7 @@ Class cFTThemeHost_mixin is a Mixin
     Procedure OnNavigationStarting UBigInt iNavigationId String sUrl Boolean bIsRedirected ;
                                    Boolean bIsUserInitiated Boolean ByRef bCancelnavigation
         Set pbInitWebApp to True
+        Send FTDropWaitingActions
         Forward Send OnNavigationStarting iNavigationId sUrl bIsRedirected bIsUserInitiated (&bCancelnavigation)
     End_Procedure
 
@@ -263,7 +264,20 @@ Class cFTThemeHost_mixin is a Mixin
         is active and the page has called home, and at no other time. */
     Procedure OnCreate
         Set pbInitWebApp to True
+        Send FTDropWaitingActions
         Forward Send OnCreate
+    End_Procedure
+
+    /*  ...AND NOTHING WAITS FOR IT (0.9.26). A client action - a list's GridRefresh, a combo's fill - made while
+        the host had no page up waits in paClientActions, and neither a new control nor a navigation clears it:
+        the new page gets it before its objects exist, and the client stops with error 999 "Could not find
+        object" (Nils 2026-10-14: the demo's web data dialog shown a second time, 'oTypes_lst'). What waits when
+        a new page is asked for was meant for the page before it, so it goes; the new page builds itself from
+        the stored values. (The framework empties the queue at the start of every call; a page's FIRST call
+        comes too late for this.) */
+    Procedure FTDropWaitingActions
+        tWebClientAction[] aNone
+        Set paClientActions to aNone
     End_Procedure
 
 End_Class
