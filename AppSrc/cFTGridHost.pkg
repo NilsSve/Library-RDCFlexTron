@@ -48,8 +48,9 @@ Use cFTLocalWebControlHost.pkg
 
    The grid trap: piColumnSpan 0 means ONE column here, not "the rest of the row" as in the flow layout - a
    control that spans the width says how many columns. A caption longer than its span is cut off, as in a
-   Windows dialog: size the control to its caption. The FT button's 76 px minimum steps aside on a grid host
-   (ftcontrols.css), where the span is the width.
+   Windows dialog: size the control to its caption - or put a row of buttons in a cFTWebButtonRow, where each
+   is as wide as its caption. The FT button's 76 px minimum steps aside on a grid host (ftcontrols.css), where
+   the span is the width.
 
    The OverrideProperty tags tell the Studio these are the class's own defaults, so its Designer and property
    panel show them; the Sets make them so at run time. The last one, psCSSClass, is the host's own FtHost

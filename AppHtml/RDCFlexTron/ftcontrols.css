@@ -104,6 +104,22 @@
     min-width: 76px;
 }
 
+/* A ROW OF BUTTONS (cFTWebButtonRow, 0.9.27): each as wide as its glyph and caption - the framework's group with no
+   border or caption, on a grid whose columns take their content's width (max-content). No padding of its own, so its
+   buttons line up with the host's controls above and below, each keeping its own margins. ONE column for every
+   control in it, whatever its piColumnSpan says: the framework writes "grid-column: <n> / span <span>" on the element
+   itself, which only !important outweighs - in the program and in the Studio's Designer. And the FT button's 76 px
+   minimum back. */
+.WebControl.WebGroup.ftbtnrow > .WebCon_Inner > div > .WebContainer > .WebCon_Sizer > .WebCon_Content {
+    padding: 0;
+}
+.WebControl.WebGroup.ftbtnrow > .WebCon_Inner > div > .WebContainer > .WebCon_Sizer > .WebCon_Content.WebCon_GridLayout > .WebControl {
+    grid-column-end: span 1 !important;
+}
+.WebControl.WebGroup.ftbtnrow .WebCon_Content.WebCon_GridLayout > .WebControl.WebButton.ftbtn button {
+    min-width: 76px;
+}
+
 /* THE ACTION BAR (cFTActionBarHost, 0.9.26): a dialog's action menu - the framework's cWebActionBar, whose items
    (cFTWebMenuItem) look like FT buttons. The theme draws an action bar for a web program's header: 46 px tall
    when it stands alone, an item a cell with a font icon, the caption hidden. On an FT host it is one row of FT

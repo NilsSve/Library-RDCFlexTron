@@ -110,8 +110,9 @@ Class cFTWebButton is a cWebButton
 
         // Its width on a grid host of 8 px columns (cFTGridHost): 10 of them, an 80 px cell - the
         // button inside is 70 px after its own 5 px margins (Nils 2026-09-28). A longer caption needs
-        // more, and its object says so. In a flow host of 12 columns 10 is most of the row: a button
-        // there says its piColumnSpan.
+        // more, and its object says so - or the button sits in a cFTWebButtonRow, which makes it as wide
+        // as its caption. In a flow host of 12 columns 10 is most of the row: a button there says its
+        // piColumnSpan.
         Set piColumnSpan to 10
 
         Set psJSClass to "rdcft.FTWebButton"

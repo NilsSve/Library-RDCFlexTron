@@ -1,0 +1,74 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTWebButtonRow
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-10-14
+//
+// Description : A row of buttons, each as wide as its glyph and caption: the framework's group with no border
+//               or caption, whose columns take their content's width - a caption can change, and nothing in
+//               the row has to be moved or resized by hand.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cWebGroup.pkg
+
+/* A ROW OF BUTTONS THAT FIT THEIR CAPTIONS (Nils 2026-10-14: a longer caption left one button too narrow and
+   made the next one very wide - "a situation that will become common"). On a grid host (cFTGridHost) a button
+   is exactly as wide as its piColumnSpan, so a new caption means a new span, and every button after it moves.
+   In this row each button takes the width its glyph and caption need, 76 px at least, and the buttons follow
+   one another in the order they are declared.
+
+   IN THE HOST the row is one control: piRowIndex, piColumnIndex, and a piColumnSpan wide enough for its
+   buttons - to the host's right edge, say (a group's span of 0 is ONE column on a grid host). The buttons sit
+   at its left; the rest of the row stays empty.
+
+   IN THE ROW the buttons need no piColumnIndex and no piColumnSpan:
+   - peLayoutType ltGrid with psDefaultColumnWidth "max-content": each column is as wide as what is in it, an
+     empty one 0 px. piColumnCount 12 holds up to 12 buttons - a 13th would get a column of the auto width,
+     which stretches.
+   - A button with no piColumnIndex takes the next free column, in the order declared; a piColumnIndex places
+     it (the Designer writes one when a button is dragged into the row).
+   - Every control in the row takes ONE column, whatever its piColumnSpan says - a cFTWebButton's 10 would
+     reach into its neighbours' columns. The framework writes the span on the element itself, which only a
+     sheet rule marked !important outweighs (ftcontrols.css, .ftbtnrow), so it holds in the Designer too.
+   - psDefaultRowHeight is one FT row, as the host's own (cFTGridHost).
+
+   THE LOOK (ftcontrols.css, .ftbtnrow): no border, no caption and no padding of its own, so the buttons line
+   up with the host's controls in the rows above and below - each keeps its own margins - and the FT button's
+   76 px minimum, which a grid host turns off, is back.
+
+   The OverrideProperty tags tell the Studio these are the class's own defaults, so its Designer draws the row
+   as the program does; the Sets make them so at run time. */
+{ DesignerJSClass=df.WebGroup }
+{ OverrideProperty=pbShowBorder InitialValue=False }
+{ OverrideProperty=pbShowCaption InitialValue=False }
+{ OverrideProperty=peLayoutType InitialValue=ltGrid }
+{ OverrideProperty=piColumnCount InitialValue=12 }
+{ OverrideProperty=psDefaultColumnWidth InitialValue="max-content" }
+{ OverrideProperty=psDefaultRowHeight InitialValue="minmax(var(--ft-row, 33px), max-content)" }
+{ OverrideProperty=psCSSClass InitialValue="ftbtnrow" }
+Class cFTWebButtonRow is a cWebGroup
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set pbShowBorder to False
+        Set pbShowCaption to False
+        Set peLayoutType to ltGrid
+        Set piColumnCount to 12
+        Set psDefaultColumnWidth to "max-content"
+        Set psDefaultRowHeight to "minmax(var(--ft-row, 33px), max-content)"
+        Set psCSSClass to "ftbtnrow"
+    End_Procedure
+
+    // psCSSClass replaces the class list: an object that names a class of its own keeps "ftbtnrow" in front of it.
+    Procedure End_Construct_Object
+        String sClasses
+        Forward Send End_Construct_Object
+        Move (Trim(psCSSClass(Self))) to sClasses
+        If (Pos(" ftbtnrow ", (" " + sClasses + " ")) = 0) ;
+            Set psCSSClass to (Trim("ftbtnrow " + sClasses))
+    End_Procedure
+
+End_Class

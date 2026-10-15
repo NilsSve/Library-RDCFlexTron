@@ -90,6 +90,7 @@ Use cWebSuggestionForm.pkg
 Use cWebParentCombo.pkg
 Use cWebProgressBar.pkg
 Use cWebGroup.pkg
+Use cFTWebButtonRow.pkg    // FT: a row of buttons, each as wide as its glyph and caption
 Use cWebViewStack.pkg
 Use cWebBreadcrumb.pkg
 Use cWebMenuButton.pkg
