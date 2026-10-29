@@ -331,6 +331,37 @@
     background-color: var(--dfr-bg-card-hi, #31302e);
     color: var(--dfr-ink, #eceae1);
 }
+/* THE THEME'S ACCENT IS THE FT AMBER (0.9.28). The Material theme paints its accent from two of its own variables,
+   --df-MainLight and --df-MainMedium - blue in the light theme, a grey in the dark one: the edge of the field that has
+   the focus, a switch that is on, a progress bar, a slider, the selected item of a tree, a button drawn as a link, a
+   group's expand button, the edge of a plain list's selected row. They are pointed at the palette's amber here, once,
+   so the framework's own controls take it without a rule each. A control with an FT look of its own - the check box,
+   the radio, the tabs, the date picker, cFTWebList - looks as it did: its rules name its colours.
+
+   IN THE DARK THEME THE SAME VARIABLES ARE GROUNDS. There the theme lays MainMedium - and, under a list's first group
+   level, MainLight - beneath light text: a list's group headers, a menu bar, a breadcrumb. The amber itself would
+   leave that text at a contrast of 1.6 to 1.9, so in the dark theme they take the amber card's ground and its edge
+   (9.1 and 4.8, where the theme's greys give 7.7 and 4.2), and only the light theme takes the amber for both. Dark is
+   the default, as in palette.css: a page without the theme's class looks as it always has.
+
+   On the body, so a panel the framework hangs there - a date picker's - has it too, as strong as the theme's dark
+   rule (body.df-Dark) and winning by coming later; and on the host's own element, for the Studio's Designer, whose
+   body carries no FtHost. NOT reached: a variable the theme works out from these in :root - the light theme's button
+   ground, --df-BtnBackgroundColor, stays its blue - because a variable takes its value where it is declared; and the
+   rest of the light theme's blue, which these do not name - the paler tints (a switch's track, a progress bar's
+   track, a plain list's selected row) and MainRegular (a link, a breadcrumb). */
+body.FtHost,
+.FtHost {
+    --df-MainLight: var(--dfr-amber, #e6a571);
+    --df-MainMedium: var(--dfr-amber-bg, #4a4126);
+    --df-ListGroupBackgroundColor: var(--dfr-amber-line, #7a6a3a);
+}
+body.FtHost.df-Light,
+body.df-Light .FtHost {
+    --df-MainMedium: var(--dfr-amber, #98631a);
+    --df-ListGroupBackgroundColor: var(--dfr-amber, #98631a);
+}
+
 /* A CHECK BOX'S AND A RADIO'S CAPTION (0.9.22): the FT text size and ink on an FT host, as a cFTWebCheckbox has
    them. The theme writes both on the caption itself, so neither the control's 12 px nor the label rule - the
    caption is not the control's own label - reaches it. The rule names the control the caption belongs to, as the
@@ -449,7 +480,8 @@
 /* A DATE PICKER (0.9.23) - the panel a cWebDateForm opens, and a cWebDatePicker on the page. The theme paints it
    from a handful of its own colour variables, so they are pointed at the palette here, for the picker and nothing
    else: the ground and the ink, the quiet inks of the week numbers and of the neighbouring months' days, and the
-   amber for the chosen day, the month and year that are showing, and the line under the day the mouse is on.
+   ground of the year list's arrows. The amber for the chosen day, the month and year that are showing, and the line
+   under the day the mouse is on is the host's accent (0.9.28, above).
    The days are 12 px: the theme sets them to 80 % of the control's text, which is 9.6 px on an FT host. */
 :where(.FtHost) .WebDP {
     --df-Grayscale8: var(--dfr-bg-card-hi, #31302e);
@@ -457,7 +489,6 @@
     --df-Grayscale4: var(--dfr-ink-muted, #84827a);
     --df-Grayscale5: var(--dfr-ink-dim, #6f6d64);
     --df-Grayscale7: var(--dfr-bg-track, #3a3936);
-    --df-MainLight: var(--dfr-amber, #e6a571);
     --df-MainDark: var(--dfr-bg-track, #3a3936);
     box-shadow: 0 0 0 1px var(--dfr-line-card, #403f3a);
 }
