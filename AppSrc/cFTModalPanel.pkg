@@ -39,6 +39,12 @@ Class cFTModalPanel is a cRDCModalPanel
     Procedure Construct_Object
         Forward Send Construct_Object
         Set Color to (FTWebBg())
+        /* AND THE FT INK, on the panel itself (0.9.28). A Form's label - a combo form's too - has no colour of its
+           own: DataFlex gives it the TextColor of the label's container each time it places the label, which it
+           does as the dialog opens (Locate_Label > AdjustLabelColors, Windows.pkg). The children's ink
+           (FTColorChildren) reaches the label first and is replaced then, so without this every such label was
+           the panel's default black on the FT ground (Nils 2026-10-29, the demo's Windows controls dialog). */
+        Set TextColor to (FTThemeInk())
         // Built before the theme is known - a dialog Used above the application object: it waits for the
         // theme (FTThemeLater), and ApplyFTTheme colours it again as soon as the theme is read.
         If (giFTThemeMode = CI_FTThemeUnset) ;
@@ -88,6 +94,7 @@ Class cFTModalPanel is a cRDCModalPanel
     Procedure ApplyFTTheme
         Handle hoStatusBar
         Set Color to (FTWebBg())
+        Set TextColor to (FTThemeInk())
         Get phoDialogCommandbar to hoStatusBar
         If (hoStatusBar <> 0) ;
             Set peVisualTheme of (Parent(hoStatusBar)) to (FTCJTheme())
