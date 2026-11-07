@@ -8,7 +8,7 @@
 // Description : The About dialog of an FT program, as a page - a drop-in for the AboutDialog of DataFlex's
 //               DfAbout.pkg and the DFAbout library's, with the same messages: the program's mark and name,
 //               the build facts the DFAbout library gathers (cAboutInfo - the version, the compile date and
-//               time, the certificate when signtool can vouch for one), the lines a program gives it -
+//               time), the lines a program gives it -
 //               copyright, author, more - the About file when it says so, and the Powered by DataFlex mark;
 //               System information, Copy and Close at the bottom right. FTStdAbout.pkg is StdAbout.pkg's
 //               twin: Activate_About and DoAbout, with plain strings.
@@ -54,7 +54,7 @@ Define CI_FTAboutClose   for 3
 /* WHAT IT SHOWS, and where each part comes from - the application object unless the program says otherwise:
    - the masthead: the mark (psMarkImage - Logo), the name (psProgramName - ProductName; the application object's
      psProduct) and the build facts: the version (psVersionText - Version; the program's version resource, as
-     cAboutInfo reads it), the compile date and time, and the certificate when signtool vouches for one;
+     cAboutInfo reads it) and the compile date and time;
    - the lines: psCopyright (Copyright) and psAuthor (Author), then every Add_LineLn / Add_Line - one paragraph
      each, an empty one a gap; an http, https or mailto address in a line is a link the browser opens;
    - the About file, when pbShowAboutFile (pbShowRTFFile) says so - and it does when a file was bound, not when
@@ -239,7 +239,7 @@ Class cFTAboutDialog is a cFTModalPanel
         Property Boolean pbShowAboutFile CB_FTShowAboutFile
         // The lines after the author - Add_LineLn / Add_Line - one paragraph each; "" is a gap.
         Property String[] pasLines
-        // The build facts as shown, kept for Copy: "Version: ...", "Compiled: ...", the certificate sentence.
+        // The build facts as shown, kept for Copy: "Version: ..." and "Compiled: ...".
         Property String[] pasFacts
 
         Object oWebHost is a cFTGridHost
@@ -444,13 +444,11 @@ Class cFTAboutDialog is a cFTModalPanel
     End_Function
 
     // The name and the title when the object set none; the build facts, gathered on every open - the version
-    // line (the object's, or the program's), the compile date, and the certificate when signtool.exe is in the
-    // Programs folder and vouches for one ("" unsigned, "-1" no signtool - neither shown); then the page draws
-    // itself.
+    // line (the object's, or the program's) and the compile date; then the page draws itself.
     Procedure Activating
         Handle hoInfo
         String[] asFacts
-        String sVersion sCompiled sSigned
+        String sVersion sCompiled
 
         Forward Send Activating
         If ((psProgramName(Self) = "") and (ghoApplication <> 0)) ;
@@ -464,14 +462,11 @@ Class cFTAboutDialog is a cFTModalPanel
         Else If (not(Lowercase(sVersion) contains "ver")) ;
             Move ("Version:" * sVersion) to sVersion
         Get CompileDateAndTime of hoInfo to sCompiled
-        Get IsProgramDigitallySigned of hoInfo to sSigned
         Send Destroy of hoInfo
         If (sVersion <> "") ;
             Move sVersion to asFacts[-1]
         If (sCompiled <> "") ;
             Move ("Compiled:" * sCompiled) to asFacts[-1]
-        If ((sSigned <> "") and (sSigned <> "-1")) ;
-            Move sSigned to asFacts[-1]
         Set pasFacts to asFacts
         Send RefreshBody of (oAboutPage(oWebHost(Self)))
     End_Procedure
