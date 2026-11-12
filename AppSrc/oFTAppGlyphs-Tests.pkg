@@ -1,0 +1,96 @@
+// oFTAppGlyphs-Tests.pkg - the text helpers FTAppGlyphs.pkg reads an application's own SVG glyphs with:
+// the glyph name rule, cutting comments and declarations, reading and dropping an attribute, counting the
+// colours a drawing paints with, and painting one colour in currentColor.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use FTAppGlyphs.pkg
+
+Object oFTAppGlyphs_Tests is a cTestFixture
+    Set psTestFixtureName to "FTAppGlyphs - the SVG text helpers"
+
+    // A glyph name is also part of a class name: lower-case letters, digits, - and _.
+    { Published=True }
+    Procedure Test_FTIsAppGlyphName
+        Send Assert      (FTIsAppGlyphName("save-as_2")) "Lower case, a digit, - and _."
+        Send AssertFalse (FTIsAppGlyphName("Save"))      "An upper-case letter."
+        Send AssertFalse (FTIsAppGlyphName("a b"))       "A space."
+        Send AssertFalse (FTIsAppGlyphName(""))          "No name."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTCutStretches_Takes_Out_A_Comment_And_The_Declaration
+        String sSvg
+
+        Move '<?xml version="1.0"?><svg><!-- note --><path/></svg>' to sSvg
+        Move (FTCutStretches(sSvg, "<!--", "-->")) to sSvg
+        Send AssertSAreEqual '<?xml version="1.0"?><svg><path/></svg>' sSvg "The comment goes."
+        Move (FTCutStretches(sSvg, "<?", "?>")) to sSvg
+        Send AssertSAreEqual "<svg><path/></svg>" sSvg "The XML declaration goes."
+    End_Procedure
+
+    // A stretch that never closes runs to the end of the text.
+    { Published=True }
+    Procedure Test_FTCutStretches_An_Open_Stretch_Runs_To_The_End
+        Send AssertSAreEqual "abc" (FTCutStretches("abc<!-- x", "<!--", "-->")) "No closing -->."
+    End_Procedure
+
+    // Either quote; and "width" is not found inside "stroke-width".
+    { Published=True }
+    Procedure Test_FTTagAttr
+        String sTag
+
+        Move ('<path stroke-width="2" width=' + "'9'" + ' d="M0 0">') to sTag
+        Send AssertSAreEqual "9"     (FTTagAttr(sTag, "width"))        "width, in single quotes."
+        Send AssertSAreEqual "2"     (FTTagAttr(sTag, "stroke-width")) "stroke-width."
+        Send AssertSAreEqual "M0 0"  (FTTagAttr(sTag, "d"))            "A value with a space."
+        Send AssertSAreEqual ""      (FTTagAttr(sTag, "fill"))         "No such attribute."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTTagDropAttr
+        Send AssertSAreEqual '<svg width="24">' (FTTagDropAttr('<svg width="24" fill="red">', "fill")) "fill and its value go."
+        Send AssertSAreEqual '<svg width="24">' (FTTagDropAttr('<svg width="24">', "fill"))            "Nothing to drop."
+    End_Procedure
+
+    // none and currentColor are not colours.
+    { Published=True }
+    Procedure Test_FTSvgColourCount_No_Colour
+        String[] asColours
+        Integer iCount
+
+        Move (FTSvgColourCount('<svg fill="none" stroke="currentColor"><path d="M0 0"/></svg>', &asColours)) to iCount
+        Send AssertIAreEqual 0 iCount "none and currentColor."
+    End_Procedure
+
+    // The same colour twice is one colour.
+    { Published=True }
+    Procedure Test_FTSvgColourCount_One_Colour
+        String[] asColours
+        Integer iCount
+
+        Move (FTSvgColourCount('<svg><path fill="#123456"/><path fill="#123456"/></svg>', &asColours)) to iCount
+        Send AssertIAreEqual 1 iCount "One colour, twice."
+        Send AssertSAreEqual "#123456" asColours[0] "The colour as it is spelled."
+    End_Procedure
+
+    // An attribute and a style count alike; a gradient counts as two.
+    { Published=True }
+    Procedure Test_FTSvgColourCount_Two_Colours_And_A_Gradient
+        String[] asColours asNone
+        Integer iCount
+
+        Move (FTSvgColourCount('<svg><path fill="#123456"/><path style="stroke:red;"/></svg>', &asColours)) to iCount
+        Send AssertIAreEqual 2 iCount "A fill and a stroke style."
+        Move (FTSvgColourCount('<svg><stop stop-color="#ffffff"/></svg>', &asNone)) to iCount
+        Send AssertIAreEqual 2 iCount "A gradient stop."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTPaintInCurrentColor
+        String sSvg
+
+        Move (FTPaintInCurrentColor('<svg><path fill="#123456"/><path style="stroke: #123456"/></svg>', "#123456")) to sSvg
+        Send AssertSAreEqual '<svg><path fill="currentColor"/><path style="stroke: currentColor"/></svg>' sSvg "An attribute and a style."
+    End_Procedure
+
+End_Object

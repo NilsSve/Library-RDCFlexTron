@@ -212,6 +212,26 @@ case, and only letters, digits, `-` and `_`. From then on it is a glyph like the
 glyph there, run `python Tools/MakeFTGlyphsCss.py` and commit the sheet with it. A new glyph also needs its line in
 `FTGlyphNames`; the script stops if one is missing.
 
+## Unit tests
+
+`AppSrc\UnitTests.src` is the unit-test program of the library, built on
+[DFUnit](https://github.com/NilsSve/Library-DFUnit). Run `setup.bat` once: it clones DFUnit beside this folder
+(`..\DFUnit`). Then open `RDCFlexTronDev26.0.sws` and build `UnitTests.src`. `RDC-FlexTron-Library.sws`, the
+package other workspaces use, does not know DFUnit.
+
+The tests are in `AppSrc\o<Subject>-Tests.pkg`, one file per subject, and `AppSrc\oUnit_Tests.pkg` lists them.
+The first files cover the library code that needs no window and no FlexTron framework: `FTHtmlEscape` and
+`FTPlainText`, the SVG text helpers of `FTAppGlyphs.pkg`, and a check that every name `FTGlyphNames` lists has a
+drawing in `DashIcon` (an unknown name draws an empty path, so a missing drawing shows as a blank glyph and no
+error). From a command prompt:
+
+```
+df-cli build --target UnitTests RDCFlexTronDev26.0.sws
+Programs\UnitTests64.exe -c
+```
+
+`-c` runs the tests on the console and ends with exit code 0 when all passed.
+
 ## Credits
 
 Most `DashIcon` glyphs come from [Tabler Icons](https://tabler.io/icons) - MIT License,

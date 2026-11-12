@@ -1,0 +1,41 @@
+// oFTMarkupBuilders-Tests.pkg - FTMarkupBuilders.pkg: FTHtmlEscape, the text made safe to put in HTML, and
+// FTPlainText, the text of HTML without its tags (the About dialog's Copy).
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use FTMarkupBuilders.pkg
+
+Object oFTMarkupBuilders_Tests is a cTestFixture
+    Set psTestFixtureName to "FTMarkupBuilders - FTHtmlEscape and FTPlainText"
+
+    { Published=True }
+    Procedure Test_FTHtmlEscape_Escapes_Ampersand_LessThan_And_Quote
+        Send AssertSAreEqual 'a &amp; b &lt; c &quot;q&quot;' (FTHtmlEscape('a & b < c "q"')) "The three characters HTML reads."
+    End_Procedure
+
+    // "&" goes first, or the "&" of every "&lt;" made would be escaped once more.
+    { Published=True }
+    Procedure Test_FTHtmlEscape_Escapes_A_Named_Character_Once
+        Send AssertSAreEqual "&amp;lt;" (FTHtmlEscape("&lt;")) "Text that looks like a named character."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTPlainText_A_Paragraph_Ends_A_Line
+        Send AssertSAreEqual ("One & two" + C_NewLine + "tail") (FTPlainText("<p>One &amp; <b>two</b></p>tail")) "Tags out, &amp; back to &."
+    End_Procedure
+
+    // A list item starts with a dash and ends a line; the end of the list ends one more.
+    { Published=True }
+    Procedure Test_FTPlainText_List_Items_Start_With_A_Dash
+        Send AssertSAreEqual ("- A" + C_NewLine + "- B" + C_NewLine + C_NewLine + "end") (FTPlainText("<ul><li>A</li><li>B</li></ul>end")) "A two-item list."
+    End_Procedure
+
+    // The line breaks and indents of the HTML source are layout, not text.
+    { Published=True }
+    Procedure Test_FTPlainText_Source_Line_Breaks_Are_Layout
+        String sHtml
+
+        Move ("<p>" + Character(13) + Character(10) + "    Hello" + Character(13) + Character(10) + "    world</p>end") to sHtml
+        Send AssertSAreEqual ("Hello world" + C_NewLine + "end") (FTPlainText(sHtml)) "One space for each line break and indent."
+    End_Procedure
+
+End_Object

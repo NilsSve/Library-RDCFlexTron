@@ -1,0 +1,13 @@
+[Properties]
+Version=26.0
+[WorkspacePaths]
+ConfigFile=.\Programs\Config.ws
+[Conditionals]
+Is$WebApp=False
+Is$Win64=True
+[Preferences]
+DefaultFormHeight=12
+[Projects]
+Project0=UnitTests.src
+[Libraries]
+Lib1=..\DFUnit\RDC-DFUnit-Library.sws

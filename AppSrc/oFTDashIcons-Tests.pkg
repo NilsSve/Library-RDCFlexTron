@@ -1,0 +1,35 @@
+// oFTDashIcons-Tests.pkg - FTDashIcons.pkg: every name FTGlyphNames lists has a drawing in DashIcon.
+//
+// DashIcon falls back to an empty path for a name it does not know, so a name added to the list without its
+// drawing (or a drawing whose name was misspelt) shows as a blank glyph and no error. This test finds it.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use FTDashIcons.pkg
+
+Object oFTDashIcons_Tests is a cTestFixture
+    Set psTestFixtureName to "FTDashIcons - DashIcon and FTGlyphNames"
+
+    { Published=True }
+    Procedure Test_Every_Glyph_Name_Has_A_Drawing
+        String[] asNames
+        String sSvg sMissing
+        Integer i
+
+        Move (FTGlyphNames()) to asNames
+        Send Assert (SizeOfArray(asNames) > 0) "FTGlyphNames lists the glyphs."
+        Move "" to sMissing
+        For i from 0 to (SizeOfArray(asNames) - 1)
+            Move (DashIcon(asNames[i])) to sSvg
+            If ((Left(sSvg, 4) <> "<svg") or (Right(sSvg, 6) <> "</svg>") or (Pos('<path d=""/>', sSvg) > 0)) Begin
+                Move (sMissing + " " + asNames[i]) to sMissing
+            End
+        Loop
+        Send AssertSAreEqual "" sMissing "Glyph names with no drawing."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_An_Unknown_Name_Draws_Nothing
+        Send Assert (Pos('<path d=""/>', DashIcon("no-such-glyph-7q")) > 0) "The empty fallback."
+    End_Procedure
+
+End_Object
