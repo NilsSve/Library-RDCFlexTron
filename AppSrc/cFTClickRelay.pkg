@@ -35,6 +35,8 @@ Class cFTClickRelay is a cTimer
         Property Boolean pbPendingHtml False
         Property String  psPendingId ""
         Property String  psPendingParam ""
+        // The pending work is a message of its own (RelaySend), not a click: sent to phoPending on the tick.
+        Property Integer piPendingMsg 0
         Set piTimeout to 1
         Set pbEnabled to False
     End_Procedure
@@ -42,6 +44,7 @@ Class cFTClickRelay is a cTimer
     // A button's click: its OnButtonClick runs on the tick.
     Procedure Relay Handle hoButton
         Set phoPending to hoButton
+        Set piPendingMsg to 0
         Set pbPendingHtml to False
         Set psPendingId to ""
         Set psPendingParam to ""
@@ -51,9 +54,21 @@ Class cFTClickRelay is a cTimer
     // An HTML box's click: its OnHtmlClick sId sParam runs on the tick.
     Procedure RelayHtmlClick Handle hoBox String sId String sParam
         Set phoPending to hoBox
+        Set piPendingMsg to 0
         Set pbPendingHtml to True
         Set psPendingId to sId
         Set psPendingParam to sParam
+        Set pbEnabled to True
+    End_Procedure
+
+    // Any other work a web event must not do itself: iMsg, a procedure of hoObject's without parameters, sent to it
+    // on the tick - cFTWebForm's native prompt list (2026-11-14), say.
+    Procedure RelaySend Handle hoObject Integer iMsg
+        Set phoPending to hoObject
+        Set piPendingMsg to iMsg
+        Set pbPendingHtml to False
+        Set psPendingId to ""
+        Set psPendingParam to ""
         Set pbEnabled to True
     End_Procedure
 
@@ -62,14 +77,21 @@ Class cFTClickRelay is a cTimer
         Handle hoObject
         Boolean bHtml
         String sId sParam
+        Integer iMsg
         Set pbEnabled to False
         Get phoPending to hoObject
+        Get piPendingMsg to iMsg
         Get pbPendingHtml to bHtml
         Get psPendingId to sId
         Get psPendingParam to sParam
         Set phoPending to 0
+        Set piPendingMsg to 0
         If (hoObject = 0) ;
             Procedure_Return
+        If (iMsg <> 0) Begin
+            Send iMsg to hoObject
+            Procedure_Return
+        End
         If (bHtml) ;
             Send OnHtmlClick of hoObject sId sParam
         Else ;

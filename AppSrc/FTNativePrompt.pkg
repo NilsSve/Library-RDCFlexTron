@@ -1,0 +1,46 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTNativePrompt
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-11-14
+//
+// Description : The native prompt list (a cDbCJGridPromptList) inside the prompt panel a data dictionary names
+//               for a field - what cFTWebForm needs to prompt with it.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+Use cDbCJGridPromptList.pkg
+
+/* A DATA DICTIONARY NAMES A FIELD'S PROMPT LIST BY ITS PANEL - Set Field_Prompt_Object Field X to oX_sl, a
+   dbModalPanel - and the list that does the work is a cDbCJGridPromptList inside it: its update mode, whether it
+   was cancelled and the rows chosen are the list's. FTNativePromptList finds it. Every object understands
+   FTFindPromptList and does nothing; a cDbCJGridPromptList answers with itself, so a broadcast to the panel finds
+   the list wherever it sits. */
+
+Global_Variable Handle ghoFTFoundPromptList
+
+Procedure FTFindPromptList for cObject
+End_Procedure
+
+Procedure FTFindPromptList for cDbCJGridPromptList
+    If (ghoFTFoundPromptList = 0) Begin
+        Move Self to ghoFTFoundPromptList
+    End
+End_Procedure
+
+// The cDbCJGridPromptList in a prompt panel - the object itself, when it is one - or 0: no panel, or an older kind
+// of list (a dbList), which this does not drive.
+Function FTNativePromptList Global Handle hoPrompt Returns Handle
+    If (hoPrompt = 0) Begin
+        Function_Return 0
+    End
+    Move 0 to ghoFTFoundPromptList
+    Send FTFindPromptList of hoPrompt
+    If (ghoFTFoundPromptList = 0) Begin
+        Broadcast Recursive Send FTFindPromptList of hoPrompt
+    End
+    Function_Return ghoFTFoundPromptList
+End_Function
