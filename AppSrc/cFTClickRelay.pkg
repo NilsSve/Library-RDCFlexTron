@@ -14,6 +14,12 @@
 //****************************************************************************
 Use cTimer.pkg
 
+// The two messages the tick sends are the button's and the box's (cFTWebButton.pkg, cFTWebHtmlBox.pkg). Named here,
+// so a program that Uses only one of those packages - or only this one - compiles: without them it stopped on
+// 4306 "Forward reference not resolved" MSG_ONBUTTONCLICK (or MSG_ONHTMLCLICK) in this file.
+Register_Procedure OnButtonClick
+Register_Procedure OnHtmlClick String sId String sParam
+
 /* THE CLICK'S WORK WAITS FOR THE CLICK TO END. A web click is handled inside the WebView2 event, and
    a modal panel, a Close_Panel, a view activation, a file dialog or an Exit_Application from there
    faults (4410). So a button's OnClick, or an HTML box's, only hands the click to this relay, and one
