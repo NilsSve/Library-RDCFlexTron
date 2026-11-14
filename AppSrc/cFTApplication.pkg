@@ -16,6 +16,7 @@ Use FTConstants.h.pkg               // the CI_FTTheme* modes, giFTThemeMode, whe
 Use FTThemeColors.pkg               // FTThemeLateObjects - the FT objects that waited for the theme
 Use FTMessageBox.pkg                // FTInfoBox - Windows' own box in a program without FTMessageBox.dg
 Use FTAppGlyphs.pkg                 // FTLoadAppGlyphs - the application's own glyphs, and their sheet
+Use FTThemeIcons.pkg                // FTSeedThemeIcons - the toolbar and menu icons in the dark theme
 
 // A theme mode in words, as a theme button names it: "Dark", "Light" or "Follow Windows".
 Function FTThemeName Global Integer iMode Returns String
@@ -36,7 +37,7 @@ End_Function
    A dialog Used ABOVE the application object is built before the theme is known: its panel and web hosts
    wait for it (FTThemeLater), and SeedFTTheme themes them as soon as it has read it - before any of them is
    shown. A program whose application object is of a class of its own reads the choice itself, the way
-   SeedFTTheme does. */
+   SeedFTTheme does, and sends FTSeedThemeIcons after it. */
 Class cFTApplication is a cApplication
 
     // The saved theme choice, read once, into giFTThemeMode - and every FT object that waited for it takes it
@@ -55,6 +56,10 @@ Class cFTApplication is a cApplication
     Procedure End_Construct_Object
         Forward Send End_Construct_Object
         Send SeedFTTheme
+        // The toolbar and menu icons follow the theme: in the dark theme, the dark icon folders in front of the
+        // bitmap path - before the menus and toolbars are built, which is when they load their icons
+        // (FTThemeIcons.pkg).
+        Send FTSeedThemeIcons
         // The application's own glyphs (AppHtml\FTGlyphs) - read now, from the program's own workspace, and their
         // sheet written when it is out of date (FTAppGlyphs.pkg).
         Send FTLoadAppGlyphs

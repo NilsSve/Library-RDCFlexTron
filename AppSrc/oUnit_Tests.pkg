@@ -18,5 +18,6 @@ Object oWorkspace_Tests is a cTestFixture
     Use oFTMarkupBuilders-Tests.pkg
     Use oFTAppGlyphs-Tests.pkg
     Use oFTDashIcons-Tests.pkg
+    Use oFTThemeIcons-Tests.pkg
 
 End_Object

@@ -18,7 +18,8 @@
         "df-min": 26.0,
         "icon": "RDC-Mark.svg",
         "includeFiles": [
-            "AppHtml/RDCFlexTron/**/*"
+            "AppHtml/RDCFlexTron/**/*",
+            "Bitmaps/RDCFlexTron/**/*"
         ],
         "install": [
             "${AppHtml}/RDCFlexTron/palette.css",
@@ -30,7 +31,8 @@
             "${AppHtml}/RDCFlexTron/ftcontrols.js",
             "${AppHtml}/RDCFlexTron/ftglyphs.css",
             "${AppHtml}/RDCFlexTron/ftabout.css",
-            "${AppHtml}/RDCFlexTron/PoweredByDataFlex.png"
+            "${AppHtml}/RDCFlexTron/PoweredByDataFlex.png",
+            "${Bitmap}/RDCFlexTron/Dk/*.ico"
         ],
         "license": "MIT",
         "licenseFile": "LICENSE",

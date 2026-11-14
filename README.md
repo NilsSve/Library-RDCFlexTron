@@ -46,6 +46,7 @@ SVG icons to build the pages with. It grew out of the FlexTron edition of DFRefa
 | `FTMarkupBuilders.pkg` | HTML builders - buttons and their faces (`IconLabel`: a glyph and its words), chips, divs, tables, style sheet and script links - `FTHtmlEscape`, `MarkedText`: prose whose names are marked with backticks, as in a README - and `FTPlainText`, the text of HTML without its tags, a paragraph or a list item a line, for the clipboard |
 | `FTDashIcons.pkg` | `DashIcon`: inline SVG glyphs for buttons and tiles, each named by a `CS_Glyph*` constant; `FTGlyphNames` returns all their names, your own glyphs' too, for a combo or a list to choose from |
 | `FTAppGlyphs.pkg` | your application's own glyphs: SVG files in `AppHtml\FTGlyphs`, drawn like the library's by `DashIcon`, `psGlyph` and `psTitleIcon` - see [Your own glyphs](#your-own-glyphs) |
+| `FTThemeIcons.pkg` | the toolbar and menu icons in the dark theme: `FTSeedThemeIcons` puts the dark icon folders in front of the bitmap path - your own `Bitmaps\Dk`, then the library's `Bitmaps\RDCFlexTron\Dk` - see [Icons in the dark theme](#icons-in-the-dark-theme) |
 | `FTAllWebControlClasses.pkg` | the framework's web classes, with the cFT ones in their place |
 | `AppHtml/RDCFlexTron/*` | palette, buttons, bars, pagefit, pills - and `ftcontrols.css` / `ftcontrols.js`, the look and the client code of the real web controls and the Designer's mockups, `ftglyphs.css`, the `DashIcon` glyphs as button classes (generated), and `ftabout.css` with `PoweredByDataFlex.png`, the About and System information pages' look and mark; installed into your `AppHtml\RDCFlexTron`. Every FT host page loads `ftcontrols.css`, `ftglyphs.css` and `ftcontrols.js` itself |
 
@@ -75,7 +76,8 @@ commit is not a version, so the ranges above cannot accept it.
 
 - **The application object** is a `cFTApplication`: it reads the theme choice as soon as it is built
   (`SeedFTTheme`). An application object of a class of your own reads it the same way: `ReadInteger` of
-  `CS_FTThemeSection` / `CS_FTTheme` into `giFTThemeMode`, then `Send FTThemeLateObjects`. A dialog can be
+  `CS_FTThemeSection` / `CS_FTTheme` into `giFTThemeMode`, then `Send FTThemeLateObjects` and
+  `Send FTSeedThemeIcons` ([Icons in the dark theme](#icons-in-the-dark-theme)). A dialog can be
   Used anywhere, above the application object too: an FT panel or web host
   built before the theme is read waits for it, and takes it as soon as it is read - before it is shown.
   (One with a `cFTCJSelectionGrid` goes below it - see its row in the table above.)
@@ -205,6 +207,30 @@ case, and only letters, digits, `-` and `_`. From then on it is a glyph like the
   (`cFTApplication`), or when a glyph is first needed. A program that points its workspace object at other
   workspaces while it runs names its own folder before it does: `Send FTLoadAppGlyphsFrom "<AppHtml>\FTGlyphs"`.
 
+## Icons in the dark theme
+
+The standard DataFlex toolbar and menu icons are drawn for a light ground. The package installs dark versions of
+the ones RDC Tools' programs share into your workspace, in `Bitmaps\RDCFlexTron\Dk`: Find, Save, Delete, Clear,
+Prompt, Undo and Redo, Cut, Copy and Paste, About, Help, Exit, Settings, Refresh, the Select icons, Ko-fi, GitHub
+and Suggestion. Save has a blue outline and Delete Record a red one.
+
+In the dark theme, and with Follow Windows, a program looks for an icon in `Bitmaps\Dk` first - your own dark
+icons, which win - then in `Bitmaps\RDCFlexTron\Dk`, then in `Bitmaps`, as in the light theme (`FTSeedThemeIcons`,
+`FTThemeIcons.pkg`).
+
+- **The application object.** `cFTApplication` sends `FTSeedThemeIcons` itself, right after it reads the theme.
+  An application object of a class of your own sends it once the theme is in `giFTThemeMode`, before the menus
+  and toolbars are built - they load their icons as they are built.
+- **Keep these icons out of the program.** An icon named in the project's `.cfg` `[Icons]` list is compiled into
+  the program, and a compiled-in icon is always taken before a file, so it stays light. Take the names the dark
+  folders hold out of that list. The Studio adds a name there when you pick an image in its Designer.
+- **Git.** The installed folder belongs to the package: add `Bitmaps/RDCFlexTron/` to your `.gitignore`, as
+  `AppHtml/RDCFlexTron/`. `df-cli config` puts the files back after a fresh clone.
+- **A new version of the library.** `df-cli package upgrade` replaces the icons that changed. A pin moved by hand
+  (the version in the `.sws`, then config) keeps the old ones and reports them as "modified": delete
+  `Bitmaps\RDCFlexTron` and run config again.
+- **A release of your program** ships `Bitmaps\RDCFlexTron` with it, as it ships `AppHtml\RDCFlexTron`.
+
 ## Changing the library's glyphs
 
 `AppHtml/RDCFlexTron/ftglyphs.css` is generated from `AppSrc/FTDashIcons.pkg`. After adding or changing a
@@ -220,7 +246,8 @@ package other workspaces use, does not know DFUnit.
 
 The tests are in `AppSrc\o<Subject>-Tests.pkg`, one file per subject, and `AppSrc\oUnit_Tests.pkg` lists them.
 The first files cover the library code that needs no window and no FlexTron framework: `FTHtmlEscape` and
-`FTPlainText`, the SVG text helpers of `FTAppGlyphs.pkg`, and a check that every name `FTGlyphNames` lists has a
+`FTPlainText`, the SVG text helpers of `FTAppGlyphs.pkg`, the dark-theme bitmap path of `FTThemeIcons.pkg`, and a
+check that every name `FTGlyphNames` lists has a
 drawing in `DashIcon` (an unknown name draws an empty path, so a missing drawing shows as a blank glyph and no
 error). From a command prompt:
 

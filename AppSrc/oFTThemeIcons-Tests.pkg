@@ -1,0 +1,118 @@
+// oFTThemeIcons-Tests.pkg - the dark-theme bitmap path of FTThemeIcons.pkg: the path FTDarkIconPath builds, and
+// what FTSeedThemeIcons does to the workspace and the file search path in each theme.
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use FTThemeIcons.pkg
+
+Object oFTThemeIcons_Tests is a cTestFixture
+    Set psTestFixtureName to "FTThemeIcons - the dark-theme bitmap path"
+
+    Property Integer piSavedThemeMode
+    Property String  psSavedBitmapPath
+    Property String  psSavedOpenPath
+
+    // FTSeedThemeIcons changes the program's own state: the theme, the workspace's bitmap path and the file search
+    // path. Each test starts from a known state and puts the program's back afterwards.
+    Procedure Setup
+        String sOpenPath
+        Set piSavedThemeMode  to giFTThemeMode
+        Set psSavedBitmapPath to (psBitmapPath(phoWorkspace(ghoApplication)))
+        Get_Attribute DF_OPEN_PATH to sOpenPath
+        Set psSavedOpenPath   to sOpenPath
+        Move False to gbFTThemeIconsSeeded
+    End_Procedure
+
+    Procedure TearDown
+        Move (piSavedThemeMode(Self)) to giFTThemeMode
+        Set psBitmapPath of (phoWorkspace(ghoApplication)) to (psSavedBitmapPath(Self))
+        Set_Attribute DF_OPEN_PATH to (psSavedOpenPath(Self))
+        Move False to gbFTThemeIconsSeeded
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTDarkIconPath_One_Folder
+        Send AssertSAreEqual "C:\WS\Bitmaps\Dk;C:\WS\Bitmaps\RDCFlexTron\Dk;C:\WS\Bitmaps" ;
+            (FTDarkIconPath("C:\WS\Bitmaps")) "The own dark folder, the library's, then the folder."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTDarkIconPath_A_Trailing_Backslash
+        Send AssertSAreEqual "C:\WS\Bitmaps\Dk;C:\WS\Bitmaps\RDCFlexTron\Dk;C:\WS\Bitmaps\" ;
+            (FTDarkIconPath("C:\WS\Bitmaps\")) "No double backslash."
+    End_Procedure
+
+    // The dark folders go under the FIRST folder; the others stay where they were.
+    { Published=True }
+    Procedure Test_FTDarkIconPath_Several_Folders
+        Send AssertSAreEqual "C:\A\Bitmaps\Dk;C:\A\Bitmaps\RDCFlexTron\Dk;C:\A\Bitmaps;C:\B\Images" ;
+            (FTDarkIconPath("C:\A\Bitmaps;C:\B\Images")) "Under the first folder."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTDarkIconPath_Nothing_To_Build_On
+        Send AssertSAreEqual ""        (FTDarkIconPath(""))        "An empty path."
+        Send AssertSAreEqual ""        (FTDarkIconPath("   "))     "Spaces only."
+        Send AssertSAreEqual ";C:\B"   (FTDarkIconPath(";C:\B"))   "An empty first folder."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTSeedThemeIcons_Dark_Puts_The_Dark_Folders_In_Front
+        String sOpenPath
+        Move CI_FTThemeDark to giFTThemeMode
+        Set psBitmapPath of (phoWorkspace(ghoApplication)) to "C:\WS\Bitmaps"
+        Send FTSeedThemeIcons
+        Send AssertSAreEqual "C:\WS\Bitmaps\Dk;C:\WS\Bitmaps\RDCFlexTron\Dk;C:\WS\Bitmaps" ;
+            (psBitmapPath(phoWorkspace(ghoApplication))) "The workspace's bitmap path."
+        // The runtime tidies the search path as it takes it - no empty entries, a backslash after each folder - so
+        // look for the folders and their order, not for the text as it was set.
+        Get_Attribute DF_OPEN_PATH to sOpenPath
+        Send Assert (Pos("C:\WS\Bitmaps\Dk", sOpenPath) > 0) "The file search path has the own dark folder."
+        Send Assert (Pos("C:\WS\Bitmaps\RDCFlexTron\Dk", sOpenPath) > Pos("C:\WS\Bitmaps\Dk", sOpenPath)) ;
+            "Then the library's."
+        // Sent again: no second copy in front.
+        Send FTSeedThemeIcons
+        Send AssertSAreEqual "C:\WS\Bitmaps\Dk;C:\WS\Bitmaps\RDCFlexTron\Dk;C:\WS\Bitmaps" ;
+            (psBitmapPath(phoWorkspace(ghoApplication))) "Only once."
+    End_Procedure
+
+    // Follow Windows takes the dark icons, as the native colours do.
+    { Published=True }
+    Procedure Test_FTSeedThemeIcons_Follow_Windows_Is_Dark
+        Move CI_FTThemeSystem to giFTThemeMode
+        Set psBitmapPath of (phoWorkspace(ghoApplication)) to "C:\WS\Bitmaps"
+        Send FTSeedThemeIcons
+        Send AssertSAreEqual "C:\WS\Bitmaps\Dk;C:\WS\Bitmaps\RDCFlexTron\Dk;C:\WS\Bitmaps" ;
+            (psBitmapPath(phoWorkspace(ghoApplication))) "The dark folders."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTSeedThemeIcons_Light_Leaves_The_Path
+        String sOpenPath
+        Move CI_FTThemeLight to giFTThemeMode
+        Set psBitmapPath of (phoWorkspace(ghoApplication)) to "C:\WS\Bitmaps"
+        Send FTSeedThemeIcons
+        Send AssertSAreEqual "C:\WS\Bitmaps" (psBitmapPath(phoWorkspace(ghoApplication))) "The bitmap path as it was."
+        Get_Attribute DF_OPEN_PATH to sOpenPath
+        Send AssertSAreEqual (psSavedOpenPath(Self)) sOpenPath "The file search path as it was."
+    End_Procedure
+
+    // Before the theme is read, and before a workspace is open, it does nothing - and can be sent again later.
+    { Published=True }
+    Procedure Test_FTSeedThemeIcons_Waits_For_The_Theme_And_The_Workspace
+        Move CI_FTThemeUnset to giFTThemeMode
+        Set psBitmapPath of (phoWorkspace(ghoApplication)) to "C:\WS\Bitmaps"
+        Send FTSeedThemeIcons
+        Send AssertSAreEqual "C:\WS\Bitmaps" (psBitmapPath(phoWorkspace(ghoApplication))) "No theme yet."
+
+        Move CI_FTThemeDark to giFTThemeMode
+        Set psBitmapPath of (phoWorkspace(ghoApplication)) to ""
+        Send FTSeedThemeIcons
+        Send AssertSAreEqual "" (psBitmapPath(phoWorkspace(ghoApplication))) "No workspace open."
+
+        Set psBitmapPath of (phoWorkspace(ghoApplication)) to "C:\WS\Bitmaps"
+        Send FTSeedThemeIcons
+        Send AssertSAreEqual "C:\WS\Bitmaps\Dk;C:\WS\Bitmaps\RDCFlexTron\Dk;C:\WS\Bitmaps" ;
+            (psBitmapPath(phoWorkspace(ghoApplication))) "Sent again once both are there."
+    End_Procedure
+
+End_Object
