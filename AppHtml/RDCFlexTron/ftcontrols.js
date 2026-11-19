@@ -135,6 +135,27 @@
        only when asked - rows from code always, a bound list's whenever its data dictionary is not the host's
        own. So the first time the page draws the list, it asks: FTLoadRows, which sends GridRefresh. A page the
        host builds again asks again. */
+    /* THE FOCUS GOES TO THE HOST AS IT MOVES (0.9.39, Nils 2026-11-19). A native toolbar's Find, Prompt or Clear
+       asks the host which field has the focus, and the host knows only what the page's last call named - every
+       call carries the name of the focused control (getFocusObjName), but moving the focus makes no call. So
+       after a click or a Tab into another field the toolbar still acted on the field before it. Here each change
+       of focus to another control sends one call of its own, FTFocusSync on the host (cFTDbLocalWebControlHost),
+       which has nothing to do: the call itself brings the name. Both FT hosts publish it (cFTThemeHost_mixin), and
+       only an FT host's page loads this file. */
+    if (df.WebApp && df.WebApp.prototype.objFocus && !df.WebApp.prototype._ftFocusSync) {
+        var fObjFocus = df.WebApp.prototype.objFocus;
+        df.WebApp.prototype._ftFocusSync = true;
+        df.WebApp.prototype.objFocus = function (oObj) {
+            var sName;
+            fObjFocus.call(this, oObj);
+            sName = this.getFocusObjName();
+            if (sName && sName !== this._sFTFocusSent) {
+                this._sFTFocusSent = sName;
+                this.serverAction("FTFocusSync");
+            }
+        };
+    }
+
     rdcft.FTWebList = class extends df.WebList {
         constructor(sName, oParent) {
             super(sName, oParent);

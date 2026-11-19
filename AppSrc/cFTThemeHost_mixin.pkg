@@ -280,4 +280,11 @@ Class cFTThemeHost_mixin is a Mixin
         Set paClientActions to aNone
     End_Procedure
 
+    // THE FOCUS AS IT MOVES (0.9.39): the page calls this each time the focus goes to another control
+    // (ftcontrols.js). There is nothing to do here - the call brings the focused control's name, as every call
+    // does, and the host keeps it (FocusObject): a native toolbar's Find, Prompt or Clear then acts on that
+    // control, not on the one the page named last. Published by both FT hosts (End_Construct_Object).
+    Procedure FTFocusSync
+    End_Procedure
+
 End_Class

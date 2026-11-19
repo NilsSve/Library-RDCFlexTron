@@ -54,6 +54,7 @@ Class cFTLocalWebControlHost is a cLocalWebControlHost
         Forward Send End_Construct_Object
         Send ApplyFTHostClass       // FtHost on the host's element - after the object's body, which may set classes
         Send ApplyFTTheme
+        WebPublishProcedure FTFocusSync     // the page reports each move of the focus (cFTThemeHost_mixin)
     End_Procedure
 
 End_Class

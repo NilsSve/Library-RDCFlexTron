@@ -21,6 +21,7 @@ Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
 Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc)
 Use cFTDeferTimer.pkg           // the focus field's one tick after the page is up
 Use FTPageIsUp.pkg              // FTHostPageIsUp
+Use cWebList.pkg                // a list's Find goes through one of its columns (FTListFindColumn)
 
 Register_Procedure FTFocusTheFocusField
 
@@ -62,10 +63,11 @@ Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
     // Auto_Top states stop at the host - to them it is one control - so a host does that for the fields on its
     // page here:
     //
-    // - The toolbar acts on the focus field when the page names no data field as focused. The host sends a
-    //   toolbar Find to the field the page named in its last call (DEOControlFocusObject), and a page that has not
-    //   been clicked in names none, also when a field was given the focus; the host then answered with itself, and
-    //   its Find_Next and the rest did nothing - the field had to be clicked first (Nils, COMManifestStudio).
+    // - The toolbar acts on the field that has the focus (0.9.39, Nils 2026-11-19: "the logic needs to ask the
+    //   focused object for its server" - an order view's Order number, Customer, Sales person or Payment Terms
+    //   field, or its lines' list, each finds in its own table). The page reports each move of the focus
+    //   (FTFocusSync), so FocusObject is the control that has it; DEOControlFocusObject below makes it a Find
+    //   target. Only when no data field has had the focus yet does it fall back to the focus field.
     // - The focus field takes the focus when the page has loaded - the host navigates, so the page loads, every
     //   time the host is shown (OnLoad) - and after Request_Clear and Request_Clear_All (pbFTAutoTopFocus).
     //
@@ -80,6 +82,8 @@ Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
         // acts on it.
         Property Boolean pbFTAutoTopFocus True
         Property Handle phoFTFocusTimer 0
+        // The last data field - or list column - the toolbar acted on: kept for a focus that is not one (a button).
+        Property Handle phoFTLastFindTarget 0
         Get Create (RefClass(cFTFocusFieldTimer)) to hoTimer
         Set phoFTFocusTimer to hoTimer
     End_Procedure
@@ -116,17 +120,83 @@ Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
         Function_Return 0
     End_Function
 
-    // The field the toolbar acts on: the one the page named as focused, else the focus field.
-    Function DEOControlFocusObject Returns Handle
-        Handle hoFocus hoField
-        Forward Get DEOControlFocusObject to hoFocus
-        If ((hoFocus <= 0) or (hoFocus = Self)) Begin
-            Get FTFocusField to hoField
-            If (hoField <> 0) Begin
-                Move hoField to hoFocus
+    // A data-aware list's column a Find goes through: the column it is sorted on (piSortColumn), else the first
+    // column bound to its ordering index (piOrdering), else the first column with an index. The column sends the
+    // Find to the list's own server (cWebColumn_mixin's Request_Find), as the framework's F7 and F8 in a list
+    // do. 0 for a list that is not data-aware, or has no column with an index.
+    Function FTListFindColumn Handle hoList Returns Handle
+        Handle hoColumn hoServer hoFirst
+        Integer iSort iCount i iFile iField iIndex iOrdering
+        If (not(pbDataAware(hoList))) Begin
+            Function_Return 0
+        End
+        Get piSortColumn of hoList to iSort
+        Get ColumnCount of hoList to iCount
+        If ((iSort >= 0) and (iSort < iCount)) Begin
+            Get GetColumnObject of hoList iSort to hoColumn
+            If ((hoColumn <> 0) and (Data_File(hoColumn) > 0)) Begin
+                Function_Return hoColumn
             End
         End
-        Function_Return hoFocus
+        Get Server of hoList to hoServer
+        If (hoServer = 0) Begin
+            Function_Return 0
+        End
+        Get piOrdering of hoList to iOrdering
+        Move 0 to hoFirst
+        For i from 0 to (iCount - 1)
+            Get GetColumnObject of hoList i to hoColumn
+            If (hoColumn <> 0) Begin
+                Get Data_File of hoColumn to iFile
+                Get Data_Field of hoColumn to iField
+                If (iFile > 0) Begin
+                    Get File_Field_Index of hoServer iFile iField to iIndex
+                    If ((iIndex > 0) and (iIndex = iOrdering)) Begin
+                        Function_Return hoColumn
+                    End
+                    If ((iIndex > 0) and (hoFirst = 0)) Begin
+                        Move hoColumn to hoFirst
+                    End
+                End
+            End
+        Loop
+        Function_Return hoFirst
+    End_Function
+
+    // The control the toolbar's Find, Prompt, Clear ... act on. The page's focused control (FocusObject, kept
+    // current by FTFocusSync) when it is a data field: its own Request_Find goes to its own server, on its own
+    // table and column. A data-aware list: its find column (FTListFindColumn), which finds through the list's
+    // server. Anything else - a button, an HTML box, no focus yet: the last field or column it acted on, else the
+    // focus field (FTFocusField). 0 when there is none of those.
+    Function DEOControlFocusObject Returns Handle
+        Handle hoFocus hoTarget
+        Boolean bDEO bControl
+        Get FocusObject to hoFocus
+        If ((hoFocus > 0) and (hoFocus <> Self)) Begin
+            If (IsObjectOfClass(hoFocus, RefClass(cWebList))) Begin
+                Get FTListFindColumn hoFocus to hoTarget
+                If (hoTarget <> 0) Begin
+                    Set phoFTLastFindTarget to hoTarget
+                    Function_Return hoTarget
+                End
+            End
+            Else Begin
+                Get DEO_Object of hoFocus to bDEO
+                If (bDEO) Begin
+                    Get DEO_Control_Object of hoFocus to bControl
+                    If (bControl) Begin
+                        Set phoFTLastFindTarget to hoFocus
+                        Function_Return hoFocus
+                    End
+                End
+            End
+        End
+        Get phoFTLastFindTarget to hoTarget
+        If (hoTarget <> 0) Begin
+            Function_Return hoTarget
+        End
+        Get FTFocusField to hoTarget
+        Function_Return hoTarget
     End_Function
 
     // The focus field the focus: the web focus (Focus), and - when the host has the Windows focus - the keyboard
@@ -186,6 +256,7 @@ Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
         Forward Send End_Construct_Object
         Send ApplyFTHostClass       // FtHost on the host's element - after the object's body, which may set classes
         Send ApplyFTTheme
+        WebPublishProcedure FTFocusSync     // the page reports each move of the focus (cFTThemeHost_mixin)
     End_Procedure
 
 End_Class
