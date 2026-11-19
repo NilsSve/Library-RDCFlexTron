@@ -5,8 +5,9 @@
 // Web-site    : http://www.rdctools.com
 // Created     : 2026-11-14
 //
-// Description : The toolbar and menu icons follow the theme: in the dark theme a program looks for an icon in
-//               the dark folders first - its own Bitmaps\Dk, then the library's Bitmaps\RDCFlexTron\Dk.
+// Description : The toolbar and menu icons follow the theme: a program looks for an icon in the theme's folders
+//               first - in the dark theme its own Bitmaps\Dk, then the library's Bitmaps\RDCFlexTron\Dk; in the
+//               light theme Bitmaps\Lt, then Bitmaps\RDCFlexTron\Lt.
 //
 // This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -28,23 +29,31 @@ Use FTConstants.h.pkg       // giFTThemeMode, CI_FTTheme*
        <Bitmaps>\Dk;<Bitmaps>\RDCFlexTron\Dk;<the path as it was>
 
    so an icon comes from the program's own dark folder when it is there, then from the library's, and otherwise
-   from Bitmaps, as in the light theme. The light theme leaves the path as it is. Follow Windows takes the dark
-   icons, as the native colours do (FTThemeColors.pkg).
+   from Bitmaps. Follow Windows takes the dark icons, as the native colours do (FTThemeColors.pkg).
+
+   THE LIGHT ICONS TOO (0.9.37, Nils 2026-11-19). The library ships a light version of each dark icon, in the same
+   outline style, in Bitmaps\RDCFlexTron\Lt - made from the dark ones by Tools\MakeLightIcons.py: the light lines
+   dark, the colours darkened to a contrast of at least 4:1 with white - and the package installs them beside the
+   dark ones ("${Bitmap}/RDCFlexTron/Lt/*.ico"). In the light theme the bitmap path becomes
+
+       <Bitmaps>\Lt;<Bitmaps>\RDCFlexTron\Lt;<the path as it was>
+
+   so the light theme has the same icons as the dark one. A program's own Bitmaps\Lt comes first, as its Dk does.
 
    WHAT A PROGRAM MUST KNOW:
-   - An icon the dark folders hold must NOT be built into the program. A name in the project's .cfg [Icons] list
+   - An icon the theme's folders hold must NOT be built into the program. A name in the project's .cfg [Icons] list
      is compiled in, and the command bars take a built-in icon before they look for a file (cCJCommandBarSystem's
-     AddImageType), so the dark file would never be read. The Studio adds a name to that list when an image is
+     AddImageType), so the theme's file would never be read. The Studio adds a name to that list when an image is
      picked in its Designer: if an icon stays light in the dark theme, look there first.
    - WHEN. Once the workspace is open - it makes the file search path (Open_Path) from its folders only as it
      opens, so this makes it again - and before the menus and toolbars are built, which is when they load their
      icons. cFTApplication sends FTSeedThemeIcons itself, right after it reads the theme. A program with an
      application object of its own sends it once its theme is in giFTThemeMode. */
 
-// The bitmap path for the dark theme: the first folder's Dk folder, then the library's dark folder under it, then
-// the path as it was. sBitmapPath is the workspace's psBitmapPath: one folder, or several separated by ";". An
-// empty path, or one whose first folder is empty, comes back as it was.
-Function FTDarkIconPath Global String sBitmapPath Returns String
+// The bitmap path for a theme: the first folder's sThemeFolder ("Dk" or "Lt"), then the library's folder of that
+// name under it, then the path as it was. sBitmapPath is the workspace's psBitmapPath: one folder, or several
+// separated by ";". An empty path, or one whose first folder is empty, comes back as it was.
+Function FTThemeIconPath Global String sBitmapPath String sThemeFolder Returns String
     String sFirst
     Integer iPos
     Move (Trim(sBitmapPath)) to sBitmapPath
@@ -60,21 +69,32 @@ Function FTDarkIconPath Global String sBitmapPath Returns String
     If (Right(sFirst, 1) <> "\") Begin
         Move (sFirst + "\") to sFirst
     End
-    Function_Return (sFirst + "Dk;" + sFirst + "RDCFlexTron\Dk;" + sBitmapPath)
+    Function_Return (sFirst + sThemeFolder + ";" + sFirst + "RDCFlexTron\" + sThemeFolder + ";" + sBitmapPath)
 End_Function
 
-// Set once the dark folders are in the path: a second call would put them in front a second time.
+// The bitmap path for the dark theme: <Bitmaps>\Dk;<Bitmaps>\RDCFlexTron\Dk;<the path as it was>.
+Function FTDarkIconPath Global String sBitmapPath Returns String
+    Function_Return (FTThemeIconPath(sBitmapPath, "Dk"))
+End_Function
+
+// The bitmap path for the light theme: <Bitmaps>\Lt;<Bitmaps>\RDCFlexTron\Lt;<the path as it was>.
+Function FTLightIconPath Global String sBitmapPath Returns String
+    Function_Return (FTThemeIconPath(sBitmapPath, "Lt"))
+End_Function
+
+// Set once the theme's folders are in the path: a second call would put them in front a second time.
 Global_Variable Boolean gbFTThemeIconsSeeded
 
-// The dark folders in front of the bitmap path, when the theme is dark. Nothing in the light theme, before the
-// theme is read, or before a workspace is open - and so it can be sent again once it is.
+// The theme's folders in front of the bitmap path: the dark ones in the dark theme and in Follow Windows, the light
+// ones in the light theme. Nothing before the theme is read, or before a workspace is open - and so it can be sent
+// again once it is.
 Procedure FTSeedThemeIcons Global
     Handle hoWorkspace
     String sBitmapPath
     If (gbFTThemeIconsSeeded) Begin
         Procedure_Return
     End
-    If ((giFTThemeMode = CI_FTThemeUnset) or (giFTThemeMode = CI_FTThemeLight)) Begin
+    If (giFTThemeMode = CI_FTThemeUnset) Begin
         Procedure_Return
     End
     If (ghoApplication = 0) Begin
@@ -89,7 +109,12 @@ Procedure FTSeedThemeIcons Global
         Procedure_Return
     End
     Move True to gbFTThemeIconsSeeded
-    Set psBitmapPath of hoWorkspace to (FTDarkIconPath(sBitmapPath))
+    If (giFTThemeMode = CI_FTThemeLight) Begin
+        Set psBitmapPath of hoWorkspace to (FTLightIconPath(sBitmapPath))
+    End
+    Else Begin
+        Set psBitmapPath of hoWorkspace to (FTDarkIconPath(sBitmapPath))
+    End
     Send DoAssignPaths of hoWorkspace
     Set_Attribute DF_OPEN_PATH to (psDfPath(hoWorkspace))
 End_Procedure

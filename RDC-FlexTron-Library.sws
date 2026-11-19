@@ -32,7 +32,8 @@
             "${AppHtml}/RDCFlexTron/ftglyphs.css",
             "${AppHtml}/RDCFlexTron/ftabout.css",
             "${AppHtml}/RDCFlexTron/PoweredByDataFlex.png",
-            "${Bitmap}/RDCFlexTron/Dk/*.ico"
+            "${Bitmap}/RDCFlexTron/Dk/*.ico",
+            "${Bitmap}/RDCFlexTron/Lt/*.ico"
         ],
         "license": "MIT",
         "licenseFile": "LICENSE",
