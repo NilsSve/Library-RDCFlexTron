@@ -104,29 +104,66 @@ Class cFTWebForm is a cWebForm
         Function_Return hoPrompt
     End_Function
 
+    // The list's column bound to the same table and column as this field (piBindingTable, piBindingColumn), or -1.
+    Function FTPromptColumnFor Handle hoList Integer iFile Integer iField Returns Integer
+        Handle hoColumn
+        Integer i iCount
+        Get ColumnCount of hoList to iCount
+        For i from 0 to (iCount - 1)
+            Get ColumnObject of hoList i to hoColumn
+            If ((piBindingTable(hoColumn) = iFile) and (piBindingColumn(hoColumn) = iField)) Begin
+                Function_Return i
+            End
+        Loop
+        Function_Return -1
+    End_Function
+
     // The native list, on the relay's tick: not invoked by a field, and the chosen record found in this field's
     // data dictionary - the DD of the list's file in its tree. The list's own update mode is put back after.
     Procedure FTOpenNativePrompt
         Handle hoPanel hoList hoDD hoTarget
-        Integer eOldMode iFile
-        Boolean bCanceled bFound
+        Integer eOldMode iFile iMyFile iMyField iColumn iOldColumn
+        Boolean bCanceled bFound bSeed
+        String sValue
         RowID[] riSelected
         Get FTNativePromptPanel to hoPanel
         If (hoPanel = 0) Begin
             Procedure_Return
         End
         Move (FTNativePromptList(hoPanel)) to hoList
+        Get Server to hoDD
         Get peUpdateMode of hoList to eOldMode
         Set peUpdateMode of hoList to umPromptNonInvoking
+        /* SEEDED AS A NATIVE FIELD'S LIST IS (Nils 2026-11-19: with a record in the view, F4 should open the list at
+           it). A list that is not invoked by a field seeds itself from psSeedValue through its update column
+           (cDbCJGridPromptList's SeedData), and neither is set for it - so it opened at its first row. When the list
+           seeds (pbAutoSeed), its update column is, for this prompt, the column bound to this field's table and
+           column, and the seed is the field's current value: what a native field's umPromptValue list does. The
+           list clears psSeedValue itself once it has loaded; its update column is put back afterwards. */
+        Move False to bSeed
+        Get Data_File to iMyFile
+        Get Data_Field to iMyField
+        If (pbAutoSeed(hoList)) Begin
+            Get FTPromptColumnFor hoList iMyFile iMyField to iColumn
+            If (iColumn >= 0) Begin
+                Move True to bSeed
+                Get piUpdateColumn of hoList to iOldColumn
+                Set piUpdateColumn of hoList to iColumn
+                Get File_Field_Current_Value of hoDD iMyFile iMyField to sValue
+                Set psSeedValue of hoList to sValue
+            End
+        End
         Send Popup of hoPanel
         Get pbCanceled of hoList to bCanceled
         Get SelectedRowIds of hoList to riSelected
         Set peUpdateMode of hoList to eOldMode
+        If (bSeed) Begin
+            Set piUpdateColumn of hoList to iOldColumn
+        End
         If (bCanceled or (SizeOfArray(riSelected) = 0)) Begin
             Procedure_Return
         End
         Get Main_File of (Server(hoList)) to iFile
-        Get Server to hoDD
         Get Which_Data_Set of hoDD iFile to hoTarget
         If (hoTarget = 0) Begin
             Procedure_Return
