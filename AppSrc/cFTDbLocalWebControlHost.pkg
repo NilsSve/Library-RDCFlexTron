@@ -24,8 +24,8 @@ Use FTPageIsUp.pkg              // FTHostPageIsUp
 
 Register_Procedure FTFocusTheFocusField
 
-// The host's focus-field timer (cFTDbLocalWebControlHost, below): it waits while the host is up and its page is
-// not, then gives the focus field the focus. Its parent is the host.
+// The host's focus-field timer (cFTDbLocalWebControlHost, below), for a clear: it waits while the host is up and
+// its page is not, then gives the focus field the focus. Its parent is the host.
 { Visibility=Private }
 Class cFTFocusFieldTimer is a cFTDeferTimer
     Procedure Construct_Object
@@ -66,8 +66,8 @@ Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
     //   toolbar Find to the field the page named in its last call (DEOControlFocusObject), and a page that has not
     //   been clicked in names none, also when a field was given the focus; the host then answered with itself, and
     //   its Find_Next and the rest did nothing - the field had to be clicked first (Nils, COMManifestStudio).
-    // - The focus field takes the web focus once the page is up after the host is shown, and after Request_Clear
-    //   and Request_Clear_All (pbFTAutoTopFocus).
+    // - The focus field takes the focus when the page has loaded - the host navigates, so the page loads, every
+    //   time the host is shown (OnLoad) - and after Request_Clear and Request_Clear_All (pbFTAutoTopFocus).
     //
     // The focus field is phoFTFocusField, or - when that is 0 - the host's first enabled field bound to a column
     // of its Server's table, in object order (FTFocusField).
@@ -129,28 +129,45 @@ Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
         Function_Return hoFocus
     End_Function
 
-    // The focus field the web focus, once the page is up (the timer waits for it). Not by Activate: that is a
-    // Windows control's message, and a web field activated so - from a view's End_Construct_Object - left the
-    // runtime's focus chain in a state where the next modal dialog hung the program, with no error.
-    Procedure FTFocusTheFocusField
+    // The focus field the focus: the web focus (Focus), and - when the host has the Windows focus - the keyboard
+    // focus to the browser too, or the field has the page's focus and no blinking caret. The browser gets the
+    // keyboard focus when the host gets the Windows focus (cWebView2Browser's OnSetFocus sends ComMoveFocus), and a
+    // host gets that as its view opens, before its browser is made (Nils 2026-11-19: no caret until a toolbar Find
+    // or Clear All). Not by Activate: that is a Windows control's message, and a web field activated so - from a
+    // view's End_Construct_Object - left the runtime's focus chain in a state where the next modal dialog hung the
+    // program, with no error.
+    Procedure FTGiveTheFocusFieldTheFocus
         Handle hoField
+        Boolean bCreated
         If (not(pbFTAutoTopFocus(Self))) Begin
             Procedure_Return
         End
-        If (not(FTHostPageIsUp(Self))) Begin
+        Get FTFocusField to hoField
+        If (hoField = 0) Begin
             Procedure_Return
         End
-        Get FTFocusField to hoField
-        If (hoField <> 0) Begin
-            Send Focus of hoField
+        If (Focus(Desktop) = Self) Begin
+            Get IsComObjectCreated to bCreated
+            If (bCreated) Begin
+                Send ComMoveFocus OLECOREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC
+            End
+        End
+        Send Focus of hoField
+    End_Procedure
+
+    // The same, on the focus timer's tick after a clear, when the page is up.
+    Procedure FTFocusTheFocusField
+        If (FTHostPageIsUp(Self)) Begin
+            Send FTGiveTheFocusFieldTheFocus
         End
     End_Procedure
 
-    // Shown: the focus field takes the focus once the page is up - the host navigates, so the page loads, every
-    // time it is shown.
-    Procedure Activating
-        Forward Send Activating
-        Send Arm of (phoFTFocusTimer(Self))
+    // The page has loaded (LoadWebApp): the focus field takes the focus. A client action sent here runs once the
+    // page is drawn (the framework's OnLoad). Given earlier - when the browser said the page was there - the
+    // focus was lost while the page built its controls (0.9.34: no caret, no focused field, seen in screenshots).
+    Procedure OnLoad
+        Forward Send OnLoad
+        Send FTGiveTheFocusFieldTheFocus
     End_Procedure
 
     Procedure Request_Clear
