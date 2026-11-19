@@ -19,6 +19,30 @@ Use cDbLocalWebControlHost.pkg
 Use FTConstants.h.pkg           // CI_FTTheme* + giFTThemeMode
 Use FTThemeColors.pkg           // FTWebBg - the WebView2 back colour
 Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc)
+Use cFTDeferTimer.pkg           // the focus field's one tick after the page is up
+Use FTPageIsUp.pkg              // FTHostPageIsUp
+
+Register_Procedure FTFocusTheFocusField
+
+// The host's focus-field timer (cFTDbLocalWebControlHost, below): it waits while the host is up and its page is
+// not, then gives the focus field the focus. Its parent is the host.
+{ Visibility=Private }
+Class cFTFocusFieldTimer is a cFTDeferTimer
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        Set piTimeout to 100
+    End_Procedure
+
+    Function DeferHold Returns Boolean
+        Handle hoHost
+        Move (Parent(Self)) to hoHost
+        Function_Return (Active_State(hoHost) and not(FTHostPageIsUp(hoHost)))
+    End_Function
+
+    Procedure OnDeferredAction Integer iAction String sParam
+        Send FTFocusTheFocusField of (Parent(Self))
+    End_Procedure
+End_Class
 
 /* Both tags are inherited from cLocalWebControlHost (Studio help: "the DesignerClass meta-tag is
    inherited"), and are stated here so the Windows Designer's view of this class does not depend on
@@ -32,6 +56,112 @@ Use cFTThemeHost_mixin.pkg      // the shared theme members (was FTThemeHost.inc
 Class cFTDbLocalWebControlHost is a cDbLocalWebControlHost
 
     Import_Class_Protocol cFTThemeHost_mixin
+
+    // THE FOCUS FIELD (0.9.34, 2026-11-19). A native view has Auto_Top_View_State: its first field takes the focus
+    // when the view is shown and after a clear, and the toolbar's Find, Prompt, Clear ... act on it. The native
+    // Auto_Top states stop at the host - to them it is one control - so a host does that for the fields on its
+    // page here:
+    //
+    // - The toolbar acts on the focus field when the page names no data field as focused. The host sends a
+    //   toolbar Find to the field the page named in its last call (DEOControlFocusObject), and a page that has not
+    //   been clicked in names none, also when a field was given the focus; the host then answered with itself, and
+    //   its Find_Next and the rest did nothing - the field had to be clicked first (Nils, COMManifestStudio).
+    // - The focus field takes the web focus once the page is up after the host is shown, and after Request_Clear
+    //   and Request_Clear_All (pbFTAutoTopFocus).
+    //
+    // The focus field is phoFTFocusField, or - when that is 0 - the host's first enabled field bound to a column
+    // of its Server's table, in object order (FTFocusField).
+    Procedure Construct_Object
+        Handle hoTimer
+        Forward Send Construct_Object
+        // The field the toolbar acts on, and that takes the focus; 0 - the first enabled field of the Server's table.
+        Property Handle phoFTFocusField 0
+        // False - the focus field does not take the focus when the host is shown or cleared; the toolbar still
+        // acts on it.
+        Property Boolean pbFTAutoTopFocus True
+        Property Handle phoFTFocusTimer 0
+        Get Create (RefClass(cFTFocusFieldTimer)) to hoTimer
+        Set phoFTFocusTimer to hoTimer
+    End_Procedure
+
+    // The focus field (above): phoFTFocusField, else the first enabled field of this host bound to a column of its
+    // Server's table - the Server's DEOs are listed in the order they were made, which is the object order. 0 when
+    // there is none.
+    Function FTFocusField Returns Handle
+        Handle hoField hoServer hoDEO
+        Integer i iCount
+        Boolean bControl
+        Get phoFTFocusField to hoField
+        If (hoField <> 0) Begin
+            Function_Return hoField
+        End
+        Get Server to hoServer
+        If (hoServer = 0) Begin
+            Function_Return 0
+        End
+        Get Data_Set_User_Interface_Count of hoServer to iCount
+        For i from 0 to (iCount - 1)
+            Get Data_Set_User_Interface of hoServer i to hoDEO
+            If (hoDEO <> 0) Begin
+                If (IsObjectOfClass(hoDEO, RefClass(cWebObject))) Begin
+                    If (Host(hoDEO) = Self) Begin
+                        Get DEO_Control_Object of hoDEO to bControl
+                        If (bControl and (Data_File(hoDEO) > 0) and pbEnabled(hoDEO) and pbRender(hoDEO)) Begin
+                            Function_Return hoDEO
+                        End
+                    End
+                End
+            End
+        Loop
+        Function_Return 0
+    End_Function
+
+    // The field the toolbar acts on: the one the page named as focused, else the focus field.
+    Function DEOControlFocusObject Returns Handle
+        Handle hoFocus hoField
+        Forward Get DEOControlFocusObject to hoFocus
+        If ((hoFocus <= 0) or (hoFocus = Self)) Begin
+            Get FTFocusField to hoField
+            If (hoField <> 0) Begin
+                Move hoField to hoFocus
+            End
+        End
+        Function_Return hoFocus
+    End_Function
+
+    // The focus field the web focus, once the page is up (the timer waits for it). Not by Activate: that is a
+    // Windows control's message, and a web field activated so - from a view's End_Construct_Object - left the
+    // runtime's focus chain in a state where the next modal dialog hung the program, with no error.
+    Procedure FTFocusTheFocusField
+        Handle hoField
+        If (not(pbFTAutoTopFocus(Self))) Begin
+            Procedure_Return
+        End
+        If (not(FTHostPageIsUp(Self))) Begin
+            Procedure_Return
+        End
+        Get FTFocusField to hoField
+        If (hoField <> 0) Begin
+            Send Focus of hoField
+        End
+    End_Procedure
+
+    // Shown: the focus field takes the focus once the page is up - the host navigates, so the page loads, every
+    // time it is shown.
+    Procedure Activating
+        Forward Send Activating
+        Send Arm of (phoFTFocusTimer(Self))
+    End_Procedure
+
+    Procedure Request_Clear
+        Forward Send Request_Clear
+        Send Arm of (phoFTFocusTimer(Self))
+    End_Procedure
+
+    Procedure Request_Clear_All
+        Forward Send Request_Clear_All
+        Send Arm of (phoFTFocusTimer(Self))
+    End_Procedure
 
     Procedure End_Construct_Object
         // Forward first: the base sends End_Construct_cWebHostAPI_mixin, which is what brings
