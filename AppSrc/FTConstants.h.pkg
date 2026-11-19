@@ -22,7 +22,7 @@ Use Rgb.pkg
 // THE PACKAGE VERSION, as RDC-FlexTron-Library.sws states it in "package"."version" - keep the two
 // equal. Every FT host page links ftcontrols.css / ftcontrols.js with it as ?v=, because WebView2
 // keeps a copy of what it loaded, and a new version of the library must not be served the old one.
-Define CS_FTLibraryVersion for "0.9.32"
+Define CS_FTLibraryVersion for "0.9.33"
 
 // The one source of truth for the above, seeded from the saved setting on first use.
 // Re-read by Send ApplyFTTheme, which is what a runtime switch would broadcast.
