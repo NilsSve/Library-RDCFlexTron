@@ -1,0 +1,137 @@
+﻿//****************************************************************************
+// $Module type: Package
+// $Module name: FTCalendar
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-11-23
+//
+// Description : What cFTMonthCalendar draws a month with, and what a program fills in for each of its days:
+//               the tFTCalendarDay struct, the month and day names in a language of the program's choosing,
+//               and dates written the same on every computer. No web objects here, so the unit tests use it
+//               as it is.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use Windows.pkg
+
+// ONE DAY OF A MONTH CALENDAR - what cFTMonthCalendar asks its OnDefineDay for, one date at a time.
+//   sClass       the day's classes, besides ftcal-d: the library's marks (below) or a program's own
+//   sTip         the tooltip; "" = the date, written yyyy-mm-dd
+//   sAttributes  more attributes for the day's cell, written as they are: 'data-n="12"' - for a page's own script
+// THE MARKS ftcontrols.css draws, in the palette's colours, so they follow the theme:
+//   ftcal-off    a day off: a holiday, a vacation - the strongest mark, filled coral
+//   ftcal-wkd    a day off every week: muted
+//   ftcal-spc    a day worth a look that is still a working day: a framed violet
+//   ftcal-cls    closed, blocked, booked: a framed amber
+// ftcal-today and ftcal-sel are the calendar's own: today, and the day that was clicked.
+Struct tFTCalendarDay
+    String sClass
+    String sTip
+    String sAttributes
+End_Struct
+
+// The month and day names' locale types (GetLocaleInfoEx). Monday is day 1, as in ISO 8601.
+#IFNDEF FT_LOCALE_SMONTHNAME1
+    Define FT_LOCALE_SMONTHNAME1        for |CI$00000038   // January - December: 1 .. 12
+    Define FT_LOCALE_SABBREVMONTHNAME1  for |CI$00000044   // Jan - Dec
+    Define FT_LOCALE_SDAYNAME1          for |CI$0000002A   // Monday - Sunday
+    Define FT_LOCALE_SABBREVDAYNAME1    for |CI$00000031   // Mon - Sun
+    Define FT_LOCALE_SSHORTESTDAYNAME1  for |CI$00000060   // Mo - Su
+#ENDIF
+
+// The same declaration as HolidaysFuncLib's (cCalendarHolidays.h.pkg): whichever package comes first declares it.
+#IFNDEF get_WinAPI_GetLocaleInfoEx
+External_Function WinAPI_GetLocaleInfoEx "GetLocaleInfoEx" Kernel32.dll ;
+    Pointer lpLocaleName ;
+    UInteger LCTYPE ;
+    Pointer lpLCDATA ;
+    Integer cchData ;
+    Returns Integer
+#ENDIF
+
+// One value of a named Windows locale - "sv-SE", "en-GB" - or of the computer's own when sLocaleName is "".
+Function FTLocaleValue Global String sLocaleName Integer iLCType Returns String
+    WString wsLocale wsResult
+    Pointer pLocale
+    Integer iLength
+    Move 0 to pLocale                                   // NULL: the user's own locale
+    If (sLocaleName <> "") Begin
+        Move (sLocaleName + Character(0)) to wsLocale
+        Move (AddressOf(wsLocale)) to pLocale
+    End
+    Move (WinAPI_GetLocaleInfoEx(pLocale, iLCType, 0, 0)) to iLength
+    If (iLength <= 0) ;
+        Function_Return ""
+    Move (ZeroString(iLength)) to wsResult
+    Move (WinAPI_GetLocaleInfoEx(pLocale, iLCType, AddressOf(wsResult), iLength)) to iLength
+    Function_Return (CString(wsResult))
+End_Function
+
+// A name with its first letter upper case, as the start of a line writes it: "januari" -> "Januari".
+Function FTCapsFirst Global String sName Returns String
+    If (sName = "") ;
+        Function_Return ""
+    Function_Return (Uppercase(Left(sName, 1)) + Right(sName, (Length(sName) - 1)))
+End_Function
+
+// A month's name (1 - 12) in a locale's language, its first letter upper case; bLong False = abbreviated.
+Function FTMonthName Global Integer iMonth Boolean bLong String sLocaleName Returns String
+    If ((iMonth < 1) or (iMonth > 12)) ;
+        Function_Return ""
+    If (bLong) ;
+        Function_Return (FTCapsFirst(FTLocaleValue(sLocaleName, FT_LOCALE_SMONTHNAME1 + iMonth - 1)))
+    Function_Return (FTCapsFirst(FTLocaleValue(sLocaleName, FT_LOCALE_SABBREVMONTHNAME1 + iMonth - 1)))
+End_Function
+
+// A day's name (1 = Monday .. 7 = Sunday) in a locale's language, its first letter upper case; bLong False =
+// abbreviated ("Mon", "Mån").
+Function FTDayName Global Integer iIsoDay Boolean bLong String sLocaleName Returns String
+    If ((iIsoDay < 1) or (iIsoDay > 7)) ;
+        Function_Return ""
+    If (bLong) ;
+        Function_Return (FTCapsFirst(FTLocaleValue(sLocaleName, FT_LOCALE_SDAYNAME1 + iIsoDay - 1)))
+    Function_Return (FTCapsFirst(FTLocaleValue(sLocaleName, FT_LOCALE_SABBREVDAYNAME1 + iIsoDay - 1)))
+End_Function
+
+// A day's shortest name, as a calendar's column heading writes it: "Mo", "Må".
+Function FTShortestDayName Global Integer iIsoDay String sLocaleName Returns String
+    If ((iIsoDay < 1) or (iIsoDay > 7)) ;
+        Function_Return ""
+    Function_Return (FTCapsFirst(FTLocaleValue(sLocaleName, FT_LOCALE_SSHORTESTDAYNAME1 + iIsoDay - 1)))
+End_Function
+
+// The day of the week as ISO 8601 counts it: 1 Monday .. 7 Sunday (DateGetDayOfWeek counts from Sunday).
+Function FTIsoDayOfWeek Global Date dDate Returns Integer
+    Integer iDay
+    Move (DateGetDayOfWeek(dDate)) to iDay
+    If (iDay = 1) ;
+        Function_Return 7
+    Function_Return (iDay - 1)
+End_Function
+
+Function FTTwoDigits Global Integer iValue Returns String
+    If (iValue < 10) ;
+        Function_Return ("0" + String(iValue))
+    Function_Return (String(iValue))
+End_Function
+
+// A date written yyyy-mm-dd - the same on every computer, whatever its date format: "2026-07-04".
+Function FTIsoDate Global Date dDate Returns String
+    Function_Return (String(DateGetYear(dDate)) + "-" + FTTwoDigits(DateGetMonth(dDate)) + "-" + FTTwoDigits(DateGetDay(dDate)))
+End_Function
+
+// The date a yyyy-mm-dd string writes, read the same on every computer; 0 when it is no such date.
+Function FTDateFromIso Global String sIso Returns Date
+    Integer iYear iMonth iDay
+    Date dNone
+    Move 0 to dNone
+    If ((Length(sIso) <> 10) or (Mid(sIso, 1, 5) <> "-") or (Mid(sIso, 1, 8) <> "-")) ;
+        Function_Return dNone
+    Move (Left(sIso, 4))   to iYear
+    Move (Mid(sIso, 2, 6)) to iMonth
+    Move (Mid(sIso, 2, 9)) to iDay
+    If ((iYear < 1) or (iMonth < 1) or (iMonth > 12) or (iDay < 1) or (iDay > 31)) ;
+        Function_Return dNone
+    Function_Return (DateSet(iYear, iMonth, iDay))
+End_Function

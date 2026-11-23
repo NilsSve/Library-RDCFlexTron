@@ -1,0 +1,211 @@
+﻿//****************************************************************************
+// $Module type: Class Package
+// $Module name: cFTMonthCalendar
+// $Author     : Nils Svedmyr, RDC Tools International, <mailto:support@rdctools.com>
+// Web-site    : http://www.rdctools.com
+// Created     : 2026-11-23
+//
+// Description : One month as a calendar, in an HTML box: a heading with the month's name, the weeks Monday
+//               first with their ISO week numbers, and every day marked the way the program says
+//               (OnDefineDay). Today is marked, a clicked day is marked and reaches OnDayClick, and the month
+//               and day names come in the language psLocaleName names. Twelve of them make a year.
+//
+// This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//****************************************************************************
+Use cFTWebHtmlBox.pkg
+Use FTCalendar.pkg             // tFTCalendarDay, FTMonthName, FTShortestDayName, FTIsoDate ...
+Use FTMarkupBuilders.pkg       // FTHtmlEscape
+
+/* HOW A PROGRAM USES IT. Set the month, fill in the days, draw it:
+
+       Object oJuly is a cFTMonthCalendar
+           Set piYear to 2026
+           Set piMonth to 7
+           Set psLocaleName to "en-US"          // the month and day names; "" = the computer's language
+
+           // Each day of the month, before the month is drawn: its marks, its tooltip, attributes of its own.
+           Procedure OnDefineDay Date dDate tFTCalendarDay ByRef Day
+               Forward Send OnDefineDay dDate (&Day)        // the weekend: ftcal-wkd
+               If (IsBooked(Self, dDate)) Begin
+                   Move (Day.sClass + " ftcal-cls") to Day.sClass
+                   Move "Booked" to Day.sTip
+               End
+           End_Procedure
+
+           Procedure OnDayClick Date dDate
+               Send ShowBookings dDate
+           End_Procedure
+       End_Object
+
+   and Send Refresh when the month, the year or the days have changed - in End_Construct_Object for the first
+   drawing. Refresh draws the month and keeps it for the page's next mount (UpdateHtml), so it may come before
+   the page is up.
+
+   THE MARKS. ftcontrols.css draws four, in the palette's colours: ftcal-off (a day off), ftcal-wkd (the
+   weekend), ftcal-spc (worth a look, still a working day) and ftcal-cls (closed, booked). A program may add
+   classes of its own and style them in its own sheet. Today is ftcal-today, and the clicked day ftcal-sel -
+   ftcontrols.js marks it at once, in every calendar on the page, and tells the page's scripts with the DOM
+   event "ftcal-select" (event.detail.date, "yyyy-mm-dd"). A page's script can choose a day too:
+   rdcft.ftcalSelect("2026-07-04").
+
+   THE DESIGNER draws the class default - a month's shape (ftph-month, ftcontrols.css) - since it runs no code. */
+{ OverrideProperty=psHtml InitialValue="<div class='ftph-month'></div>" }
+Class cFTMonthCalendar is a cFTWebHtmlBox
+
+    Procedure Construct_Object
+        Forward Send Construct_Object
+        // The month: 0 = this year, this month.
+        Property Integer piYear 0
+        Property Integer piMonth 0
+        // The language of the month and day names, as Windows names a locale: "sv-SE", "en-US". "" = the
+        // computer's own language.
+        Property String psLocaleName ""
+        // The ISO week numbers in a column at the left, under this heading.
+        Property Boolean pbWeekNumbers True
+        Property String psWeekCaption "Wk"
+        // The heading: the month's name, and the note MonthNote returns at its right.
+        Property Boolean pbShowTitle True
+        // A click on a day reaches OnDayClick. False: the page marks the clicked day, and nothing more.
+        Property Boolean pbDayClick True
+
+        Set psHtml to "<div class='ftph-month'></div>"
+    End_Procedure
+
+    // The month shown: piYear and piMonth, this year and this month where they are 0.
+    Function CalendarYear Returns Integer
+        Date dToday
+        If (piYear(Self) > 0) ;
+            Function_Return (piYear(Self))
+        Sysdate dToday
+        Function_Return (DateGetYear(dToday))
+    End_Function
+
+    Function CalendarMonth Returns Integer
+        Date dToday
+        If ((piMonth(Self) >= 1) and (piMonth(Self) <= 12)) ;
+            Function_Return (piMonth(Self))
+        Sysdate dToday
+        Function_Return (DateGetMonth(dToday))
+    End_Function
+
+    /* ONE DAY, asked for each date of the month as it is drawn, in date order: its classes, its tooltip and
+       attributes of its own (tFTCalendarDay, FTCalendar.pkg). The default marks Saturday and Sunday ftcal-wkd -
+       an augmentation that Forwards first keeps that, one that does not decides the weekend itself. */
+    { MethodType=Event }
+    Procedure OnDefineDay Date dDate tFTCalendarDay ByRef Day
+        If (FTIsoDayOfWeek(dDate) >= 6) ;
+            Move "ftcal-wkd" to Day.sClass
+    End_Procedure
+
+    // The note at the right of the heading - "21 working days" - asked after the days, so OnDefineDay may have
+    // counted what it shows. "" = none.
+    { MethodType=Event }
+    Function MonthNote Returns String
+        Function_Return ""
+    End_Function
+
+    // A click on a day, after the web click has returned (pbDayClick True).
+    { MethodType=Event }
+    Procedure OnDayClick Date dDate
+    End_Procedure
+
+    Procedure OnHtmlClick String sId String sParam
+        Date dDate
+        Forward Send OnHtmlClick sId sParam
+        If (sId = "ftcal-day") Begin
+            Move (FTDateFromIso(sParam)) to dDate
+            If (dDate > 0) ;
+                Send OnDayClick dDate
+        End
+    End_Procedure
+
+    // The column headings: the week caption, then the shortest day names, Monday first.
+    Function HeadingsHtml Returns String
+        String sHtml sLocale
+        Integer iDay
+        Get psLocaleName to sLocale
+        Move "<tr>" to sHtml
+        If (pbWeekNumbers(Self)) ;
+            Append sHtml '<th class="ftcal-wn">' (FTHtmlEscape(psWeekCaption(Self))) "</th>"
+        For iDay from 1 to 7
+            Append sHtml "<th>" (FTHtmlEscape(FTShortestDayName(iDay, sLocale))) "</th>"
+        Loop
+        Function_Return (sHtml + "</tr>")
+    End_Function
+
+    // The whole month, as Refresh shows it.
+    Function CalendarHtml Returns String
+        String sHtml sRows sCls sTip sIso sNote
+        Integer iYear iMonth iDays iDay iIsoDay iCol
+        Boolean bWeeks bClick
+        Date dFirst dNext dDate dToday
+        tFTCalendarDay Day Empty
+
+        Get CalendarYear to iYear
+        Get CalendarMonth to iMonth
+        Get pbWeekNumbers to bWeeks
+        Get pbDayClick to bClick
+        Sysdate dToday
+        Move (DateSet(iYear, iMonth, 1)) to dFirst
+        If (iMonth = 12) ;
+            Move (DateSet(iYear + 1, 1, 1)) to dNext
+        Else ;
+            Move (DateSet(iYear, iMonth + 1, 1)) to dNext
+        Move (dNext - dFirst) to iDays
+
+        Move "" to sRows
+        For iDay from 1 to iDays
+            Move (dFirst + iDay - 1) to dDate
+            Move (FTIsoDayOfWeek(dDate)) to iIsoDay
+            If ((iDay = 1) or (iIsoDay = 1)) Begin
+                If (iDay > 1) ;
+                    Append sRows "</tr>"
+                Append sRows "<tr>"
+                If (bWeeks) ;
+                    Append sRows '<td class="ftcal-wn">' (String(DateGetWeekOfYearISO(dDate))) "</td>"
+                If (iDay = 1) Begin
+                    For iCol from 1 to (iIsoDay - 1)
+                        Append sRows "<td></td>"
+                    Loop
+                End
+            End
+
+            Move Empty to Day
+            Send OnDefineDay dDate (&Day)
+            Move (FTIsoDate(dDate)) to sIso
+            Move (Trim("ftcal-d " + Day.sClass)) to sCls
+            If (dDate = dToday) ;
+                Move (sCls + " ftcal-today") to sCls
+            Move Day.sTip to sTip
+            If (sTip = "") ;
+                Move sIso to sTip
+            Append sRows '<td class="' sCls '" data-d="' sIso '"'
+            If (bClick) ;
+                Append sRows ' data-ServerOnClick="ftcal-day" data-OnClickParam="' sIso '"'
+            If (Day.sAttributes <> "") ;
+                Append sRows " " Day.sAttributes
+            Append sRows ' title="' (FTHtmlEscape(sTip)) '">' (String(iDay)) "</td>"
+        Loop
+        Append sRows "</tr>"
+
+        Move ('<div class="ftcal" data-month="' + String(iYear) + "-" + FTTwoDigits(iMonth) + '">') to sHtml
+        If (pbShowTitle(Self)) Begin
+            Get MonthNote to sNote
+            Append sHtml '<div class="ftcal-h"><span class="ftcal-name">' (FTHtmlEscape(FTMonthName(iMonth, True, psLocaleName(Self)))) "</span>"
+            If (sNote <> "") ;
+                Append sHtml '<span class="ftcal-note">' (FTHtmlEscape(sNote)) "</span>"
+            Append sHtml "</div>"
+        End
+        Append sHtml '<table class="ftcal-t">' (HeadingsHtml(Self)) sRows "</table></div>"
+        Function_Return sHtml
+    End_Function
+
+    // Draw the month - now on a page that is up, and for the page's next mount in any case (UpdateHtml).
+    Procedure Refresh
+        String sHtml
+        Get CalendarHtml to sHtml
+        Send UpdateHtml sHtml
+    End_Procedure
+
+End_Class

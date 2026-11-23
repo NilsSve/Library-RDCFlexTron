@@ -843,3 +843,61 @@ body.df-Light .WebControl.WebList.ftlist .WebList_BodyWrp {
 .WebControl.WebForm.ftinput {
     margin: 0 2px 0 18px;
 }
+
+/* ===== THE MONTH CALENDAR (cFTMonthCalendar, 0.9.40) =====
+   One month in an HTML box: a heading, the weeks Monday first, the ISO week numbers at the left. The day marks are
+   the library's four - ftcal-off, ftcal-wkd, ftcal-spc, ftcal-cls (tFTCalendarDay, FTCalendar.pkg) - drawn in the
+   palette's colours, so they follow the theme; a program styles classes of its own in its own sheet. */
+.WebControl.WebHtmlBox .ftcal {
+    font: 12px "Segoe UI", sans-serif;
+    color: var(--dfr-ink, #eceae1);
+    background: var(--dfr-bg-card, #2c2b29);
+    border: 1px solid var(--dfr-line-card, #3a3936);
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+.WebControl.WebHtmlBox .ftcal-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.WebControl.WebHtmlBox .ftcal-name { font-weight: bold; color: var(--dfr-ink-bright, #ffffff); }
+.WebControl.WebHtmlBox .ftcal-note { color: var(--dfr-ink-muted, #a8a69b); font-size: 11px; }
+.WebControl.WebHtmlBox .ftcal-t { border-collapse: collapse; width: 100%; }
+.WebControl.WebHtmlBox .ftcal-t th { font-weight: normal; color: var(--dfr-ink-muted, #a8a69b); font-size: 11px; padding: 1px 0; text-align: center; }
+.WebControl.WebHtmlBox .ftcal-t td { text-align: center; padding: 2px 0; }
+.WebControl.WebHtmlBox .ftcal-t .ftcal-wn { color: var(--dfr-ink-faint, #6e6c65); font-size: 10px; width: 22px; }
+.WebControl.WebHtmlBox .ftcal td.ftcal-d { border-radius: 4px; cursor: pointer; }
+.WebControl.WebHtmlBox .ftcal td.ftcal-d:hover { box-shadow: inset 0 0 0 1px var(--dfr-amber-line, #8a6a2a); }
+/* the marks - the legend swatches of a page may use them too: <i class="ftcal-d ftcal-off"></i> */
+.ftcal-d.ftcal-wkd { background: var(--dfr-bg-sunken, #1f1e1c); color: var(--dfr-ink-muted, #a8a69b); }
+.ftcal-d.ftcal-off { background: var(--dfr-coral, #e8916f); color: var(--dfr-ink-on-fill, #1d1c1a); font-weight: bold; }
+.ftcal-d.ftcal-off.ftcal-wkd { background: var(--dfr-coral-2, #c9785b); }
+.ftcal-d.ftcal-spc { background: var(--dfr-violet-bg, #2e2a3d); color: var(--dfr-ink-bright, #ffffff); box-shadow: inset 0 0 0 1px var(--dfr-violet-line, #6c5fa8); }
+.ftcal-d.ftcal-spc.ftcal-wkd { background: var(--dfr-bg-sunken, #1f1e1c); color: var(--dfr-ink-muted, #a8a69b); }
+.ftcal-d.ftcal-cls { background: var(--dfr-warn-bg, #3a3020); color: var(--dfr-ink-bright, #ffffff); box-shadow: inset 0 0 0 1px var(--dfr-amber-line, #8a6a2a); }
+.ftcal-d.ftcal-today { box-shadow: inset 0 0 0 2px var(--dfr-amber, #f0b44c); font-weight: bold; }
+/* the clicked day (ftcontrols.js): an outer ring in the brightest ink as well as the amber edge - the amber edge
+   alone does not show on a filled day */
+.WebControl.WebHtmlBox .ftcal td.ftcal-d.ftcal-sel { box-shadow: inset 0 0 0 2px var(--dfr-amber, #f0b44c); outline: 2px solid var(--dfr-ink-bright, #ffffff); outline-offset: 1px; font-weight: bold; position: relative; z-index: 1; }
+
+/* A MONTH, for the Studio's Designer: <div class="ftph-month"></div> - a heading and six weeks of days. It is
+   cFTMonthCalendar's class default, so a calendar shows its shape there without a literal of its own. */
+.WebControl.WebHtmlBox .ftph-month {
+    border: 1px solid var(--dfr-bg-track, #3a3936);
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+.WebControl.WebHtmlBox .ftph-month::before {
+    content: "";
+    display: block;
+    width: 45%;
+    height: 11px;
+    margin-bottom: 10px;
+    border-radius: 3px;
+    background: var(--dfr-line-strong, #4a4945);
+}
+.WebControl.WebHtmlBox .ftph-month::after {
+    content: "";
+    display: block;
+    height: 168px;
+    background-color: var(--dfr-line-strong, #4a4945);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='18%25' y='4' width='64%25' height='16' rx='4'/%3E%3C/svg%3E") 0 0 / calc(100% / 7) 24px repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='18%25' y='4' width='64%25' height='16' rx='4'/%3E%3C/svg%3E") 0 0 / calc(100% / 7) 24px repeat;
+}

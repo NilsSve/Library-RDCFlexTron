@@ -1,0 +1,44 @@
+// oFTCalendar-Tests.pkg - FTCalendar.pkg: what cFTMonthCalendar draws a month with - dates written the same on
+// every computer, the ISO day of the week, and the month and day names in a language of the program's choosing.
+// (ASCII only: a file without a BOM is read in the OEM code page.)
+
+Use DFUnit\Fixturing\Fixture.pkg
+Use FTCalendar.pkg
+
+Object oFTCalendar_Tests is a cTestFixture
+    Set psTestFixtureName to "FTCalendar - dates and names for the month calendar"
+
+    { Published=True }
+    Procedure Test_FTIsoDate_Writes_yyyy_mm_dd
+        Send AssertSAreEqual "2026-07-04" (FTIsoDate(DateSet(2026, 7, 4)))   "Two digits for the month and the day."
+        Send AssertSAreEqual "2026-12-31" (FTIsoDate(DateSet(2026, 12, 31))) "The last day of a year."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTDateFromIso_Reads_It_Back
+        Send AssertSAreEqual "2026-07-04" (FTIsoDate(FTDateFromIso("2026-07-04"))) "Read and written again."
+        Send AssertIAreEqual 0 (Integer(FTDateFromIso("2026-7-4")))  "Not yyyy-mm-dd: no date."
+        Send AssertIAreEqual 0 (Integer(FTDateFromIso("2026-13-01"))) "No 13th month."
+        Send AssertIAreEqual 0 (Integer(FTDateFromIso("")))           "Nothing: no date."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_FTIsoDayOfWeek_Monday_Is_1
+        Send AssertIAreEqual 1 (FTIsoDayOfWeek(DateSet(2026, 11, 23))) "23 November 2026 is a Monday."
+        Send AssertIAreEqual 6 (FTIsoDayOfWeek(DateSet(2026, 7, 4)))   "4 July 2026 is a Saturday."
+        Send AssertIAreEqual 7 (FTIsoDayOfWeek(DateSet(2026, 11, 22))) "22 November 2026 is a Sunday."
+    End_Procedure
+
+    { Published=True }
+    Procedure Test_Names_In_A_Locales_Language
+        Send AssertSAreEqual "January" (FTMonthName(1, True, "en-US"))   "January in English."
+        Send AssertSAreEqual "Januari" (FTMonthName(1, True, "sv-SE"))   "January in Swedish, capital first."
+        Send AssertSAreEqual "Oct"     (FTMonthName(10, False, "en-GB")) "October abbreviated."
+        Send AssertSAreEqual ""        (FTMonthName(13, True, "en-US"))  "No 13th month."
+        Send AssertSAreEqual "Sunday"  (FTDayName(7, True, "en-GB"))     "Day 7 is Sunday."
+        Send AssertSAreEqual "Tisdag"  (FTDayName(2, True, "sv-SE"))     "Tuesday in Swedish."
+        Send AssertSAreEqual "Mo"      (FTShortestDayName(1, "en-US"))   "The shortest Monday, as a heading writes it."
+        Send AssertSAreEqual ""        (FTShortestDayName(8, "en-US"))   "No eighth day."
+    End_Procedure
+
+End_Object

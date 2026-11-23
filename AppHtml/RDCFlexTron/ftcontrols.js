@@ -171,4 +171,25 @@
             }
         }
     };
+
+    /* THE MONTH CALENDARS (cFTMonthCalendar, 0.9.40). A click on a day marks it - ftcal-sel, in every calendar on
+       the page, so twelve months show one chosen day - at once, without a trip to the program, and tells the
+       page's own scripts with the DOM event "ftcal-select" (detail: date "yyyy-mm-dd", cell). The program hears
+       of the click too, through the box's OnDayClick, when the cell carries data-ServerOnClick (pbDayClick).
+       rdcft.ftcalSelect(sDate) chooses a day from a page's script: it returns the day's cell, or null. */
+    rdcft.ftcalSelect = function (sDate, oCell) {
+        var aOld = document.querySelectorAll("td.ftcal-d.ftcal-sel");
+        var aNew = document.querySelectorAll('td.ftcal-d[data-d="' + sDate + '"]');
+        aOld.forEach(function (o) { o.classList.remove("ftcal-sel"); });
+        aNew.forEach(function (o) { o.classList.add("ftcal-sel"); });
+        oCell = oCell || aNew[0] || null;
+        document.dispatchEvent(new CustomEvent("ftcal-select", { detail: { date: sDate, cell: oCell } }));
+        return oCell;
+    };
+    document.addEventListener("click", function (oEvent) {
+        var oCell = oEvent.target && oEvent.target.closest ? oEvent.target.closest("td.ftcal-d[data-d]") : null;
+        if (oCell) {
+            rdcft.ftcalSelect(oCell.getAttribute("data-d"), oCell);
+        }
+    });
 }());

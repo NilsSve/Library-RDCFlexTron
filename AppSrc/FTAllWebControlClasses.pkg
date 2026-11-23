@@ -37,6 +37,7 @@ Use cWebGrid.pkg
 Use cWebHorizontalLine.pkg
 Use cWebHtmlBox.pkg
 Use cFTWebHtmlBox.pkg   // FT: cWebHtmlBox marked non-data-aware (DEO_Object False) so the Clear broadcast skips it
+Use cFTMonthCalendar.pkg // FT: one month as a calendar (0.9.40)
 Use cWebIFrame.pkg
 Use cWebImage.pkg
 Use cWebLabel.pkg
